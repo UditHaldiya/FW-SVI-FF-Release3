@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<HART Version="1.0">
+  <Include></Include>
+  <Commands>
+    <SubCmdOnly CmdNum="190">
+      <SubCommands>
+        <Command Name="Control Data Collection" CmdNum="22" CmdType="Process" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_PROCESS_COMMAND">
+          <RequestParams>
+            <Param>Data Collection Conf Selector</Param>
+            <Param>Data Collection Command</Param>
+          </RequestParams>
+        </Command>
+      </SubCommands>
+    </SubCmdOnly>
+    <SubCmdOnly CmdNum="170">
+      <SubCommands>
+        <Command Name="Read Data Collection Configuration" CmdNum="22" CmdType="Read" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_PROCESS_COMMAND">
+          <RequestParams>
+            <Param>Data Collection Conf Selector</Param>
+          </RequestParams>
+          <ResponseParams>
+            <Param>Data Collection Conf Selector</Param>
+            <Param>Data Collection Context</Param>
+            <Param>Data Collection Skip Count</Param>
+            <Param>Data Collection Bitmap</Param>
+            <Param>Data Collection Max Samples</Param>
+            <Param>Data Collection Max PreSamples</Param>
+          </ResponseParams>
+        </Command>
+        <Command Name="Read Data Collection Trigger Configuration" CmdNum="23" CmdType="Read" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_READ_COMMAND">
+          <ResponseParams>
+            <Param>Data Collection Trigger Binary Options</Param>
+            <Param>Data Collection Trigger AI Input Threshold</Param>
+            <Param>Data Collection Position Deviation Threshold</Param>
+            <Param>Data Collection Setpoint Deviation Threshold</Param>
+            <Param>Data Collection Pressure Deviation Threshold</Param>
+            <Param>Data Collection Filter Coef</Param>
+          </ResponseParams>
+        </Command>
+      </SubCommands>
+    </SubCmdOnly>
+    <SubCmdOnly CmdNum="171">
+      <SubCommands>
+        <Command Name="Write Data Collection Configuration" CmdNum="22" CmdType="Write" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_WRITE_COMMAND">
+          <RequestParams>
+            <Param>Data Collection Conf Selector</Param>
+            <Param>Data Collection Context</Param>
+            <Param>Data Collection Skip Count</Param>
+            <Param>Data Collection Bitmap</Param>
+            <Param>Data Collection Max Samples</Param>
+            <Param>Data Collection Max PreSamples</Param>
+          </RequestParams>
+          <ResponseParams>
+            <Param>Data Collection Conf Selector</Param>
+            <Param>Data Collection Context</Param>
+            <Param>Data Collection Skip Count</Param>
+            <Param>Data Collection Bitmap</Param>
+            <Param>Data Collection Max Samples</Param>
+            <Param>Data Collection Max PreSamples</Param>
+          </ResponseParams>
+        </Command>
+        <Command Name="Write Data Collection Trigger Configuration" CmdNum="23" CmdType="Write" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_WRITE_COMMAND">
+          <RequestParams>
+            <Param>Data Collection Trigger Binary Options</Param>
+            <Param>Data Collection Trigger AI Input Threshold</Param>
+            <Param>Data Collection Position Deviation Threshold</Param>
+            <Param>Data Collection Setpoint Deviation Threshold</Param>
+            <Param>Data Collection Pressure Deviation Threshold</Param>
+            <Param>Data Collection Filter Coef</Param>
+          </RequestParams>
+          <ResponseParams>
+            <Param>Data Collection Trigger Binary Options</Param>
+            <Param>Data Collection Trigger AI Input Threshold</Param>
+            <Param>Data Collection Position Deviation Threshold</Param>
+            <Param>Data Collection Setpoint Deviation Threshold</Param>
+            <Param>Data Collection Pressure Deviation Threshold</Param>
+            <Param>Data Collection Filter Coef</Param>
+          </ResponseParams>
+        </Command>
+      </SubCommands>
+    </SubCmdOnly>
+  </Commands>
+  <Variables>
+    <Variable Name="Data Collection Conf Selector" DataType="H_UCHAR" Description="Persistent or currently in use">
+      <EnumValues v0="DCC Persistent" v1="DCC Current" />
+      <Range Model="Standard" />
+    </Variable>
+    <Variable Name="Data Collection Context" DataType="H_UCHAR" Description="Distance between samples in multiples of &quot;context&quot; task">
+      <EnumValues v0="DCC Control Task" v1="DCC Cycle Task" />
+      <Range Model="Standard" />
+    </Variable>
+    <Variable Name="Data Collection Skip Count" DataType="H_UINT" Description="Distance between samples in multiples of &quot;context&quot; task" />
+    <Variable Name="Data Collection Bitmap" DataType="H_UINT" Description="Bitmap (mask) of what variables are collected\n&#xD;&#xA;POSITION = bit 0\n&#xD;&#xA;MAIN PRESSURE = bit 1\n&#xD;&#xA;PILOT PRESSURE = bit 2\n&#xD;&#xA;SUPPLY PRESSURE = bit 3\n&#xD;&#xA;PRESSURE B = bit 4\n&#xD;&#xA;SETPOINT = bit 5\n&#xD;&#xA;IP CURRENT = bit 6\n&#xD;&#xA;" Printf="%02X"></Variable>
+    <Variable Name="Data Collection Max Samples" DataType="H_UINT" Description="0 means unlimited (other than by buffer size)"></Variable>
+    <Variable Name="Data Collection Max PreSamples" DataType="H_UINT" Description="(Ignored for temporary/on demand) configuration)"></Variable>
+    <Variable Name="Data Collection Command" DataType="H_UCHAR" Description="What to do with data collection process">
+      <EnumValues v0="HC_StartCollecting" v1="HC_StopCollecting" />
+    </Variable>
+    <Variable Name="Data Collection Trigger Binary Options" DataType="H_UINT" Description="Bits set indicate Allowed: \n&#xD;&#xA;0:Extrn cmd (HART)\n&#xD;&#xA;1:TB Alerts\n&#xD;&#xA;4: working position deviation\n&#xD;&#xA;5: act. pressure deviation\n&#xD;&#xA;6: working sp deviation\n&#xD;&#xA;7: DI open\n&#xD;&#xA;8: DI closed\n&#xD;&#xA;9: Pv below\n&#xD;&#xA;10:Pv above\n&#xD;&#xA;11:PV between\n"></Variable>
+    <Variable Name="Data Collection Trigger AI Input Threshold" DataType="H_FLOAT" MaxSize="2" Description="Above[1]/Below[0] threshold in mA" Printf="%.3f">
+      <Range MinValue="0" MaxValue="23" Model="Standard" />
+    </Variable>
+    <Variable Name="Data Collection Position Deviation Threshold" DataType="H_FLOAT" Description="Above/Below threshold in %" Printf="%.2f">
+      <Range MinValue="0.01" MaxValue="100.0" Model="Standard" />
+    </Variable>
+    <Variable Name="Data Collection Setpoint Deviation Threshold" DataType="H_FLOAT" Description="Above/Below threshold in %" Printf="%.2f">
+      <Range MinValue="0.01" MaxValue="100.0" Model="Standard" />
+    </Variable>
+    <Variable Name="Data Collection Pressure Deviation Threshold" DataType="H_FLOAT" Description="Above/Below threshold in pressure units" Printf="%.2f">
+      <Range MinValue="0.01" MaxValue="100.0" Model="Standard" />
+    </Variable>
+    <Variable Name="Data Collection Filter Coef" DataType="H_UCHAR" Description="Exponential forgetting coef exponent for averaging the deviations">
+      <Range MinValue="2" MaxValue="10" Model="Standard" />
+    </Variable>
+  </Variables>
+  <Structs></Structs>
+</HART>

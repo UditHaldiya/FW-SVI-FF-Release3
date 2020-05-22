@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--    $Archive: /MNCB/Dev/FIRMWARE/mn_instrum/profiler/instrum.xml $
+    $Date: 2/18/11 4:16p $
+    $Revision: 2 $
+    $Author: Arkkhasin $
+
+-->
+<HART Version="1.0">
+  <Include></Include>
+  <Commands>
+    <SubCmdOnly CmdNum="130">
+      <SubCommands>
+        <Command CmdNum="17" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_WRITE_COMMAND" Name="Write APP FW Download Method" Description="Write Firmware Download Method">
+          <RequestParams>
+            <Param>APP FW DL Method</Param>
+          </RequestParams>
+          <ResponseParams>
+            <Param>APP FW DL Method</Param>
+          </ResponseParams>
+        </Command>
+      </SubCommands>
+    </SubCmdOnly>
+    <SubCmdOnly CmdNum="129">
+      <SubCommands>
+        <Command CmdNum="17" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_READ_COMMAND" Name="Read APP FW Download Method" Description="Read Firmware Download Method">
+          <RequestParams></RequestParams>
+          <ResponseParams>
+            <Param>APP FW DL Method</Param>
+          </ResponseParams>
+        </Command>
+      </SubCommands>
+    </SubCmdOnly>
+  </Commands>
+  <Variables>
+    <Variable Name="APP FW DL Method" DataType="H_UCHAR" Description="Firmware Download Method">
+      <EnumValues v0="Interleave FW write APP" v1="Inline FW write APP" />
+    </Variable>
+  </Variables>
+</HART>

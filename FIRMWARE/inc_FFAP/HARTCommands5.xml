@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<HART Title="FF AP HART Commands Definition" Version="1.0">
+  <Commands>
+    <!--Sample commands; params are ordered-->
+  </Commands>
+  <Include>
+    <FileName>.\HARTCommands5_APP.xml</FileName>
+    <FileName>..\interface\hart\commonxml\Shared_with_FFP.xml</FileName>
+  </Include>
+</HART>

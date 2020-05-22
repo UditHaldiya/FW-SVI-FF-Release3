@@ -1,0 +1,121 @@
+//--------- lint bugs (9.00h, 9.00i) ---------------------
+-emacro(546,CONST_ASSERT)
+-emacro(866,CONST_ASSERT)
+
+//-------- codebase-specific ------------
+-esym(960,4.1) //hex escape sequence - needed for Sitronix character map
+-efile(766, *config.h) //this one OK not to be used
+-efile(766, *projectdef.h) //this one OK not to be used - may be intended so that doesn't compile as project-independent
+-esym(962,NEED_NVMEM_END) //it is a flag defining visibility of certain things
+-esym(755,UNITS_*_N_ENTRY) //higher-res units conversion is optional
+-esym(756,*_least_t) -esym(756,*_least) -esym(756,*_fast_t) //fast types are optional
+-esym(755,std2f) //we'd love to remove it from the module but it may be used in other projects
+-esym(755,CANCELPROC_POWERMARGIN) // marginal power monitoring may not be supported
+-esym(714 759 765, periodicjob_Temperature) //underlying tempr_ComputeTemperatureCompensation moved to mopup service in this codebase
+
+//---------- thread safety --------------
+-atomic(any_type *)
+-atomic(bool_t)
+-atomic(bool)
+-atomic(int8_t)
+-atomic(uint8_t)
+-atomic(uint8_t)
+-atomic(uint16_t)
+-atomic(int32_t)
+-atomic(uint32_t)
+-atomic(float32)
+-atomic(enum)
+-atomic( any_type Atomic_ )
+-atomic( any_scalar Atomic_ [*])
+-etype(458,*Atomic_)
+-etype(457,*Atomic_)
+-etype(457,*Atomic_ [*])
+
+//-------------- RTOS and RTOS interface ------------
+-esym(729 843,OSRunning, OSTCBCur) //not explicitly init'ed, not const: changed in assembler port
+//RTOS awareness
+-sem(main,no_thread) //semantics
+
+//---------------- Compiler -------------------
+-d__sfe(a)=NULL //let Lint ignore the linker interface
+
+//Imported from "fault matrix"
+-efile(755,*\uilabels.h) //not referenced OK
+-efile(755,*\faultdef.h) //not referenced OK
+//Other automatically generated
+-esym(755, ROMEND)
+
+//--------------- lint overreach --------------------------
+--emacro((546),CONST_ASSERT) //Suspicious use of &
+-emacro(866,CONST_ASSERT) //Unusual use of '&' in argument to sizeof
+
+
+//----------------- thread safety issues misunderstood by Lint -------------------------
+-etype(457,struct HartState_t [*])
+-etype(457,struct RcvState_t [*])
+
+-estring(457,"of thread 'control_ControlTask(void *)'")
+-estring(457,control_ControlTask*has*an*unprotected)
+
+
+//----------------- optional system headers (OK if unused) ------------------
+-efile(766,*\mnassert.h) //not referenced OK
+
+//There is no requiement (yet?) that all or any generated enumerations in derived
+//from XML be used: XML enumerations may be useful sometimes but their primary use is
+//in tools/documentation
+-efile(769,*hartdef*_enum*.h)
+//HART mandates the definitions; not all of them might be used
+-esym(769, iflock_t::*) //global enumeration constant not referenced
+
+//------------------- ignore instrumentation hooks ---------------
+-efile(766,*instrum.h) //OK if unused
+
+//------------------- unused harmless provisions for future -------------------
+-esym(768, SubCommandInfo_t::length_offset) //one way of doing variable-length subcommands
+
+//------------------- lint (9.00h) gets it wrong - review! -------------
+-esym(458, mode_GetMode) //unprotected read access to m_Mode_ - Lint (9.00h) mistake - or prove otherwise :)
+
+//------------------- stuff of optional use -------------------------------
+-esym(769, ErrorCode_t::*) //some error codes might not be applicable
+-esym(755, HART_COMMAND_0*)
+-esym(755, HART_COMMAND_1*)
+-esym(755, HART_COMMAND_2*)
+-esym(755, HART_COMMAND_6*)
+-esym(755, HART_COMMAND_3*) //seldom if ever used; the automatically made definitions are for backward compatibility
+
+//Command 48 gutted
+-esym(768, Rsp_ReadAddlStatus_t::*)
+-esym(768, Rsp_ReadFaultCodeMasks_t::*, Req_ReadFaultCodeMasks_t::*, Req_WriteFaultCodeMasks_t::*)
+
+//Not necessarily used in a particular project
+-esym(714 759 765, util_GetU8ArrayFromXmlBuffer, util_SetXmlBuffer)
+//-- and since command 48 with its masks is taken out...
+-esym(714 759 765, error_IsAnyFaultExt)
+
+
+//-------------------- stuff for use by external tools analyzing the firmware image -----------------
+-esym(768, VerInfo_t::*) //no field is required to be accessed
+
+//------------------ OK now but keep an eye on these -------------------------
+-esym(755, SWOPTION_UI_LOWCOST_ENABLE_SPLIT_RANGE) //option may or may not be used in a project
+-esym(755, SWOPTION_UI_LOWCOST_ENABLE_CUSTOM_CHARACT) //option may or may not be used in a project
+
+//------------------ NEEDS CLEANUP minding sister projects -------------------
+//-------- HART ------------
+-efile(755, *\hartcmd.h) //unused legacy commands macros
+-efile(755, *\hartfunc.h) //unused response codes etc.
+-efile(769, *\process.h) //global enumeration of processes
+-esym(768, HartData_t::*) //in SVIFF, not configurable
+
+//----------- component configuration -----------------
+//only one <component>_OPTIONS_<options_name>_OPTION_<a_selection> is used
+-esym(755, *_OPTIONS_*_OPTION_*)
+
+
+//------------------ bad masking of potential bugs -------------------
+//------- Misc. Delegated to PCLP ---------------
+-esym(641, taskid_t) //RHS of <<
+-estring(923, "*unsigned int*") //we delegate 923 to PCLP where we are able to exempt uintptr_t, EWARM 8
+-estring(923, "*unsigned long*") //pointer to or from uintptr_t, EWARM before 8
