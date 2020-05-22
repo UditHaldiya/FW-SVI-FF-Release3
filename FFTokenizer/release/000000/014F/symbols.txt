@@ -1,0 +1,20 @@
+#
+# %W% %G%
+#
+# RIO MAI16 block symbols
+#
+# Items:	0x80023700 -> 0x800237FF
+# Members:	0xC0013700 -> 0xC00137FF
+#
+block		__multiple_analog_input_16_block		0x80023700
+var-list	__mai16_view_1					0x80023701
+var-list	__mai16_view_2					0x80023702
+var-list	__mai16_view_3					0x80023703
+var-list	__mai16_view_4					0x80023704
+record		__mai16_character				0x80023705
+collection      no_download_mai16	RESERVED	0x800237FE
+collection      upload_wanted_mai16	RESERVED	0x800237FF
+
+member        VL_FORCE_ENB_16				variable-list			0xC0013700
+member        VL_OUTM_16					variable-list			0xC0013701
+member        VL_MAP_MM_16					variable-list			0xC0013702

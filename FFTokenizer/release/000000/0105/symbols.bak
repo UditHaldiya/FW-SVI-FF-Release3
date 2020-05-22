@@ -1,0 +1,19 @@
+#
+# %W% %G%
+#
+# BG block symbols
+#
+# Items:	0x80020250 -> 0x8002026F
+# Members:	0xC0010250 -> 0xC0010250
+#
+block		__bias_gain_block			0x80020250
+var-list	__bg_view_1				0x80020251
+var-list	__bg_view_2				0x80020252
+var-list	__bg_view_3				0x80020253
+var-list	__bg_view_4				0x80020254
+unit		__unit_bg_pv				0x80020255
+unit		__unit_bg_out				0x80020256
+unit		__unit_bg_trk				0x80020257
+record		__bg_character				0x80020258
+collection      no_download_bg	RESERVED	0x8002026E
+collection      upload_wanted_bg	RESERVED	0x8002026F

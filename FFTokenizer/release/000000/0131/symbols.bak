@@ -1,0 +1,16 @@
+#
+# %W% %G%
+#
+# MAO block symbols
+#
+# Items: 	0x800209D0 -> 0x800209EF
+# Members:      0xC00109D0 -> 0xC00101FF
+#
+block           __mao_block                      0x800209D0
+var-list        __mao_view_1                     0x800209D1
+var-list        __mao_view_2                     0x800209D2
+var-list        __mao_view_3                     0x800209D3
+var-list        __mao_view_4                     0x800209D4
+record          __mao_character                  0x800209D7
+collection      no_download_mao	RESERVED	0x800209EE
+collection      upload_wanted_mao	RESERVED	0x800209EF

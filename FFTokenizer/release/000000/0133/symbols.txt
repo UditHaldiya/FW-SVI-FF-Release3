@@ -1,0 +1,15 @@
+#
+#
+# Resource block 2 symbols
+#
+# Items:        0x80020AF0 -> 0x80020B0F
+# Members:      0xC0010AF0 -> 0xC0010AF0
+#
+block           __resource_block_2              0x80020AF0
+var-list        __res_2_view_1                  0x80020AF1
+var-list        __res_2_view_2                  0x80020AF2
+var-list        __res_2_view_3                  0x80020AF3
+var-list        __res_2_view_4                  0x80020AF4
+record          __res_2_character               0x80020AF5
+collection      no_download_res_2	RESERVED	0x80020B0E
+collection      upload_wanted_res_2	RESERVED	0x80020B0F

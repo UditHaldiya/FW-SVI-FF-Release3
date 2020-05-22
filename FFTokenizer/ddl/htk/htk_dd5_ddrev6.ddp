@@ -1,0 +1,390 @@
+<nv name="project" value="" id="">
+   <nv name="version" value="" id="">
+   </nv>
+   <nv name="filename" value="C:\FF\DDL\htk\htk_dd5_ddrev6.ddp" id="">
+   </nv>
+   <nv name="projectSettings" value="" id="">
+      <nv name="version" value="1" id="">
+      </nv>
+      <nv name="tokenizerPath" value="C:\FF\TOK\BIN\ff_tok32.exe" id="">
+      </nv>
+      <nv name="tokenizerFlags" value="-DDD_REV" id="">
+      </nv>
+      <nv name="standardLibraryPath" value="C:\FF\DDL" id="">
+      </nv>
+      <nv name="outputDirectory" value="C:\FF\DDL\release" id="">
+      </nv>
+      <nv name="standardDictionary" value="C:\FF\DDL\standard.dct" id="">
+      </nv>
+      <nv name="imagesPath" value="C:\FF\DDL\HTK" id="">
+      </nv>
+   </nv>
+   <nv name="projectFiles" value="" id="">
+      <nv name="version" value="2" id="">
+      </nv>
+      <nv name="count" value="22" id="">
+      </nv>
+      <nv name="projectFile" value="" id="">
+         <nv name="version" value="1" id="">
+         </nv>
+         <nv name="path" value="C:\FF\DDL\HTK\1000_Definitions.h" id="">
+         </nv>
+         <nv name="flags" value="" id="">
+         </nv>
+         <nv name="mainFile" value="0" id="">
+         </nv>
+         <nv name="shortName" value="1000_Definitions.h" id="">
+         </nv>
+         <nv name="exclude" value="1" id="">
+         </nv>
+         <nv name="folderName" value="" id="">
+         </nv>
+      </nv>
+      <nv name="projectFile" value="" id="">
+         <nv name="version" value="1" id="">
+         </nv>
+         <nv name="path" value="C:\FF\DDL\HTK\ddl_template.ddl" id="">
+         </nv>
+         <nv name="flags" value="" id="">
+         </nv>
+         <nv name="mainFile" value="0" id="">
+         </nv>
+         <nv name="shortName" value="ddl_template.ddl" id="">
+         </nv>
+         <nv name="exclude" value="1" id="">
+         </nv>
+         <nv name="folderName" value="" id="">
+         </nv>
+      </nv>
+      <nv name="projectFile" value="" id="">
+         <nv name="version" value="1" id="">
+         </nv>
+         <nv name="path" value="C:\FF\DDL\HTK\1000_Variables.ddl" id="">
+         </nv>
+         <nv name="flags" value="" id="">
+         </nv>
+         <nv name="mainFile" value="0" id="">
+         </nv>
+         <nv name="shortName" value="1000_Variables.ddl" id="">
+         </nv>
+         <nv name="exclude" value="1" id="">
+         </nv>
+         <nv name="folderName" value="" id="">
+         </nv>
+      </nv>
+      <nv name="projectFile" value="" id="">
+         <nv name="version" value="1" id="">
+         </nv>
+         <nv name="path" value="C:\FF\DDL\HTK\1000_CustomFB.ddl" id="">
+         </nv>
+         <nv name="flags" value="" id="">
+         </nv>
+         <nv name="mainFile" value="0" id="">
+         </nv>
+         <nv name="shortName" value="1000_CustomFB.ddl" id="">
+         </nv>
+         <nv name="exclude" value="1" id="">
+         </nv>
+         <nv name="folderName" value="" id="">
+         </nv>
+      </nv>
+      <nv name="projectFile" value="" id="">
+         <nv name="version" value="1" id="">
+         </nv>
+         <nv name="path" value="C:\FF\DDL\HTK\1000_ChannelTB.ddl" id="">
+         </nv>
+         <nv name="flags" value="" id="">
+         </nv>
+         <nv name="mainFile" value="0" id="">
+         </nv>
+         <nv name="shortName" value="1000_ChannelTB.ddl" id="">
+         </nv>
+         <nv name="exclude" value="1" id="">
+         </nv>
+         <nv name="folderName" value="" id="">
+         </nv>
+      </nv>
+      <nv name="projectFile" value="" id="">
+         <nv name="version" value="1" id="">
+         </nv>
+         <nv name="path" value="C:\FF\DDL\HTK\1000_VisualTB.ddl" id="">
+         </nv>
+         <nv name="flags" value="" id="">
+         </nv>
+         <nv name="mainFile" value="0" id="">
+         </nv>
+         <nv name="shortName" value="1000_VisualTB.ddl" id="">
+         </nv>
+         <nv name="exclude" value="1" id="">
+         </nv>
+         <nv name="folderName" value="" id="">
+         </nv>
+      </nv>
+      <nv name="projectFile" value="" id="">
+         <nv name="version" value="1" id="">
+         </nv>
+         <nv name="path" value="C:\FF\DDL\HTK\1000_DataTypesTB.ddl" id="">
+         </nv>
+         <nv name="flags" value="" id="">
+         </nv>
+         <nv name="mainFile" value="0" id="">
+         </nv>
+         <nv name="shortName" value="1000_DataTypesTB.ddl" id="">
+         </nv>
+         <nv name="exclude" value="1" id="">
+         </nv>
+         <nv name="folderName" value="" id="">
+         </nv>
+      </nv>
+      <nv name="projectFile" value="" id="">
+         <nv name="version" value="1" id="">
+         </nv>
+         <nv name="path" value="C:\FF\DDL\HTK\1000_CondTB1.ddl" id="">
+         </nv>
+         <nv name="flags" value="" id="">
+         </nv>
+         <nv name="mainFile" value="0" id="">
+         </nv>
+         <nv name="shortName" value="1000_CondTB1.ddl" id="">
+         </nv>
+         <nv name="exclude" value="1" id="">
+         </nv>
+         <nv name="folderName" value="" id="">
+         </nv>
+      </nv>
+      <nv name="projectFile" value="" id="">
+         <nv name="version" value="1" id="">
+         </nv>
+         <nv name="path" value="C:\FF\DDL\HTK\1000_CondTB2.ddl" id="">
+         </nv>
+         <nv name="flags" value="" id="">
+         </nv>
+         <nv name="mainFile" value="0" id="">
+         </nv>
+         <nv name="shortName" value="1000_CondTB2.ddl" id="">
+         </nv>
+         <nv name="exclude" value="1" id="">
+         </nv>
+         <nv name="folderName" value="" id="">
+         </nv>
+      </nv>
+      <nv name="projectFile" value="" id="">
+         <nv name="version" value="1" id="">
+         </nv>
+         <nv name="path" value="C:\FF\DDL\HTK\1000_Menus.ddl" id="">
+         </nv>
+         <nv name="flags" value="" id="">
+         </nv>
+         <nv name="mainFile" value="0" id="">
+         </nv>
+         <nv name="shortName" value="1000_Menus.ddl" id="">
+         </nv>
+         <nv name="exclude" value="1" id="">
+         </nv>
+         <nv name="folderName" value="" id="">
+         </nv>
+      </nv>
+      <nv name="projectFile" value="" id="">
+         <nv name="version" value="1" id="">
+         </nv>
+         <nv name="path" value="C:\FF\DDL\HTK\1000_Methods.ddl" id="">
+         </nv>
+         <nv name="flags" value="" id="">
+         </nv>
+         <nv name="mainFile" value="0" id="">
+         </nv>
+         <nv name="shortName" value="1000_Methods.ddl" id="">
+         </nv>
+         <nv name="exclude" value="1" id="">
+         </nv>
+         <nv name="folderName" value="" id="">
+         </nv>
+      </nv>
+      <nv name="projectFile" value="" id="">
+         <nv name="version" value="1" id="">
+         </nv>
+         <nv name="path" value="C:\FF\DDL\HTK\1000_Visualizations.ddl" id="">
+         </nv>
+         <nv name="flags" value="" id="">
+         </nv>
+         <nv name="mainFile" value="0" id="">
+         </nv>
+         <nv name="shortName" value="1000_Visualizations.ddl" id="">
+         </nv>
+         <nv name="exclude" value="1" id="">
+         </nv>
+         <nv name="folderName" value="" id="">
+         </nv>
+      </nv>
+      <nv name="projectFile" value="" id="">
+         <nv name="version" value="1" id="">
+         </nv>
+         <nv name="path" value="C:\FF\DDL\HTK\1000_Test_Case_File_and_List.ddl" id="">
+         </nv>
+         <nv name="flags" value="" id="">
+         </nv>
+         <nv name="mainFile" value="0" id="">
+         </nv>
+         <nv name="shortName" value="1000_Test_Case_File_and_List.ddl" id="">
+         </nv>
+         <nv name="exclude" value="1" id="">
+         </nv>
+         <nv name="folderName" value="" id="">
+         </nv>
+      </nv>
+      <nv name="projectFile" value="" id="">
+         <nv name="version" value="1" id="">
+         </nv>
+         <nv name="path" value="C:\FF\DDL\HTK\1000_Test_Case_Chart.ddl" id="">
+         </nv>
+         <nv name="flags" value="" id="">
+         </nv>
+         <nv name="mainFile" value="0" id="">
+         </nv>
+         <nv name="shortName" value="1000_Test_Case_Chart.ddl" id="">
+         </nv>
+         <nv name="exclude" value="1" id="">
+         </nv>
+         <nv name="folderName" value="" id="">
+         </nv>
+      </nv>
+      <nv name="projectFile" value="" id="">
+         <nv name="version" value="1" id="">
+         </nv>
+         <nv name="path" value="C:\FF\DDL\HTK\1000_Test_Case_Conditional.ddl" id="">
+         </nv>
+         <nv name="flags" value="" id="">
+         </nv>
+         <nv name="mainFile" value="0" id="">
+         </nv>
+         <nv name="shortName" value="1000_Test_Case_Conditional.ddl" id="">
+         </nv>
+         <nv name="exclude" value="1" id="">
+         </nv>
+         <nv name="folderName" value="" id="">
+         </nv>
+      </nv>
+      <nv name="projectFile" value="" id="">
+         <nv name="version" value="1" id="">
+         </nv>
+         <nv name="path" value="C:\FF\DDL\HTK\1000_Test_Case_Conditional_Menus.ddl" id="">
+         </nv>
+         <nv name="flags" value="" id="">
+         </nv>
+         <nv name="mainFile" value="0" id="">
+         </nv>
+         <nv name="shortName" value="1000_Test_Case_Conditional_Menus.ddl" id="">
+         </nv>
+         <nv name="exclude" value="1" id="">
+         </nv>
+         <nv name="folderName" value="" id="">
+         </nv>
+      </nv>
+      <nv name="projectFile" value="" id="">
+         <nv name="version" value="1" id="">
+         </nv>
+         <nv name="path" value="C:\FF\DDL\HTK\1000_Test_Case_Graph.ddl" id="">
+         </nv>
+         <nv name="flags" value="" id="">
+         </nv>
+         <nv name="mainFile" value="0" id="">
+         </nv>
+         <nv name="shortName" value="1000_Test_Case_Graph.ddl" id="">
+         </nv>
+         <nv name="exclude" value="1" id="">
+         </nv>
+         <nv name="folderName" value="" id="">
+         </nv>
+      </nv>
+      <nv name="projectFile" value="" id="">
+         <nv name="version" value="1" id="">
+         </nv>
+         <nv name="path" value="C:\FF\DDL\HTK\1000_Test_Case_Grid.ddl" id="">
+         </nv>
+         <nv name="flags" value="" id="">
+         </nv>
+         <nv name="mainFile" value="0" id="">
+         </nv>
+         <nv name="shortName" value="1000_Test_Case_Grid.ddl" id="">
+         </nv>
+         <nv name="exclude" value="1" id="">
+         </nv>
+         <nv name="folderName" value="" id="">
+         </nv>
+      </nv>
+      <nv name="projectFile" value="" id="">
+         <nv name="version" value="1" id="">
+         </nv>
+         <nv name="path" value="C:\FF\DDL\HTK\1000_Test_Case_Image.ddl" id="">
+         </nv>
+         <nv name="flags" value="" id="">
+         </nv>
+         <nv name="mainFile" value="0" id="">
+         </nv>
+         <nv name="shortName" value="1000_Test_Case_Image.ddl" id="">
+         </nv>
+         <nv name="exclude" value="1" id="">
+         </nv>
+         <nv name="folderName" value="" id="">
+         </nv>
+      </nv>
+      <nv name="projectFile" value="" id="">
+         <nv name="version" value="1" id="">
+         </nv>
+         <nv name="path" value="C:\FF\DDL\HTK\1000_Test_Case_Menu.ddl" id="">
+         </nv>
+         <nv name="flags" value="" id="">
+         </nv>
+         <nv name="mainFile" value="0" id="">
+         </nv>
+         <nv name="shortName" value="1000_Test_Case_Menu.ddl" id="">
+         </nv>
+         <nv name="exclude" value="1" id="">
+         </nv>
+         <nv name="folderName" value="" id="">
+         </nv>
+      </nv>
+      <nv name="projectFile" value="" id="">
+         <nv name="version" value="1" id="">
+         </nv>
+         <nv name="path" value="C:\FF\DDL\HTK\1000_Test_Case_Misc.ddl" id="">
+         </nv>
+         <nv name="flags" value="" id="">
+         </nv>
+         <nv name="mainFile" value="0" id="">
+         </nv>
+         <nv name="shortName" value="1000_Test_Case_Misc.ddl" id="">
+         </nv>
+         <nv name="exclude" value="1" id="">
+         </nv>
+         <nv name="folderName" value="" id="">
+         </nv>
+      </nv>
+      <nv name="projectFile" value="" id="">
+         <nv name="version" value="1" id="">
+         </nv>
+         <nv name="path" value="C:\FF\DDL\HTK\1000_Device.ddl" id="">
+         </nv>
+         <nv name="flags" value="-DDD_REV" id="">
+         </nv>
+         <nv name="mainFile" value="1" id="">
+         </nv>
+         <nv name="shortName" value="1000_Device.ddl" id="">
+         </nv>
+         <nv name="exclude" value="0" id="">
+         </nv>
+         <nv name="folderName" value="" id="">
+         </nv>
+      </nv>
+      <nv name="folders" value="" id="">
+      </nv>
+   </nv>
+   <nv name="devsimFiles" value="" id="">
+      <nv name="version" value="2" id="">
+      </nv>
+      <nv name="count" value="0" id="">
+      </nv>
+      <nv name="folders" value="" id="">
+      </nv>
+   </nv>
+</nv>

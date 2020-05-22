@@ -1,0 +1,315 @@
+#
+# %W% %G%
+#
+# rio_xdcr_parm symbols
+#
+# Items:    0x80023B00 -> 0X80023BFF
+# Members:  0xC0013B00 -> 0xC0013BFF
+#
+#
+
+variable    __var_names_entry                   visible         0x80023B00
+array       __var_names4                                        0x80023B01
+array       __var_names8                                        0x80023B02
+array       __var_names16                                       0x80023B03
+array       __var_names32                                       0x80023B04
+array       __var_names64a                                      0x80023B05
+array       __var_names64b                                      0x80023B06
+record      __process_value_a                                   0x80023B09
+record      __process_value_b                                   0x80023B0A
+variable    __h1_vfd_id_1                       unsigned        0x80023B0B
+variable    __h1_vfd_id_2                       unsigned        0x80023B0C
+variable    __h1_vfd_id_3                       unsigned        0x80023B0D
+variable    __h1_vfd_id_4                       unsigned        0x80023B0E
+record      __process_value_range_a_1                           0x80023B0F
+record      __process_value_range_a_2                           0x80023B10
+record      __process_value_range_a_3                           0x80023B11
+record      __process_value_range_a_4                           0x80023B12
+variable    __overrng_bad                       float           0x80023B13
+variable    __overrng_unc                       float           0x80023B14
+variable    __underrng_unc                      float           0x80023B15
+variable    __underrng_bad                      float           0x80023B16
+variable    __overrng_lim                       float           0x80023B17
+variable    __underrng_lim                      float           0x80023B18
+record      __io_threshold_a_1                                  0x80023B1A
+record      __io_threshold_a_2                                  0x80023B1B
+record      __io_threshold_a_3                                  0x80023B1C
+record      __io_threshold_a_4                                  0x80023B1D
+record      __process_value_a_1                                 0x80023B21
+record      __process_value_a_2                                 0x80023B22
+record      __process_value_a_3                                 0x80023B23
+record      __process_value_a_4                                 0x80023B24
+record      __process_value_a_5                                 0x80023B25
+record      __process_value_a_6                                 0x80023B26
+record      __process_value_a_7                                 0x80023B27
+record      __process_value_a_8                                 0x80023B28
+record      __process_value_a_9                                 0x80023B29
+record      __process_value_a_10                                0x80023B2A
+record      __process_value_a_11                                0x80023B2B
+record      __process_value_a_12                                0x80023B2C
+record      __process_value_a_13                                0x80023B2D
+record      __process_value_a_14                                0x80023B2E
+record      __process_value_a_15                                0x80023B2F
+record      __process_value_a_16                                0x80023B30
+record      __process_value_b_1                                 0x80023B31
+record      __process_value_b_2                                 0x80023B32
+record      __process_value_b_3                                 0x80023B33
+record      __process_value_b_4                                 0x80023B34
+record      __process_value_b_5                                 0x80023B35
+record      __process_value_b_6                                 0x80023B36
+record      __process_value_b_7                                 0x80023B37
+record      __process_value_b_8                                 0x80023B38
+record      __process_value_b_9                                 0x80023B39
+record      __process_value_b_10                                0x80023B3A
+record      __process_value_b_11                                0x80023B3B
+record      __process_value_b_12                                0x80023B3C
+record      __process_value_b_13                                0x80023B3D
+record      __process_value_b_14                                0x80023B3E
+record      __process_value_b_15                                0x80023B3F
+record      __process_value_b_16                                0x80023B40
+record      __process_value_b_17                                0x80023B41
+record      __process_value_b_18                                0x80023B42
+record      __process_value_b_19                                0x80023B43
+record      __process_value_b_20                                0x80023B44
+record      __process_value_b_21                                0x80023B45
+record      __process_value_b_22                                0x80023B46
+record      __process_value_b_23                                0x80023B47
+record      __process_value_b_24                                0x80023B48
+record      __process_value_b_25                                0x80023B49
+record      __process_value_b_26                                0x80023B4A
+record      __process_value_b_27                                0x80023B4B
+record      __process_value_b_28                                0x80023B4C
+record      __process_value_b_29                                0x80023B4D
+record      __process_value_b_30                                0x80023B4E
+record      __process_value_b_31                                0x80023B4F
+record      __process_value_b_32                                0x80023B50
+record      __process_value_b_33                                0x80023B51
+record      __process_value_b_34                                0x80023B52
+record      __process_value_b_35                                0x80023B53
+record      __process_value_b_36                                0x80023B54
+record      __process_value_b_37                                0x80023B55
+record      __process_value_b_38                                0x80023B56
+record      __process_value_b_39                                0x80023B57
+record      __process_value_b_40                                0x80023B58
+record      __process_value_b_41                                0x80023B59
+record      __process_value_b_42                                0x80023B5A
+record      __process_value_b_43                                0x80023B5B
+record      __process_value_b_44                                0x80023B5C
+record      __process_value_b_45                                0x80023B5D
+record      __process_value_b_46                                0x80023B5E
+record      __process_value_b_47                                0x80023B5F
+record      __process_value_b_48                                0x80023B60
+record      __process_value_b_49                                0x80023B61
+record      __process_value_b_50                                0x80023B62
+record      __process_value_b_51                                0x80023B63
+record      __process_value_b_52                                0x80023B64
+record      __process_value_b_53                                0x80023B65
+record      __process_value_b_54                                0x80023B66
+record      __process_value_b_55                                0x80023B67
+record      __process_value_b_56                                0x80023B68
+record      __process_value_b_57                                0x80023B69
+record      __process_value_b_58                                0x80023B6A
+record      __process_value_b_59                                0x80023B6B
+record      __process_value_b_60                                0x80023B6C
+record      __process_value_b_61                                0x80023B6D
+record      __process_value_b_62                                0x80023B6E
+record      __process_value_b_63                                0x80023B6F
+record      __process_value_b_64                                0x80023B70
+variable    __var_dir_entry                     enumerated      0x80023B71
+array       __var_dir4                                          0x80023B72
+array       __var_dir8                                          0x80023B73
+array       __var_dir16                                         0x80023B74
+array       __var_dir32                                         0x80023B75
+array       __var_dir64                                         0x80023B76
+variable   __expd_manufac_id                    enumerated      0x80023B7A
+variable   __expd_dev_type                      enumerated      0x80023B7B
+variable   __expd_dev_rev                       unsigned        0x80023B7C
+variable   __expd_dd_rev                        unsigned        0x80023B7D
+variable   __vfd_ref                            unsigned        0x80023B7E
+record      __process_value_range_a_5                           0x80023B7F
+record      __process_value_range_a_6                           0x80023B80
+record      __process_value_range_a_7                           0x80023B81
+record      __process_value_range_a_8                           0x80023B82
+record      __process_value_range_a_9                           0x80023B83
+record      __process_value_range_a_10                          0x80023B84
+record      __process_value_range_a_11                          0x80023B85
+record      __process_value_range_a_12                          0x80023B86
+record      __process_value_range_a_13                          0x80023B87
+record      __process_value_range_a_14                          0x80023B88
+record      __process_value_range_a_15                          0x80023B89
+record      __process_value_range_a_16                          0x80023B8A
+record      __io_threshold_a_5                                  0x80023B8B
+record      __io_threshold_a_6                                  0x80023B8C
+record      __io_threshold_a_7                                  0x80023B8D
+record      __io_threshold_a_8                                  0x80023B8E
+record      __io_threshold_a_9                                  0x80023B8F
+record      __io_threshold_a_10                                 0x80023B90
+record      __io_threshold_a_11                                 0x80023B91
+record      __io_threshold_a_12                                 0x80023B92
+record      __io_threshold_a_13                                 0x80023B93
+record      __io_threshold_a_14                                 0x80023B94
+record      __io_threshold_a_15                                 0x80023B95
+record      __io_threshold_a_16                                 0x80023B96
+
+member      VAR_NAMES_ENTRY                     parameter       0xC0013B00
+member      VAR_NAMES4                          parameter       0xC0013B01
+member      VAR_NAMES8                          parameter       0xC0013B02
+member      VAR_NAMES16                         parameter       0xC0013B03
+member      VAR_NAMES32                         parameter       0xC0013B04
+member      VAR_NAMES64a                        parameter       0xC0013B05
+member      VAR_NAMES64b                        parameter       0xC0013B06
+member      PROCESS_VALUE_A                     parameter       0xC0013B09
+member      PROCESS_VALUE_B                     parameter       0xC0013B0A
+member      H1_VFD_ID_1                         parameter       0xC0013B0B
+member      H1_VFD_ID_2                         parameter       0xC0013B0C
+member      H1_VFD_ID_3                         parameter       0xC0013B0D
+member      H1_VFD_ID_4                         parameter       0xC0013B0E
+member      PROCESS_VALUE_RANGE_A_1             parameter       0xC0013B0F
+member      PROCESS_VALUE_RANGE_A_2             parameter       0xC0013B10
+member      PROCESS_VALUE_RANGE_A_3             parameter       0xC0013B11
+member      PROCESS_VALUE_RANGE_A_4             parameter       0xC0013B12
+member      OVERRNG_BAD                         record          0xC0013B13
+member      OVERRNG_UNC                         record          0xC0013B14
+member      UNDERRNG_UNC                        record          0xC0013B15
+member      UNDERRNG_BAD                        record          0xC0013B16
+member      OVERRNG_LIM                         record          0xC0013B17
+member      UNDERRNG_LIM                        record          0xC0013B18
+member      IO_THRESHOLD_A_1                    parameter       0xC0013B1A
+member      IO_THRESHOLD_A_2                    parameter       0xC0013B1B
+member      IO_THRESHOLD_A_3                    parameter       0xC0013B1C
+member      IO_THRESHOLD_A_4                    parameter       0xC0013B1D
+member      VL_H1_VFD_ID_1                      variable-list   0xC0013B1E
+member      VL_H1_VFD_ID_2                      variable-list   0xC0013B1F
+member      VL_ERROR_STATUS                     variable-list   0xC0013B20
+member      PROCESS_VALUE_A_1                   parameter       0xC0013B21
+member      PROCESS_VALUE_A_2                   parameter       0xC0013B22
+member      PROCESS_VALUE_A_3                   parameter       0xC0013B23
+member      PROCESS_VALUE_A_4                   parameter       0xC0013B24
+member      PROCESS_VALUE_A_5                   parameter       0xC0013B25
+member      PROCESS_VALUE_A_6                   parameter       0xC0013B26
+member      PROCESS_VALUE_A_7                   parameter       0xC0013B27
+member      PROCESS_VALUE_A_8                   parameter       0xC0013B28
+member      PROCESS_VALUE_A_9                   parameter       0xC0013B29
+member      PROCESS_VALUE_A_10                  parameter       0xC0013B2A
+member      PROCESS_VALUE_A_11                  parameter       0xC0013B2B
+member      PROCESS_VALUE_A_12                  parameter       0xC0013B2C
+member      PROCESS_VALUE_A_13                  parameter       0xC0013B2D
+member      PROCESS_VALUE_A_14                  parameter       0xC0013B2E
+member      PROCESS_VALUE_A_15                  parameter       0xC0013B2F
+member      PROCESS_VALUE_A_16                  parameter       0xC0013B30
+member      PROCESS_VALUE_B_1                   parameter       0xC0013B31
+member      PROCESS_VALUE_B_2                   parameter       0xC0013B32
+member      PROCESS_VALUE_B_3                   parameter       0xC0013B33
+member      PROCESS_VALUE_B_4                   parameter       0xC0013B34
+member      PROCESS_VALUE_B_5                   parameter       0xC0013B35
+member      PROCESS_VALUE_B_6                   parameter       0xC0013B36
+member      PROCESS_VALUE_B_7                   parameter       0xC0013B37
+member      PROCESS_VALUE_B_8                   parameter       0xC0013B38
+member      PROCESS_VALUE_B_9                   parameter       0xC0013B39
+member      PROCESS_VALUE_B_10                  parameter       0xC0013B3A
+member      PROCESS_VALUE_B_11                  parameter       0xC0013B3B
+member      PROCESS_VALUE_B_12                  parameter       0xC0013B3C
+member      PROCESS_VALUE_B_13                  parameter       0xC0013B3D
+member      PROCESS_VALUE_B_14                  parameter       0xC0013B3E
+member      PROCESS_VALUE_B_15                  parameter       0xC0013B3F
+member      PROCESS_VALUE_B_16                  parameter       0xC0013B40
+member      PROCESS_VALUE_B_17                  parameter       0xC0013B41
+member      PROCESS_VALUE_B_18                  parameter       0xC0013B42
+member      PROCESS_VALUE_B_19                  parameter       0xC0013B43
+member      PROCESS_VALUE_B_20                  parameter       0xC0013B44
+member      PROCESS_VALUE_B_21                  parameter       0xC0013B45
+member      PROCESS_VALUE_B_22                  parameter       0xC0013B46
+member      PROCESS_VALUE_B_23                  parameter       0xC0013B47
+member      PROCESS_VALUE_B_24                  parameter       0xC0013B48
+member      PROCESS_VALUE_B_25                  parameter       0xC0013B49
+member      PROCESS_VALUE_B_26                  parameter       0xC0013B4A
+member      PROCESS_VALUE_B_27                  parameter       0xC0013B4B
+member      PROCESS_VALUE_B_28                  parameter       0xC0013B4C
+member      PROCESS_VALUE_B_29                  parameter       0xC0013B4D
+member      PROCESS_VALUE_B_30                  parameter       0xC0013B4E
+member      PROCESS_VALUE_B_31                  parameter       0xC0013B4F
+member      PROCESS_VALUE_B_32                  parameter       0xC0013B50
+member      PROCESS_VALUE_B_33                  parameter       0xC0013B51
+member      PROCESS_VALUE_B_34                  parameter       0xC0013B52
+member      PROCESS_VALUE_B_35                  parameter       0xC0013B53
+member      PROCESS_VALUE_B_36                  parameter       0xC0013B54
+member      PROCESS_VALUE_B_37                  parameter       0xC0013B55
+member      PROCESS_VALUE_B_38                  parameter       0xC0013B56
+member      PROCESS_VALUE_B_39                  parameter       0xC0013B57
+member      PROCESS_VALUE_B_40                  parameter       0xC0013B58
+member      PROCESS_VALUE_B_41                  parameter       0xC0013B59
+member      PROCESS_VALUE_B_42                  parameter       0xC0013B5A
+member      PROCESS_VALUE_B_43                  parameter       0xC0013B5B
+member      PROCESS_VALUE_B_44                  parameter       0xC0013B5C
+member      PROCESS_VALUE_B_45                  parameter       0xC0013B5D
+member      PROCESS_VALUE_B_46                  parameter       0xC0013B5E
+member      PROCESS_VALUE_B_47                  parameter       0xC0013B5F
+member      PROCESS_VALUE_B_48                  parameter       0xC0013B60
+member      PROCESS_VALUE_B_49                  parameter       0xC0013B61
+member      PROCESS_VALUE_B_50                  parameter       0xC0013B62
+member      PROCESS_VALUE_B_51                  parameter       0xC0013B63
+member      PROCESS_VALUE_B_52                  parameter       0xC0013B64
+member      PROCESS_VALUE_B_53                  parameter       0xC0013B65
+member      PROCESS_VALUE_B_54                  parameter       0xC0013B66
+member      PROCESS_VALUE_B_55                  parameter       0xC0013B67
+member      PROCESS_VALUE_B_56                  parameter       0xC0013B68
+member      PROCESS_VALUE_B_57                  parameter       0xC0013B69
+member      PROCESS_VALUE_B_58                  parameter       0xC0013B6A
+member      PROCESS_VALUE_B_59                  parameter       0xC0013B6B
+member      PROCESS_VALUE_B_60                  parameter       0xC0013B6C
+member      PROCESS_VALUE_B_61                  parameter       0xC0013B6D
+member      PROCESS_VALUE_B_62                  parameter       0xC0013B6E
+member      PROCESS_VALUE_B_63                  parameter       0xC0013B6F
+member      PROCESS_VALUE_B_64                  parameter       0xC0013B70
+member      VAR_DIR_ENTRY                       parameter       0xC0013B71
+member      VAR_DIR4                            parameter       0xC0013B72
+member      VAR_DIR8                            parameter       0xC0013B73
+member      VAR_DIR16                           parameter       0xC0013B74
+member      VAR_DIR32                           parameter       0xC0013B75
+member      VAR_DIR64                           parameter       0xC0013B76
+member      EXPD_MANUFAC_ID                     parameter       0xC0013B7A
+member      EXPD_DEV_TYPE                       parameter       0xC0013B7B
+member      EXPD_DEV_REV                        parameter       0xC0013B7C
+member      EXPD_DD_REV                         parameter       0xC0013B7D
+member      VFD_REF                             parameter       0xC0013B7E
+member      PROCESS_VALUE_RANGE_A_5             parameter       0xC0013B7F
+member      PROCESS_VALUE_RANGE_A_6             parameter       0xC0013B80
+member      PROCESS_VALUE_RANGE_A_7             parameter       0xC0013B81
+member      PROCESS_VALUE_RANGE_A_8             parameter       0xC0013B82
+member      PROCESS_VALUE_RANGE_A_9             parameter       0xC0013B83
+member      PROCESS_VALUE_RANGE_A_10            parameter       0xC0013B84
+member      PROCESS_VALUE_RANGE_A_11            parameter       0xC0013B85
+member      PROCESS_VALUE_RANGE_A_12            parameter       0xC0013B86
+member      PROCESS_VALUE_RANGE_A_13            parameter       0xC0013B87
+member      PROCESS_VALUE_RANGE_A_14            parameter       0xC0013B88
+member      PROCESS_VALUE_RANGE_A_15            parameter       0xC0013B89
+member      PROCESS_VALUE_RANGE_A_16            parameter       0xC0013B8A
+member      IO_THRESHOLD_A_5                    parameter       0xC0013B8B
+member      IO_THRESHOLD_A_6                    parameter       0xC0013B8C
+member      IO_THRESHOLD_A_7                    parameter       0xC0013B8D
+member      IO_THRESHOLD_A_8                    parameter       0xC0013B8E
+member      IO_THRESHOLD_A_9                    parameter       0xC0013B8F
+member      IO_THRESHOLD_A_10                   parameter       0xC0013B90
+member      IO_THRESHOLD_A_11                   parameter       0xC0013B91
+member      IO_THRESHOLD_A_12                   parameter       0xC0013B92
+member      IO_THRESHOLD_A_13                   parameter       0xC0013B93
+member      IO_THRESHOLD_A_14                   parameter       0xC0013B94
+member      IO_THRESHOLD_A_15                   parameter       0xC0013B95
+member      IO_THRESHOLD_A_16                   parameter       0xC0013B96
+member      VL_PROCESS_VALUE_RANGE_A_1          variable-list   0xC0013B97
+member      VL_PROCESS_VALUE_RANGE_A_2          variable-list   0xC0013B98
+member      VL_PROCESS_VALUE_RANGE_A_3          variable-list   0xC0013B99
+member      VL_PROCESS_VALUE_RANGE_A_4          variable-list   0xC0013B9A
+member      VL_IO_THRESHOLD_A_1                 variable-list   0xC0013B9B
+member      VL_IO_THRESHOLD_A_2                 variable-list   0xC0013B9C
+member      VL_IO_THRESHOLD_A_3                 variable-list   0xC0013B9D
+member      VL_IO_THRESHOLD_A_4                 variable-list   0xC0013B9E
+member      VL_PROCESS_VALUE_A_1                variable-list   0xC0013B9F
+member      VL_PROCESS_VALUE_A_2                variable-list   0xC0013BA0
+member      VL_PROCESS_VALUE_A_3                variable-list   0xC0013BA1
+member      VL_PROCESS_VALUE_A_4                variable-list   0xC0013BA2
+member      VL_EXPD_MANUFAC_ID                  variable-list   0xC0013BA4
+member      VL_EXPD_DEV_TYPE                    variable-list   0xC0013BA5
+member      VL_EXPD_DEV_REV                     variable-list   0xC0013BA6
+member      VL_EXPD_DD_REV                      variable-list   0xC0013BA7
+

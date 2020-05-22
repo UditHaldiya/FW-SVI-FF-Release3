@@ -1,0 +1,16 @@
+#
+# %W% %G%
+#
+# Resource block symbols
+#
+# Items:	0x80020310 -> 0x8002032F
+# Members:	0xC0010310 -> 0xC0010310
+#
+block		__resource_block		0x80020310
+var-list	__res_view_1			0x80020311
+var-list	__res_view_2			0x80020312
+var-list	__res_view_3			0x80020313
+var-list	__res_view_4			0x80020314
+record		__res_character			0x80020315
+collection      no_download_res	RESERVED	0x8002032E
+collection      upload_wanted_res	RESERVED	0x8002032F

@@ -1,0 +1,204 @@
+#
+# %W% %G%
+#
+# rio_hart_xdcr_parm symbols
+#
+# Items:    0x80023D00 -> 0X80023DFF
+# Members:  0xC0013D00 -> 0xC0013DFF
+#
+#
+
+record      __io_threshold                                      0x80023D19
+variable    __reserved_ds_175                   octet           0x80023D1E
+variable    __hart_medium                       unsigned        0x80023D1F
+variable    __hart_version                      unsigned        0x80023D20
+variable    __num_of_process_variables          unsigned        0x80023D21
+variable    __dd_revision                       unsigned        0x80023D22
+variable    __device_revision                   unsigned        0x80023D23
+variable    __device_type                       unsigned        0x80023D24
+variable    __manufacture_id                    unsigned        0x80023D25
+variable    __reserved_ds_175_ro                octet           0x80023D26
+variable    __hart_medium_ro                    unsigned        0x80023D27
+variable    __hart_version_ro                   unsigned        0x80023D28
+variable    __num_of_process_variables_ro       unsigned        0x80023D29
+variable    __dd_revision_ro                    unsigned        0x80023D30
+variable    __device_revision_ro                unsigned        0x80023D31
+variable    __device_type_ro                    unsigned        0x80023D32
+variable    __manufacture_id_ro                 unsigned        0x80023D33
+record      __hart_expd_dev_info                                0x80023D34
+record      __hart_actl_dev_info                                0x80023D35
+variable    __hart_cmd_entry                    octet           0x80023D36
+variable    __hart_resp_entry                   octet           0x80023D37
+array       __hart_cmd                                          0x80023D38
+array       __hart_resp                                         0x80023D39
+record      __hart_ind                                          0x80023D3A
+variable    __hart_com_stat                     enumerated      0x80023D3B
+variable    __hart_diag_map_entry               enumerated      0x80023D3C
+array       __hart_diag_map                                     0x80023D3D
+variable    __hart_tstamp                       time-value      0x80023D3E
+variable    __hart_bad_tmout                    unsigned        0x80023D3F
+variable    __hart_unc_tmout                    unsigned        0x80023D40
+variable    __hart_var_codes8_entry             unsigned        0x80023D41
+array       __hart_var_codes8                                   0x80023D42
+record      __hart_pv                                           0x80023D43
+record      __hart_sv                                           0x80023D44
+record      __hart_tv                                           0x80023D45
+record      __hart_qv                                           0x80023D46
+record      __hart_5v                                           0x80023D47
+record      __hart_6v                                           0x80023D48
+record      __hart_7v                                           0x80023D49
+record      __hart_8v                                           0x80023D4A
+variable    __hart_lrl                          float           0x80023D4B
+variable    __hart_url                          float           0x80023D4C
+variable    __var_units9_entry                  unsigned        0x80023D4D
+array       __var_units9                                        0x80023D4E
+variable    __var_names9_entry                  visible         0x80023D4F
+array       __var_names9                                        0x80023D50
+array       __var_dir9                                          0x80023D51
+variable    __publish_control                   enumerated      0x80023D52
+variable    __hart_command_expansion            unsigned        0x80023D53
+variable    __device_variable_code_0            unsigned        0x80023D54
+variable    __device_variable_code_1            unsigned        0x80023D55
+variable    __device_variable_code_2            unsigned        0x80023D56
+variable    __device_variable_code_3            unsigned        0x80023D57
+variable    __device_variable_code_4            unsigned        0x80023D58
+variable    __device_variable_code_5            unsigned        0x80023D59
+variable    __device_variable_code_6            unsigned        0x80023D5A
+variable    __device_variable_code_7            unsigned        0x80023D5B
+variable    __publish_data_ref                  unsigned        0x80023D5C
+variable    __max_publish_count                 unsigned        0x80023D5D
+variable    __hart_command_number               unsigned        0x80023D5E
+variable    __reserved_ds_183_u16               unsigned        0x80023D5F
+variable    __minimum_update_period             float           0x80023D60
+variable    __maximum_update_period             float           0x80023D61
+variable    __trigger_mode                      enumerated      0x80023D62
+variable    __device_variable_classification    enumerated      0x80023D63
+variable    __hart_unit                         enumerated      0x80023D64
+variable    __reserved_ds_183_u8                unsigned        0x80023D65
+variable    __trigger_level                     float           0x80023D66
+record __hart_burst_ctrl_1                                      0x80023D67
+record __hart_burst_ctrl_2                                      0x80023D68
+record __hart_burst_ctrl_3                                      0x80023D69
+record __hart_burst_ctrl_4                                      0x80023D6A
+variable    __hart_address                      unsigned        0x80023D6B
+variable    __reserved_8_DS_175_1               unsigned        0x80023D6C
+variable    __hart_device_type                  unsigned        0x80023D6D
+variable    __hart_manufacturer_id              unsigned        0x80023D6E
+variable    __hart_distributor_id               unsigned        0x80023D6F
+variable    __reserved_8_DS_175_2               unsigned        0x80023D70
+variable    __hart_device_profile               unsigned        0x80023D71
+variable    __hart_device_id                    unsigned        0x80023D72
+variable    __hart_address_ro                   unsigned        0x80023D73
+variable    __reserved_8_DS_175_1_ro            unsigned        0x80023D74
+variable    __hart_device_type_ro               unsigned        0x80023D75
+variable    __hart_manufacturer_id_ro           unsigned        0x80023D76
+variable    __hart_distributor_id_ro            unsigned        0x80023D77
+variable    __reserved_8_DS_175_2_ro            unsigned        0x80023D78
+variable    __hart_device_profile_ro            unsigned        0x80023D79
+variable    __dup_var_name_def_9                bitstring       0x80023D7A
+variable    __hart_device_id_ro                 unsigned        0x80023D7B
+variable    __ds_184_pad                        unsigned        0x80023D7C
+variable    __response_code                     unsigned        0x80023D7D
+variable    __response_message                  octet           0x80023D7E
+variable    __var_dir9_entry                    enumerated      0x80023D7F
+variable    __hart_ind_pri                      unsigned        0x80023D80
+
+member      VL_HART_TSTAMP                      variable-list   0xC0013D00
+member      VL_HART_PV                          variable-list   0xC0013D01
+member      VL_HART_SV                          variable-list   0xC0013D02
+member      VL_HART_TV                          variable-list   0xC0013D03
+member      VL_HART_QV                          variable-list   0xC0013D04
+member      VL_HART_5V                          variable-list   0xC0013D05
+member      VL_HART_6V                          variable-list   0xC0013D06
+member      VL_HART_7V                          variable-list   0xC0013D07
+member      VL_HART_8V                          variable-list   0xC0013D08
+member      VL_HART_EXPD_DEV_INFO               variable-list   0xC0013D09
+member      VL_HART_DIAG_MAP                    variable-list   0xC0013D0A
+member      VL_HART_URL                         variable-list   0xC0013D0B
+member      VL_HART_LRL                         variable-list   0xC0013D0C
+member      VL_IO_THRESHOLD                     variable-list   0xC0013D0D
+member      VL_HART_BAD_TMOUT                   variable-list   0xC0013D0E
+member      VL_HART_UNC_TMOUT                   variable-list   0xC0013D0F
+member      VL_HART_VAR_CODES8                  variable-list   0xC0013D10
+member      VL_VAR_UNITS9                       variable-list   0xC0013D11
+member      VL_HART_ACTL_DEV_INFO               variable-list   0xC0013D12
+member      VL_HART_IND_PRI                     variable-list   0xC0013D13
+member	    IO_THRESHOLD                        parameter       0xC0013D19
+member      RESERVED_DS_175                     record          0xC0013D1E
+member      HART_MEDIUM                         record          0xC0013D1F
+member      HART_VERSION                        record          0xC0013D20
+member      NUM_OF_PROCESS_VARIABLES            record          0xC0013D21
+member      DD_REVISION_DS_175                  record          0xC0013D22
+member      DEVICE_REVISION_DS_175              record          0xC0013D23
+member      DEVICE_TYPE_DS_175                  record          0xC0013D24
+member      MANUFACTURER_ID                     record          0xC0013D25
+member	    HART_EXPD_DEV_INFO                  parameter       0xC0013D34
+member	    HART_ACTL_DEV_INFO                  parameter       0xC0013D35
+member	    HART_CMD                            parameter       0xC0013D38
+member	    HART_RESP                           parameter       0xC0013D39
+member	    HART_IND                            parameter       0xC0013D3A
+member	    HART_COM_STAT                       parameter       0xC0013D3B
+member	    HART_DIAG_MAP                       parameter       0xC0013D3D
+member	    HART_TSTAMP                         parameter       0xC0013D3E
+member	    HART_BAD_TMOUT                      parameter       0xC0013D3F
+member	    HART_UNC_TMOUT                      parameter       0xC0013D40
+member	    HART_VAR_CODES8                     parameter       0xC0013D42
+member	    HART_PV                             parameter       0xC0013D43
+member	    HART_SV                             parameter       0xC0013D44
+member	    HART_TV                             parameter       0xC0013D45
+member	    HART_QV                             parameter       0xC0013D46
+member	    HART_5V                             parameter       0xC0013D47
+member	    HART_6V                             parameter       0xC0013D48
+member	    HART_7V                             parameter       0xC0013D49
+member	    HART_8V                             parameter       0xC0013D4a
+member	    VAR_UNITS9                          parameter       0xC0013D4E
+member	    VAR_NAMES9                          parameter       0xC0013D50
+member	    HART_URL                            parameter       0xC0013D4C
+member	    HART_LRL                            parameter       0xC0013D4B
+member	    VAR_DIR9                            parameter       0xC0013D51
+member	    PUBLISH_CONTROL                     record          0xC0013D52
+member	    HART_COMMAND_EXPANSION              record          0xC0013D53
+member	    DEVICE_VARIABLE_CODE_0              record          0xC0013D54
+member	    DEVICE_VARIABLE_CODE_1              record          0xC0013D55
+member	    DEVICE_VARIABLE_CODE_2              record          0xC0013D56
+member	    DEVICE_VARIABLE_CODE_3              record          0xC0013D57
+member	    DEVICE_VARIABLE_CODE_4              record          0xC0013D58
+member	    DEVICE_VARIABLE_CODE_5              record          0xC0013D59
+member	    DEVICE_VARIABLE_CODE_6              record          0xC0013D5A
+member	    DEVICE_VARIABLE_CODE_7              record          0xC0013D5B
+member	    PUBLISH_DATA_REF                    record          0xC0013D5C
+member	    MAX_PUBLISH_COUNT                   record          0xC0013D5D
+member	    HART_COMMAND_NUMBER                 record          0xC0013D5E
+member	    RESERVED_DS_183_U16                 record          0xC0013D5F
+member	    MINIMUM_UPDATE_PERIOD               record          0xC0013D60
+member	    MAXIMUM_UPDATE_PERIOD               record          0xC0013D61
+member	    TRIGGER_MODE                        record          0xC0013D62
+member	    DEVICE_VARIABLE_CLASSIFICATION      record          0xC0013D63
+member	    HART_UNIT                           record          0xC0013D64
+member	    RESERVED_DS_183_U8                  record          0xC0013D65
+member	    TRIGGER_LEVEL                       record          0xC0013D66
+member	    HART_BURST_CTRL_1                   parameter       0xC0013D67
+member	    HART_BURST_CTRL_2                   parameter       0xC0013D68
+member	    HART_BURST_CTRL_3                   parameter       0xC0013D69
+member	    HART_BURST_CTRL_4                   parameter       0xC0013D6A
+member      VL_VAR_DIR9                         variable-list   0xC0013D6B
+member      VL_HART_BURST_CTRL_1                variable-list   0xC0013D6C
+member      VL_HART_BURST_CTRL_2                variable-list   0xC0013D6D
+member      VL_HART_BURST_CTRL_3                variable-list   0xC0013D6E
+member      VL_HART_BURST_CTRL_4                variable-list   0xC0013D6F
+member      HART_ADDRESS                        record          0xC0013D70
+member      HART_DD_REVISION                    record          0xC0013D71
+member      HART_DEVICE_REVISION                record          0xC0013D72
+member      RESERVED_8_DS_175_1                 record          0xC0013D73
+member      HART_DEVICE_TYPE                    record          0xC0013D74
+member      HART_MANUFACTURER_ID                record          0xC0013D75
+member      HART_DISTRIBUTOR_ID                 record          0xC0013D76
+member      RESERVED_8_DS_175_2                 record          0xC0013D77
+member      HART_DEVICE_PROFILE                 record          0xC0013D78
+member      HART_DEVICE_ID                      record          0xC0013D79
+member      PAD                                 record          0xC0013D7A
+member      RESPONSE_CODE                       record          0xC0013D7B
+member      RESPONSE_MESSAGE                    record          0xC0013D7C
+member      DUP_VAR_NAME_DEF_9                  parameter       0xC0013D7D
+member      HART_IND_PRI                        parameter       0xC0013D80
+

@@ -1,0 +1,18 @@
+#
+# %W% %G%
+#
+# OS block symbols
+#
+# Items:	0x80020730 -> 0x8002074F
+# Members:	0xC0020730 -> 0xC002074F
+#
+block		__output_splitter	0x80020730
+var-list	__os_view_1			0x80020731
+var-list	__os_view_2			0x80020732
+var-list	__os_view_3			0x80020733
+var-list	__os_view_4			0x80020734
+unit            __unit_os_out_1                  0x80020735
+unit            __unit_os_out_2                  0x80020736
+record		__os_character			0x80020737
+collection      no_download_os	RESERVED	0x8002074E
+collection      upload_wanted_os	RESERVED	0x8002074F

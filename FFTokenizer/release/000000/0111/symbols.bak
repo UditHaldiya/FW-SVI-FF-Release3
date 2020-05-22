@@ -1,0 +1,16 @@
+#
+# %W% %G%
+#
+# Discrete Positioner Valve Basic Device block symbols
+#
+# Items:	0x800205B0 -> 0x800205CF
+# Members:	0xC00105B0 -> 0xC00105B0
+#
+block		__discrete_pv_basic		0x800205B4
+var-list	__dpvb_view_1			0x800205B5
+var-list	__dpvb_view_2			0x800205B6
+var-list	__dpvb_view_3			0x800205B7
+var-list	__dpvb_view_4			0x800205B8
+record		__dpvb_character		0x800205B9
+collection      no_download_dpvb	RESERVED	0x800205CE
+collection      upload_wanted_dpvb	RESERVED	0x800205CF

@@ -1,0 +1,24 @@
+#
+# %W% %G%
+#
+# RIO MAO16 block symbols
+#
+# Items:	0x80023800 -> 0x800238FF
+# Members:	0xC0013800 -> 0xC00138FF
+#
+block		__multiple_analog_output_16_block		0x80023800
+var-list	__mao16_view_1					0x80023801
+var-list	__mao16_view_2					0x80023802
+var-list	__mao16_view_3					0x80023803
+var-list	__mao16_view_4					0x80023804
+record		__mao16_character				0x80023805
+collection      no_download_mao16	RESERVED	0x800238FE
+collection      upload_wanted_mao16	RESERVED	0x800238FF
+
+member        VL_SPM_16				variable-list			0xC0013800
+member        VL_CAS_INM_16			variable-list			0xC0013801
+member        VL_BKCAL_OUTM_16		variable-list			0xC0013802
+member        VL_MO_FSTATE_OPTS_16	variable-list			0xC0013803
+member        VL_MO_POWERUP_OPTS_16	variable-list			0xC0013804
+			
+

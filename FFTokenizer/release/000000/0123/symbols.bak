@@ -1,0 +1,16 @@
+#
+# %W% %G%
+#
+# CDO block symbols
+#
+# Items:	0x80020810 -> 0x8002082F
+# Members:	0xC0020810 -> 0xC002082F
+#
+block		__complex_do	0x80020810
+var-list	__cdo_view_1			0x80020811
+var-list	__cdo_view_2			0x80020812
+var-list	__cdo_view_3			0x80020813
+var-list	__cdo_view_4			0x80020814
+record		__cdo_character			0x80020815
+collection      no_download_cdo	RESERVED	0x8002082E
+collection      upload_wanted_cdo	RESERVED	0x8002082F

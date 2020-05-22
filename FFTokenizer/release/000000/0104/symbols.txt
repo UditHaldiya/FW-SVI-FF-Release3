@@ -1,0 +1,18 @@
+#
+# %W% %G%
+#
+# DO block symbols
+#
+# Items:	0x80020230 -> 0x8002024F
+# Members:	0xC0010230 -> 0xC0010230
+#
+block		__discrete_output_block	0x80020230
+var-list	__do_view_1				0x80020231
+var-list	__do_view_2				0x80020232
+var-list	__do_view_3				0x80020233
+var-list	__do_view_4				0x80020234
+unit		__unit_do_pv				0x80020235
+unit		__unit_do_xd				0x80020236
+record		__do_character				0x80020237
+collection      no_download_do	RESERVED	0x8002024E
+collection      upload_wanted_do	RESERVED	0x8002024F

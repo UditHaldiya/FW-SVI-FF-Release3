@@ -1,0 +1,16 @@
+#
+# %W% %G%
+#
+# AHI block symbols
+#
+# Items:	0x80020930 -> 0x8002094F
+# Members:	0xC0020930 -> 0xC002094F
+#
+block		__analog_human_interface	0x80020930
+var-list	__ahi_view_1			0x80020931
+var-list	__ahi_view_2			0x80020932
+var-list	__ahi_view_3			0x80020933
+var-list	__ahi_view_4			0x80020934
+record		__ahi_character			0x80020935
+collection      no_download_ahi	RESERVED	0x8002094E
+collection      upload_wanted_ahi	RESERVED	0x8002094F

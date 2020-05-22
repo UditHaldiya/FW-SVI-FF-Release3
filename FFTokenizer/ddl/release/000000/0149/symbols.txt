@@ -1,0 +1,16 @@
+#
+# %W% %G%
+#
+# RIO Association Block symbols
+#
+# Items:	0x80023100 -> 0x800231FF	
+# Members:	0xC0013100 -> 0xC00131FF
+#
+block		__association_block				0x80023100
+var-list	__ab_view_1						0x80023101
+var-list	__ab_view_2						0x80023102
+var-list	__ab_view_3						0x80023103
+var-list	__ab_view_4						0x80023104
+record		__ab_character					0x80023105
+collection      no_download_ab	RESERVED	0x800231FE
+collection      upload_wanted_ab	RESERVED	0x800231FF

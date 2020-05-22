@@ -1,0 +1,22 @@
+#
+# %W% %G%
+#
+# RIO MBI64 block symbols
+#
+# Items:	0x80023500 -> 0x800235FF
+# Members:	0xC0013500 -> 0xC00135FF
+
+#
+block		__multiple_binary_input_64_block		0x80023500
+var-list	__mbi64_view_1					0x80023501
+var-list	__mbi64_view_2					0x80023502
+var-list	__mbi64_view_3					0x80023503
+var-list	__mbi64_view_4					0x80023504
+record		__mbi64_character				0x80023505
+collection      no_download_mbi64	RESERVED	0x800235FE
+collection      upload_wanted_mbi64	RESERVED	0x800235FF
+
+member        VL_OUTM_B64					variable-list			0xC0013501
+member        VL_MAP_MM_64					variable-list			0xC0013502
+member        VL_FORCE_ENB_B64				variable-list			0xC0013503
+member        VL_FORCE_VAL_B64				variable-list			0xC0013504

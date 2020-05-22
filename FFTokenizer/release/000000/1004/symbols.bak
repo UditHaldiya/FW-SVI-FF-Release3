@@ -1,0 +1,16 @@
+#
+# %W% %G%
+#
+# SIF Discrete output block symbols
+#
+# Items:        0x80022200 -> 0x800222FF
+# Members:      0xC0012200 -> 0xC00122FF
+#
+block           __sif_discrete_output_block    0x80022200
+var-list        __sif_do_view_1                0x80022201
+var-list        __sif_do_view_2                0x80022202
+var-list        __sif_do_view_3                0x80022203
+var-list        __sif_do_view_4                0x80022204
+record          __sif_do_character             0x80022205
+collection      no_download_sif_do	RESERVED	0x800222FE
+collection      upload_wanted_sif_do	RESERVED	0x800222FF

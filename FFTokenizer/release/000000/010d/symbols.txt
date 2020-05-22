@@ -1,0 +1,27 @@
+#
+# %W% %G%
+#
+# Advanced Positioner Valve Basic Device block symbols
+#
+# Items:	0x80020530 -> 0x8002054F
+# Members:	0xC00101D0 -> 0xC00101D0
+#
+# block		__advanced_pv_basic		0x80020530
+# var-list	__apvb_view_1			0x80020531
+# var-list	__apvb_view_2			0x80020532
+# var-list	__apvb_view_3			0x80020533
+# var-list	__apvb_view_4			0x80020534
+# unit		__unit_apvb_fvr 		0x80020535
+
+# record		__apvb_character		0x80020536
+
+
+block    __advanced_pv_basic  0x800205BA
+var-list __apvb_view_1        0x800205BB
+var-list __apvb_view_2        0x800205BC 
+var-list __apvb_view_3        0x800205BD
+var-list __apvb_view_4        0x800205BE
+unit     __unit_apvb_fvr      0x800205BF
+record   __apvb_character     0x8002053C 
+collection      no_download_apvb	RESERVED	0x8002054E
+collection      upload_wanted_apvb	RESERVED	0x8002054F

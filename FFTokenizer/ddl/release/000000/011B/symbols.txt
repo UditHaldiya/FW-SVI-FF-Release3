@@ -1,0 +1,16 @@
+#
+# %W% %G%
+#
+# DC block symbols
+#
+# Items:	0x80020710 -> 0x8002072F
+# Members:	0xC0020710 -> 0xC002072F
+#
+block		__device_control	0x80020710
+var-list	__dc_view_1			0x80020711
+var-list	__dc_view_2			0x80020712
+var-list	__dc_view_3			0x80020713
+var-list	__dc_view_4			0x80020714
+record		__dc_character			0x80020715
+collection      no_download_dc	RESERVED	0x8002072E
+collection      upload_wanted_dc	RESERVED	0x8002072F

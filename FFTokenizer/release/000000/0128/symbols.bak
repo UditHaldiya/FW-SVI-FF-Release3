@@ -1,0 +1,18 @@
+#
+# %W% %G%
+#
+# CALCA block symbols
+#
+# Items:	0x800208B0 -> 0x800208CF
+# Members:	0xC00208B0 -> 0xC00208CF
+#
+block		__calculate_analog	0x800208B0
+var-list	__calca_view_1			0x800208B1
+var-list	__calca_view_2			0x800208B2
+var-list	__calca_view_3			0x800208B3
+var-list	__calca_view_4			0x800208B4
+unit            __unit_calca_out_1                  0x800208B5
+unit            __unit_calca_out_2                  0x800208B6
+record		__calca_character			0x800208B7
+collection      no_download_calca	RESERVED	0x800208CE
+collection      upload_wanted_calca	RESERVED	0x800208CF

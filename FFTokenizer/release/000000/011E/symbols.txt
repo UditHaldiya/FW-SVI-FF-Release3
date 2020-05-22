@@ -1,0 +1,17 @@
+#
+# %W% %G%
+#
+# LL block symbols
+#
+# Items:	0x80020770 -> 0x8002078F
+# Members:	0xC0020770 -> 0xC002078F
+#
+block		__lead_lag	0x80020770
+var-list	__ll_view_1			0x80020771
+var-list	__ll_view_2			0x80020772
+var-list	__ll_view_3			0x80020773
+var-list	__ll_view_4			0x80020774
+unit            __unit_ll_out                  0x80020775
+record		__ll_character			0x80020776
+collection      no_download_ll	RESERVED	0x8002078E
+collection      upload_wanted_ll	RESERVED	0x8002078F

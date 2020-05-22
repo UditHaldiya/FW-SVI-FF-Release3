@@ -1,0 +1,150 @@
+variable        __fstate_status      bit-enumerated        0x800209F0
+member          FSTATE_STATUS        parameter             0xC00109F0
+variable        __fstate_val_d1     unsigned               0x800209F1
+member          FSTATE_VAL_D1       parameter              0xC00109F1
+variable        __fstate_val_d2     unsigned               0x800209F2
+member          FSTATE_VAL_D2       parameter              0xC00109F2
+variable        __fstate_val_d3     unsigned               0x800209F3
+member          FSTATE_VAL_D3       parameter              0xC00109F3
+variable        __fstate_val_d4     unsigned               0x800209F4
+member          FSTATE_VAL_D4       parameter              0xC00109F4
+variable        __fstate_val_d5     unsigned               0x800209F5
+member          FSTATE_VAL_D5       parameter              0xC00109F5
+variable        __fstate_val_d6     unsigned               0x800209F6
+member          FSTATE_VAL_D6       parameter              0xC00109F6
+variable        __fstate_val_d7     unsigned               0x800209F7
+member          FSTATE_VAL_D7       parameter              0xC00109F7
+variable        __fstate_val_d8     unsigned               0x800209F8
+member          FSTATE_VAL_D8       parameter              0xC00109F8
+variable        __fstate_val1       float                  0x800209F9
+member          FSTATE_VAL1         parameter              0xC00109F9
+variable        __fstate_val2       float                  0x800209FA
+member          FSTATE_VAL2         parameter              0xC00109FA
+variable        __fstate_val3       float                  0x800209FB
+member          FSTATE_VAL3         parameter              0xC00109FB
+variable        __fstate_val4       float                  0x800209FC
+member          FSTATE_VAL4         parameter              0xC00109FC
+variable        __fstate_val5       float                  0x800209FD
+member          FSTATE_VAL5         parameter              0xC00109FD
+variable        __fstate_val6       float                  0x800209FE
+member          FSTATE_VAL6         parameter              0xC00109FE
+variable        __fstate_val7       float                  0x800209FF
+member          FSTATE_VAL7         parameter              0xC00109FF
+variable        __fstate_val8       float                  0x80020A00
+member          FSTATE_VAL8         parameter              0xC0010A00
+record          __in_2                                     0x80020A01
+member          IN_2                parameter              0xC0010A01
+record          __in_3                                     0x80020A02
+member          IN_3                parameter              0xC0010A02
+record          __in_4                                     0x80020A03
+member          IN_4                parameter              0xC0010A03
+record          __in_5                                     0x80020A04
+member          IN_5                parameter              0xC0010A04
+record          __in_6                                     0x80020A05
+member          IN_6                parameter              0xC0010A05
+record          __in_7                                     0x80020A06
+member          IN_7                parameter              0xC0010A06
+record          __in_8                                     0x80020A07
+member          IN_8               parameter               0xC0010A07
+record          __in_d1                                    0x80020A08
+member          IN_D1               parameter              0xC0010A08
+record          __in_d2                                    0x80020A09
+member          IN_D2               parameter              0xC0010A09
+record          __in_d3                                    0x80020A0A
+member          IN_D3               parameter              0xC0010A0A
+record          __in_d4                                    0x80020A0B
+member          IN_D4               parameter              0xC0010A0B
+record          __in_d5                                    0x80020A0C
+member          IN_D5               parameter              0xC0010A0C
+record          __in_d6                                    0x80020A0D
+member          IN_D6               parameter              0xC0010A0D
+record          __in_d7                                    0x80020A0E
+member          IN_D7               parameter              0xC0010A0E
+record          __in_d8                                    0x80020A0F
+member          IN_D8               parameter              0xC0010A0F
+variable        __mo_opts           bit-enumerated         0x80020A10
+member          MO_OPTS             parameter              0xC0010A10
+variable       __mo_status_opts     unsigned               0x80020A11
+member          MO_STATUS_OPTS      parameter              0xC0010A11
+record          __out_1                                    0x80020A12
+member          OUT_1               parameter              0xC0010A12
+record          __out_2                                    0x80020A13
+member          OUT_2               parameter              0xC0010A13
+record          __out_3                                    0x80020A14
+member          OUT_3               parameter              0xC0010A14
+record          __out_4                                    0x80020A15
+member          OUT_4               parameter              0xC0010A15
+record          __out_5                                    0x80020A16
+member          OUT_5               parameter              0xC0010A16
+record          __out_6                                    0x80020A17
+member          OUT_6               parameter              0xC0010A17
+record          __out_7                                    0x80020A18
+member          OUT_7               parameter              0xC0010A18
+record          __out_8                                    0x80020A19
+member          OUT_8              parameter               0xC0010A19
+record          __out_d1                                   0x80020A1A
+member          OUT_D1              parameter              0xC0010A1A
+record          __out_d2                                   0x80020A1B
+member          OUT_D2              parameter              0xC0010A1B
+record          __out_d3                                   0x80020A1C
+member          OUT_D3              parameter              0xC0010A1C
+record          __out_d4                                   0x80020A1D
+member          OUT_D4              parameter              0xC0010A1D
+record          __out_d5                                   0x80020A1E
+member          OUT_D5              parameter              0xC0010A1E
+record          __out_d6                                   0x80020A1F
+member          OUT_D6              parameter              0xC0010A1F
+record          __out_d7                                   0x80020A20
+member          OUT_D7              parameter              0xC0010A20
+record          __out_d8                                   0x80020A21
+member          OUT_D8              parameter              0xC0010A21
+member          VL_FSTATE_VAL_D1       variable-list       0xC0010A22
+member          VL_FSTATE_VAL_D2       variable-list       0xC0010A23
+member          VL_FSTATE_VAL_D3       variable-list       0xC0010A24
+member          VL_FSTATE_VAL_D4       variable-list       0xC0010A25
+member          VL_FSTATE_VAL_D5       variable-list       0xC0010A26
+member          VL_FSTATE_VAL_D6       variable-list       0xC0010A27
+member          VL_FSTATE_VAL_D7       variable-list       0xC0010A28
+member          VL_FSTATE_VAL_D8       variable-list       0xC0010A29
+member          VL_FSTATE_VAL1         variable-list       0xC0010A2A
+member          VL_FSTATE_VAL2         variable-list       0xC0010A2B
+member          VL_FSTATE_VAL3         variable-list       0xC0010A2C
+member          VL_FSTATE_VAL4         variable-list       0xC0010A2D
+member          VL_FSTATE_VAL5         variable-list       0xC0010A2E
+member          VL_FSTATE_VAL6         variable-list       0xC0010A2F
+member          VL_FSTATE_VAL7         variable-list       0xC0010A30
+member          VL_FSTATE_VAL8         variable-list       0xC0010A31
+member          VL_IN_2                variable-list       0xC0010A32
+member          VL_IN_3                variable-list       0xC0010A33
+member          VL_IN_4                variable-list       0xC0010A34
+member          VL_IN_5                variable-list       0xC0010A35
+member          VL_IN_6                variable-list       0xC0010A36
+member          VL_IN_7                variable-list       0xC0010A37
+member          VL_IN_8                variable-list       0xC0010A38
+member          VL_IN_D1               variable-list       0xC0010A39
+member          VL_IN_D2               variable-list       0xC0010A3A
+member          VL_IN_D3               variable-list       0xC0010A3B
+member          VL_IN_D4               variable-list       0xC0010A3C
+member          VL_IN_D5               variable-list       0xC0010A3D
+member          VL_IN_D6               variable-list       0xC0010A3E
+member          VL_IN_D7               variable-list       0xC0010A3F
+member          VL_IN_D8               variable-list       0xC0010A40
+member          VL_MO_OPTS             variable-list       0xC0010A41
+member          VL_MO_STATUS_OPTS      variable-list       0xC0010A42
+member          VL_OUT_1               variable-list       0xC0010A43
+member          VL_OUT_2               variable-list       0xC0010A44
+member          VL_OUT_3               variable-list       0xC0010A45
+member          VL_OUT_4               variable-list       0xC0010A46
+member          VL_OUT_5               variable-list       0xC0010A47
+member          VL_OUT_6               variable-list       0xC0010A48
+member          VL_OUT_7               variable-list       0xC0010A49
+member          VL_OUT_8               variable-list       0xC0010A4A
+member          VL_OUT_D1              variable-list       0xC0010A4B
+member          VL_OUT_D2              variable-list       0xC0010A4C
+member          VL_OUT_D3              variable-list       0xC0010A4D
+member          VL_OUT_D4              variable-list       0xC0010A4E
+member          VL_OUT_D5              variable-list       0xC0010A4F
+member          VL_OUT_D6              variable-list       0xC0010A50
+member          VL_OUT_D7              variable-list       0xC0010A51
+member          VL_OUT_D8              variable-list       0xC0010A52
+member          VL_FSTATE_STATUS       variable-list       0xC0010A53

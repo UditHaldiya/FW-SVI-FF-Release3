@@ -1,0 +1,18 @@
+#
+# %W% %G%
+#
+# gen_xdcr_block symbols
+#
+# Items:    0x80020510 -> 0x8002052F
+# Members:  0xC0010510 -> 0xC001052F
+#
+#
+
+block           __generic_xdcr_block		0x80020510
+var-list        __generic_xdcr_view_1		0x80020511
+var-list        __generic_xdcr_view_2		0x80020512
+var-list        __generic_xdcr_view_3		0x80020513
+var-list        __generic_xdcr_view_4		0x80020514
+record          __generic_xdcr_character	0x80020515
+collection      no_download_gen_xdcr	RESERVED	0x8002052E
+collection      upload_wanted_gen_xdcr	RESERVED	0x8002052F

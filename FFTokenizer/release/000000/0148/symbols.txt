@@ -1,0 +1,16 @@
+#
+# %W% %G%
+#
+# RIO Primary Association Block symbols
+#
+# Items:	0x80023000 -> 0x800230FF	
+# Members:	0xC0013000 -> 0xC00130FF
+#
+block		__primary_association_block		0x80023000
+var-list	__pab_view_1					0x80023001
+var-list	__pab_view_2					0x80023002
+var-list	__pab_view_3					0x80023003
+var-list	__pab_view_4					0x80023004
+record		__pab_character					0x80023005
+collection      no_download_pab	RESERVED	0x800230FE
+collection      upload_wanted_pab	RESERVED	0x800230FF

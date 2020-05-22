@@ -1,0 +1,21 @@
+#
+# %W% %G%
+#
+# Radar Level with Calibration for Basic Device block symbols
+#
+# Items:	0x80020670 -> 0x8002068F
+# Members:	0xC0010670 -> 0xC0010670
+#
+block		__radarlevel_cal_basic			0x80020670
+var-list	__rlcb_view_1					0x80020671
+var-list	__rlcb_view_2					0x80020672
+var-list	__rlcb_view_3					0x80020673
+var-list	__rlcb_view_4					0x80020674
+unit		__unit_rlcb_cal_unit 			0x80020675
+unit		__unit_rlcb_sensor_range  		0x80020676
+unit		__unit_rlcb_velocity_unit 		0x80020677
+unit		__unit_rlcb_primary_val_unit	0x80020678
+unit		__unit_rlcb_second_val_unit		0x80020679
+record		__rlcb_character				0x8002067A
+collection      no_download_rlcb	RESERVED	0x8002068E
+collection      upload_wanted_rlcb	RESERVED	0x8002068F

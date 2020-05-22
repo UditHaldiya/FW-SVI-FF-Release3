@@ -1,0 +1,18 @@
+#
+# %W% %G%
+#
+# DI block symbols
+#
+# Items:	0x80020210 -> 0x8002022F
+# Members:	0xC0010210 -> 0xC0010210
+#
+block		__discrete_input_block	0x80020210
+var-list	__di_view_1				0x80020211
+var-list	__di_view_2				0x80020212
+var-list	__di_view_3				0x80020213
+var-list	__di_view_4				0x80020214
+unit		__unit_di_xd				0x80020215
+unit		__unit_di_out				0x80020216
+record		__di_character				0x80020217
+collection      no_download_di	RESERVED	0x8002022E
+collection      upload_wanted_di	RESERVED	0x8002022F

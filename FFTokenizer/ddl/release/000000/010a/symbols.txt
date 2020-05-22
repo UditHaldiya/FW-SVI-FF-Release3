@@ -1,0 +1,17 @@
+#
+# %W% %G%
+#
+# CS block symbols
+#
+# Items:	0x800202F0 -> 0x8002030F
+# Members:	0xC00102F0 -> 0xC00102F0
+#
+block		__control_selector_block		0x800202F0
+var-list	__cs_view_1					0x800202F1
+var-list	__cs_view_2					0x800202F2
+var-list	__cs_view_3					0x800202F3
+var-list	__cs_view_4					0x800202F4
+unit		__unit_cs_out					0x800202F5
+record		__cs_character			0x800202F6
+collection      no_download_cs	RESERVED	0x8002030E
+collection      upload_wanted_cs	RESERVED	0x8002030F

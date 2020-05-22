@@ -1,0 +1,18 @@
+#
+# %W% %G%
+#
+# AO block symbols
+#
+# Items:	0x800201F0 -> 0x8002020F
+# Members:	0xC00101F0 -> 0xC00101F0
+#
+block		__analog_output_block	0x800201F0
+var-list	__ao_view_1			0x800201F1
+var-list	__ao_view_2			0x800201F2
+var-list	__ao_view_3			0x800201F3
+var-list	__ao_view_4			0x800201F4
+unit		__unit_ao_pv			0x800201F5
+unit		__unit_ao_xd			0x800201F6
+record		__ao_character			0x800201F7
+collection      no_download_ao	RESERVED	0x8002020E
+collection      upload_wanted_ao	RESERVED	0x8002020F

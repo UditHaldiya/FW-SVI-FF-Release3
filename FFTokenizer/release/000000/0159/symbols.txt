@@ -1,0 +1,23 @@
+#
+# %W% %G%
+#
+# Standard Temperature with Calibration Two Sensor Device 2 block symbols
+#
+# Items:    0x80024100 -> 0x800241FF
+# Members:  0xC0014100 -> 0xC00141FF
+#
+block       __temperature_cal_basic_2_sensor2    0x80024100
+var-list    __tc2s2_view_1                   0x80024101
+var-list    __tc2s2_view_2                   0x80024102
+var-list    __tc2s2_view_3                   0x80024103
+var-list    __tc2s2_view_4                   0x80024104
+unit        __unit_tc2s2_cal_unit_1          0x80024105
+unit        __unit_tc2s2_sensor_range_1      0x80024106
+unit        __unit_tc2s2_primary_val_1       0x80024107
+unit        __unit_tc2s2_cal_unit_2          0x80024108
+unit        __unit_tc2s2_sensor_range_2      0x80024109
+unit        __unit_tc2s2_primary_val_2       0x8002410A
+unit        __unit_tc2s2_second_val          0x8002410B
+record      __tc2s2_character                0x8002410C
+collection      no_download_tc2s2	RESERVED	0x8002410D
+collection      upload_wanted_tc2s2	RESERVED	0x8002410E

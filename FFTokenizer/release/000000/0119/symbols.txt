@@ -1,0 +1,23 @@
+#
+# %W% %G%
+#
+# Standard Temperature with Calibration Two Sensor Device block symbols
+#
+# Items:    0x800206B0 -> 0x800206CF
+# Members:  0xC00106B0 -> 0xC00106CF
+#
+block       __temperature_cal_basic_2_sensor    0x800206B0
+var-list    __tc2s_view_1                   0x800206B1
+var-list    __tc2s_view_2                   0x800206B2
+var-list    __tc2s_view_3                   0x800206B3
+var-list    __tc2s_view_4                   0x800206B4
+unit        __unit_tc2s_cal_unit_1          0x800206B5
+unit        __unit_tc2s_sensor_range_1      0x800206B6
+unit        __unit_tc2s_primary_val_1       0x800206B7
+unit        __unit_tc2s_cal_unit_2          0x800206B8
+unit        __unit_tc2s_sensor_range_2      0x800206B9
+unit        __unit_tc2s_primary_val_2       0x800206BA
+unit        __unit_tc2s_second_val          0x800206BB
+record      __tc2s_character                0x800206BC
+collection      no_download_tc2s	RESERVED	0x800206CE
+collection      upload_wanted_tc2s	RESERVED	0x800206CF

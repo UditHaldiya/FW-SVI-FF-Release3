@@ -1,0 +1,20 @@
+#
+# %W% %G%
+#
+# PID block symbols
+#
+# Items:	0x800202B0 -> 0x800202CF
+# Members:	0xC00102B0 -> 0xC00102B0
+#
+block		__proportional_integral_derivative_block	0x800202B0
+var-list	__pid_view_1								0x800202B1
+var-list	__pid_view_2								0x800202B2
+var-list	__pid_view_3								0x800202B3
+var-list	__pid_view_4								0x800202B4
+unit		__unit_pid_pv								0x800202B5
+unit		__unit_pid_out							0x800202B6
+unit		__unit_pid_trk							0x800202B7
+unit		__unit_pid_ff								0x800202B8
+record		__pid_character			0x800202B9
+collection      no_download_pid	RESERVED	0x800202CE
+collection      upload_wanted_pid	RESERVED	0x800202CF

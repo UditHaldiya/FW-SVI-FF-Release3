@@ -1,0 +1,16 @@
+#
+# %W% %G%
+#
+# custom control block symbols
+#
+# Items:        0x80021900 -> 0x800219FF
+# Members:      0xC0011900 -> 0xC00119FF
+#
+block           __custom_cntrl_block		0x80021900
+var-list        __custom_cntrl_view_1		0x80021901
+var-list        __custom_cntrl_view_2		0x80021902
+var-list        __custom_cntrl_view_3		0x80021903
+var-list        __custom_cntrl_view_4		0x80021904
+record          __custom_cntrl_character	0x80021905
+collection      no_download_custom_cntrl	RESERVED	0x800219FE
+collection      upload_wanted_custom_cntrl	RESERVED	0x800219FF

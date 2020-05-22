@@ -1,0 +1,17 @@
+#
+# %W% %G%
+#
+# CALCD block symbols
+#
+# Items:	0x80020F10 -> 0x80020F2F
+# Members:	0xC0020F10 -> 0xC0020F2F
+#
+block		__calculate_discrete	0x80020F10
+var-list	__calcd_view_1			0x80020F11
+var-list	__calcd_view_2			0x80020F12
+var-list	__calcd_view_3			0x80020F13
+var-list	__calcd_view_4			0x80020F14
+unit            __unit_calcd_out_1                  0x80020F15
+record		__calcd_character			0x80020F16
+collection      no_download_calcd	RESERVED	0x80020F2E
+collection      upload_wanted_calcd	RESERVED	0x80020F2F

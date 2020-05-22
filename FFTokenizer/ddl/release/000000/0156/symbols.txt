@@ -1,0 +1,17 @@
+#
+# %W% %G%
+#
+# rio wirelss hart xducer block symbols
+#
+# Items:        0x80023E00 -> 0x80023EFF
+# Members:      0xC0013E00 -> 0xC0013EFF
+#
+
+block           __rio_wless_hart_xdcr_block		        0x80023E00
+var-list        __rio_wless_hart_xdcr_view_1		    0x80023E01
+var-list        __rio_wless_hart_xdcr_view_2		    0x80023E02
+var-list        __rio_wless_hart_xdcr_view_3		    0x80023E03
+var-list        __rio_wless_hart_xdcr_view_4		    0x80023E04
+record          __rio_wless_hart_xdcr_character         0x80023E05
+collection      no_download_rwhx	RESERVED	0x80023EFE
+collection      upload_wanted_rwhx	RESERVED	0x80023EFF

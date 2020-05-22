@@ -1,0 +1,18 @@
+#
+# %W% %G%
+#
+# AI block symbols
+#
+# Items:	0x800201D0 -> 0x800201EF
+# Members:	0xC00101D0 -> 0xC00101D0
+#
+block		__analog_input_block	0x800201D0
+var-list	__ai_view_1			0x800201D1
+var-list	__ai_view_2			0x800201D2
+var-list	__ai_view_3			0x800201D3
+var-list	__ai_view_4			0x800201D4
+unit		__unit_ai_xd			0x800201D5
+unit		__unit_ai_out			0x800201D6
+record		__ai_character			0x800201D7
+collection      no_download_ai	RESERVED	0x800201EE
+collection      upload_wanted_ai	RESERVED	0x800201EF

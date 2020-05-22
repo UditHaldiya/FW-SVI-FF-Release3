@@ -1,0 +1,126 @@
+#
+# %W% %G%
+#
+# RIO Standard Parameters symbols
+#
+# Items:	0x80023A00 -> 0x80023AFF
+# Members:	0xC0013A00 -> 0xC0013AFF
+#
+
+variable		__force_enb_16				bit-string		0x80023A01
+array			__channel_tag_16							0x80023A02
+record			__outm_16									0x80023A03
+variable		__map_mm_16					bit-string		0x80023A04
+record			__spm_16									0x80023A05
+record			__cas_inm_16								0x80023A06
+variable		__mo_fstate_opts_16			bit-string		0x80023A07
+array			__fstate_val_16								0x80023A08
+variable		__fstate_st_16				bit-string		0x80023A09
+record			__bkcal_outm_16								0x80023A0A
+variable		__force_enb_b64				bit-string		0x80023A0B
+array			__channel_tag_64a							0x80023A0C
+array			__channel_tag_64b							0x80023A0D
+record			__outm_b64									0x80023A0E
+variable		__map_mm_64					bit-string		0x80023A0F
+record			__spm_b64									0x80023A10
+record			__cas_inm_b64								0x80023A11
+variable		__mo_fstate_opts_64			bit-string		0x80023A12
+variable		__fstate_val_b64			bit-string		0x80023A13
+variable		__fstate_st_64				bit-string		0x80023A14
+record			__bkcal_outm_b64							0x80023A15
+variable		__reserved3_r				octetstring		0x80023A16
+variable		__bkcal_outm_b64_values		bit-string		0x80023A17
+variable		__cas_inm_b64_values			bit-string		0x80023A18
+variable		__channel_tag_elem			visiblestring	0x80023A19
+variable		__outm_b64_values			bit-string		0x80023A1A
+variable		__spm_b64_values			bit-string		0x80023A1B
+variable		__elem_mismat_num			unsigned		0x80023A1C
+variable		__elem_mismat_bs_1			bit-string		0x80023A1D
+record			__elem_mismat_alm							0x80023A1E
+variable		__num_posns					unsigned		0x80023A1F
+variable		__max_num_posns				unsigned		0x80023A20
+variable		__mo_powerup_opts_16		bit-string		0x80023A21
+variable		__force_enb_64				bit-string		0x80023A22
+variable		__mo_powerup_opts_64		bit-string		0x80023A23
+variable		__force_val_b64				bit-string		0x80023A24
+variable		__reserved3_r_in			octetstring		0x80023A25
+variable		__reserved3_r_con			octetstring		0x80023A26
+
+
+member			FORCE_ENB_16				parameter		0xC0013A01
+member			CHANNEL_TAG_16				parameter		0xC0013A02
+member			OUTM_16						parameter		0xC0013A03
+member			MAP_MM_16					parameter		0xC0013A04
+member			SPM_16						parameter		0xC0013A05
+member			CAS_INM_16					parameter		0xC0013A06
+member			MO_FSTATE_OPTS_16			parameter		0xC0013A07
+member			FSTATE_VAL_16				parameter		0xC0013A08
+member			FSTATE_ST_16				parameter		0xC0013A09
+member			BKCAL_OUTM_16				parameter		0xC0013A0A
+member			FORCE_ENB_B64				parameter		0xC0013A0B
+member			CHANNEL_TAG_64A				parameter		0xC0013A0C
+member			CHANNEL_TAG_64B				parameter		0xC0013A0D
+member			OUTM_B64					parameter		0xC0013A0E
+member			MAP_MM_64					parameter		0xC0013A0F
+member			SPM_B64						parameter		0xC0013A10
+member			CAS_INM_B64					parameter		0xC0013A11
+member			MO_FSTATE_OPTS_64			parameter		0xC0013A12
+member			FSTATE_VAL_B64				parameter		0xC0013A13
+member			FSTATE_ST_64				parameter		0xC0013A14
+member			BKCAL_OUTM_B64				parameter		0xC0013A15
+
+member			RESERVED					record			0xC0013A16
+member			OVERALL_STATUS				record			0xC0013A17
+member			STATUS1						record			0xC0013A18
+member			STATUS2						record			0xC0013A19
+member			STATUS3						record			0xC0013A1A
+member			STATUS4						record			0xC0013A1B
+member			STATUS5						record			0xC0013A1C
+member			STATUS6						record			0xC0013A1D
+member			STATUS7						record			0xC0013A1E
+member			STATUS8						record			0xC0013A1F
+member			STATUS9						record			0xC0013A20
+member			STATUS10					record			0xC0013A21
+member			STATUS11					record			0xC0013A22
+member			STATUS12					record			0xC0013A23
+member			STATUS13					record			0xC0013A24
+member			STATUS14					record			0xC0013A25
+member			STATUS15					record			0xC0013A26
+member			STATUS16					record			0xC0013A27
+member			VALUE1						record			0xC0013A28
+member			VALUE2						record			0xC0013A29
+member			VALUE3						record			0xC0013A2A
+member			VALUE4						record			0xC0013A2B
+member			VALUE5						record			0xC0013A2C
+member			VALUE6						record			0xC0013A2D
+member			VALUE7						record			0xC0013A2E
+member			VALUE8						record			0xC0013A2F
+member			VALUE9						record			0xC0013A30
+member			VALUE10						record			0xC0013A31
+member			VALUE11						record			0xC0013A32
+member			VALUE12						record			0xC0013A33
+member			VALUE13						record			0xC0013A34
+member			VALUE14						record			0xC0013A35
+member			VALUE15						record			0xC0013A36
+member			VALUE16						record			0xC0013A37
+member			ELEM_MISMAT_NUM				parameter		0xC0013A3B
+member			ELEM_MISMAT_BS_1			parameter		0xC0013A3C
+member			ELEM_MISMAT_ALM				parameter		0xC0013A3D
+member			NUM_POSNS					parameter		0xC0013A3E
+member			MAX_NUM_POSNS				parameter		0xC0013A3F
+
+
+member        VL_ELEM_MISMAT_BS_1			variable-list			0xC0013A40
+member        VL_ELEM_MISMAT_NUM			variable-list			0xC0013A41
+member        VL_NUM_POSNS				variable-list			0xC0013A42
+member        VL_MAX_NUM_POSNS				variable-list			0xC0013A43
+member        VL_SP_16					variable-list			0xC0013A44
+member        VL_CAS_IN_16				variable-list			0xC0013A45
+member        VL_FSTATE_ST_16				variable-list			0xC0013A46
+member        VL_BKCAL_OUT_16				variable-list			0xC0013A47
+member        VL_MO_OPTS_16				variable-list			0xC0013A48
+member        VL_FSTATE_VAL_16				variable-list			0xC0013A49
+
+member			MO_POWERUP_OPTS_16			parameter		0xC0013A4A
+member			FORCE_VAL_B64				parameter		0xC0013A4B
+member			MO_POWERUP_OPTS_64			parameter		0xC0013A4C

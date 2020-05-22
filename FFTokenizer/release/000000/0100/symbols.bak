@@ -1,0 +1,974 @@
+#
+# Symbols file for Standard Parameters File
+# Filename: symbols.txt
+# Date of last change: 16 NOV 2007
+# HISTORY:
+#  unknown Revision 1.1  19960430 (date of creation)
+#      QLQ Revision 1.2  19970926
+#               Changed all fail-safe to fault-state.
+#               Added the variable __on_off_input_nd.
+#      QLQ Revision 1.3  19971003
+#      SBM Revision 1.4  19991201
+#               Added symbols for ITK_REV, __itk_rev
+#      SBM Revision 1.5  20000106
+#               Added symbols for VL_ST_REV_01(..20)
+#               Extented Item Id/Member ID Reservation
+#      MS  Revision 1.6  20071116
+#		Added symbols for programmable resource; AR2668
+#
+# Items:    0x80020001 -> 0x800201B1 (of 0x800201CF)
+# Items:    0x80020B10 -> 0x80020B10 (of 0x80020C0F)
+# Members:  0xC0010001 -> 0xC00101C8 (of 0xC00101CF)
+# Members:  0xC0010B10 -> 0xC0010B23 (of 0xC0010C0F)
+#
+variable	__block_tag	visiblestring	0x80020001
+variable	__dd_member	unsigned	0x80020002
+variable	__dd_item	unsigned	0x80020003
+variable	__dd_revis	unsigned	0x80020004
+variable	__profile	unsigned	0x80020005
+variable	__profile_revision	unsigned	0x80020006
+variable	__execution_time	unsigned	0x80020007
+variable	__execution_period	unsigned	0x80020008
+variable	__num_of_params	unsigned	0x80020009
+variable	__next_fb_to_execute	unsigned	0x8002000A
+variable	__views_index	unsigned	0x8002000B
+variable	__number_view_3	unsigned	0x8002000C
+variable	__number_view_4	unsigned	0x8002000D
+record	__blk_char		0x8002000E
+variable	__status_input	enumerated	0x8002000F
+variable	__status_output	enumerated	0x80020010
+variable	__status_contained_r	enumerated	0x80020011
+variable	__float_input_nd	float	0x80020012
+variable	__float_output_r	float	0x80020013
+variable	__float_contained_nd	float	0x80020014
+variable	__discrete_input	enumerated	0x80020015
+variable	__discrete_output_r	enumerated	0x80020016
+variable	__discrete_contained	enumerated	0x80020017
+variable	__bitstring_input	bit-string	0x80020018
+variable	__bitstring_output	bit-string	0x80020019
+variable	__bitstring_contained_rw	bit-string	0x8002001A
+variable	__eu_100	float	0x8002001B
+variable	__eu_0	float	0x8002001C
+variable	__units_index	enumerated	0x8002001D
+variable	__decimal	integer	0x8002001E
+variable	__target_mode	bit-enumerated	0x8002001F
+variable	__actual_mode	bit-enumerated	0x80020020
+variable	__normal_mode	bit-enumerated	0x80020021
+record	__mode		0x80020022
+variable	__grant	bit-enumerated	0x80020023
+variable	__deny	bit-enumerated	0x80020024
+record	__access		0x80020025
+variable	__unacknowledged	enumerated	0x80020026
+variable	__alarm_state	enumerated	0x80020027
+variable	__time_stamp	time-value	0x80020028
+variable	__sub_code	enumerated	0x80020029
+variable	__float_value	float	0x8002002A
+record	__alarm_float		0x8002002B
+variable	__discrete_value	enumerated	0x8002002C
+record	__alarm_discrete		0x8002002D
+variable	__static_revision	unsigned	0x8002002E
+variable	__relative_index	unsigned	0x8002002F
+record	__update_evt		0x80020030
+variable	__current_summary	bit-enumerated	0x80020031
+variable	__unacked_summary	bit-enumerated	0x80020032
+variable	__unreported_summary	bit-enumerated	0x80020033
+variable	__disabled_summary	bit-enumerated	0x80020034
+record	__alarm_sum		0x80020035
+variable	__block_index	unsigned	0x80020036
+variable	__alert_key	unsigned	0x80020037
+variable	__standard_type	enumerated	0x80020038
+variable	__mfgr_type	enumerated	0x80020039
+variable	__message_type	enumerated	0x8002003A
+variable	__priority	unsigned	0x8002003B
+record	__alert_analog		0x8002003C
+record	__alert_discrete		0x8002003D
+record	__alert_update		0x8002003E
+variable	__parameter_index	unsigned	0x8002003F
+variable	__sample_type	enumerated	0x80020040
+variable	__sample_interval	bit-enumerated	0x80020041
+variable	__last_update	bit-enumerated	0x80020042
+array	__trend_samples_float		0x80020043
+array	__trend_statii		0x80020057
+record	__trend_float		0x8002006B
+array	__trend_samples_discrete		0x8002006C
+record	__trend_discrete		0x8002006D
+variable	__bitstring_value	bit-string	0x8002006E
+array	__trend_samples_bitstring		0x8002006F
+record	__trend_bitstring		0x80020070
+variable	__local_index	unsigned	0x80020071
+variable	__vcr_number	unsigned	0x80020072
+variable	__remote_index	unsigned	0x80020073
+variable	__service_operation	enumerated	0x80020074
+record	__fb_linkage		0x80020075
+variable	__enable_disable	enumerated	0x80020076
+record	__simulate_float		0x80020077
+record	__simulate_discrete		0x80020078
+record	__simulate_bitstring		0x80020079
+variable	__test_boolean	boolean	0x8002007A
+variable	__test_integer8	integer	0x8002007B
+variable	__test_integer16	integer	0x8002007C
+variable	__test_integer32	integer	0x8002007D
+variable	__test_unsigned8	unsigned	0x8002007E
+variable	__test_unsigned16	unsigned	0x8002007F
+variable	__test_unsigned32	unsigned	0x80020080
+variable	__test_float	float	0x80020081
+variable	__test_visible_string	visiblestring	0x80020082
+variable	__test_octet_string	octetstring	0x80020083
+variable	__test_date	date/time	0x80020084
+variable	__test_time	time	0x80020085
+variable	__test_time_diff	duration	0x80020086
+variable	__test_bitstring	bit-string	0x80020087
+variable	__test_dll_time	time-value	0x80020088
+record	__test_read_write		0x80020089
+variable	__action	unsigned	0x8002008A
+variable	__function	unsigned	0x8002008B
+variable	__occurrence	unsigned	0x8002008C
+record	__action_object		0x8002008D
+variable	__ack_option	bit-enumerated	0x80020090
+variable	__alarm_hys	float	0x80020092
+variable	__bal_time	float	0x80020098
+variable	__bias	float	0x8002009A
+variable	__bkcal_hys	float	0x8002009C
+record	__bkcal_in		0x8002009E
+record	__bkcal_out		0x800200A0
+record	__bkcal_out_d		0x800200A2
+record	__bkcal_sel_1		0x800200A4
+record	__bkcal_sel_2		0x800200A6
+record	__bkcal_sel_3		0x800200A8
+record	__block_alm		0x800200AA
+variable	__block_err	bit-enumerated	0x800200AC
+variable	__bypass	enumerated	0x800200AE
+record	__cas_in		0x800200B0
+record	__cas_in_d		0x800200B2
+variable	__channel	enumerated	0x800200B4
+variable	__clr_fstate	enumerated	0x800200B6
+variable	__confirm_time	unsigned	0x800200B8
+variable	__control_opts	bit-enumerated	0x800200BA
+variable	__cycle_sel	bit-enumerated	0x800200BC
+variable	__cycle_type	bit-enumerated	0x800200BE
+variable	__dd_resource	visiblestring	0x800200C0
+variable	__dd_rev	unsigned	0x800200C2
+variable	__dev_rev	unsigned	0x800200C4
+variable	__dev_type	enumerated	0x800200C6
+record	__disc_alm		0x800200C8
+variable	__disc_lim	unsigned	0x800200CA
+variable	__disc_pri	unsigned	0x800200CC
+record	__dv_hi_alm		0x800200CE
+variable	__dv_hi_lim	float	0x800200D0
+variable	__dv_hi_pri	unsigned	0x800200D2
+record	__dv_lo_alm		0x800200D4
+variable	__dv_lo_lim	float	0x800200D6
+variable	__dv_lo_pri	unsigned	0x800200D8
+variable	__fault_state	enumerated	0x800200DA
+variable	__feature_sel	bit-enumerated	0x800200DC
+variable	__features	bit-enumerated	0x800200DE
+variable	__ff_gain	float	0x800200E0
+record	__ff_scale		0x800200E2
+record	__ff_val		0x800200E4
+record	__field_val		0x800200E6
+record	__field_val_d		0x800200E8
+variable	__free_space	float	0x800200EA
+variable	__free_time	float	0x800200EC
+variable	__fstate_time	float	0x800200EE
+variable	__fstate_val	float	0x800200F0
+variable	__fstate_val_d	unsigned	0x800200F2
+variable	__gain	float	0x800200F4
+record	__grant_deny		0x800200F6
+variable	__hard_types	bit-enumerated	0x800200F8
+record	__hi_alm		0x800200FA
+record	__hi_hi_alm		0x800200FC
+variable	__hi_hi_lim	float	0x800200FE
+variable	__hi_hi_pri	unsigned	0x80020100
+variable	__hi_lim	float	0x80020102
+variable	__hi_pri	unsigned	0x80020104
+variable	__io_opts	bit-enumerated	0x80020106
+record	__in		0x80020108
+record	__in_1		0x8002010A
+variable	__l_type	enumerated	0x8002010C
+variable	__lim_notify	unsigned	0x8002010E
+variable	__low_cut	float	0x80020110
+record	__lo_alm		0x80020112
+variable	__lo_lim	float	0x80020114
+variable	__lo_pri	unsigned	0x80020116
+record	__lo_lo_alm		0x80020118
+variable	__lo_lo_lim	float	0x8002011A
+variable	__lo_lo_pri	unsigned	0x8002011C
+variable	__manufac_id	enumerated	0x8002011E
+variable	__max_notify	unsigned	0x80020120
+variable	__memory_size	unsigned	0x80020122
+variable	__min_cycle_t	unsigned	0x80020124
+record	__mode_blk		0x80020126
+variable	__nv_cycle_t	unsigned	0x80020128
+record	__out		0x8002012A
+record	__out_d		0x8002012C
+variable	__out_hi_lim	float	0x8002012E
+variable	__out_lo_lim	float	0x80020130
+record	__out_scale		0x80020132
+variable	__out_state	unsigned	0x80020134
+record	__pv		0x80020136
+record	__pv_d		0x80020138
+variable	__pv_ftime	float	0x8002013A
+record	__pv_scale		0x8002013C
+variable	__pv_state	unsigned	0x8002013E
+variable	__ra_ftime	float	0x80020140
+variable	__rate	float	0x80020142
+record	__rcas_in		0x80020144
+record	__rcas_in_d		0x80020146
+record	__rcas_out		0x80020148
+record	__rcas_out_d		0x8002014A
+record	__readback		0x8002014C
+record	__readback_d		0x8002014E
+variable	__reset	float	0x80020150
+variable	__restart	enumerated	0x80020152
+record	__rout_in		0x80020154
+record	__rout_out		0x80020156
+variable	__rs_state	enumerated	0x80020158
+record	__sel_1		0x8002015A
+record	__sel_2		0x8002015C
+record	__sel_3		0x8002015E
+variable	__sel_type	enumerated	0x80020160
+variable	__set_fstate	enumerated	0x80020162
+variable	__shed_opt	enumerated	0x80020164
+variable	__shed_rcas	unsigned	0x80020166
+variable	__shed_rout	unsigned	0x80020168
+record	__sp		0x8002016E
+record	__sp_d		0x80020170
+variable	__sp_hi_lim	float	0x80020172
+variable	__sp_lo_lim	float	0x80020174
+variable	__sp_rate_dn	float	0x80020176
+variable	__sp_rate_up	float	0x80020178
+variable	__st_rev	unsigned	0x8002017A
+variable	__status_opts	bit-enumerated	0x8002017C
+variable	__strategy	unsigned	0x8002017E
+variable	__tag_desc	octetstring	0x80020180
+record	__trk_in_d		0x80020184
+record	__trk_scale		0x80020186
+record	__trk_val		0x80020188
+record	__write_alm		0x8002018C
+variable	__write_lock	enumerated	0x8002018E
+variable	__write_pri	unsigned	0x80020190
+record	__xd_scale		0x80020192
+variable	__xd_state	unsigned	0x80020194
+variable	__permitted_mode	bit-enumerated	0x80020195
+variable	__update_state	enumerated	0x80020196
+variable	__float_contained_r	float	0x80020197
+variable	__discrete_contained_r	enumerated	0x80020198
+variable	__bitstring_contained_r	bit-string	0x80020199
+variable	__field_val_r	float	0x8002019A
+variable	__simulate_status	enumerated	0x8002019B
+variable	__simulate_value	float	0x8002019C
+variable	__transducer_status	enumerated	0x8002019D
+variable	__transducer_value	float	0x8002019E
+variable	__simulate_d_value	enumerated	0x8002019F
+variable	__transducer_d_value	enumerated	0x800201A0
+variable	__unacknowledged_evt	enumerated	0x800201A1
+variable	__alm_value	unsigned	0x800201A2
+variable	__float_c_r_pct	float	0x800201A3
+variable	__status_contained	enumerated	0x800201A4
+variable	__status_output_nd	enumerated	0x800201A5
+variable	__float_bkcal_sel	float	0x800201A6
+variable	__float_output_nd	float	0x800201A7
+variable	__discrete_input_nd	enumerated	0x800201A8
+variable	__float_input	float	0x800201A9
+variable	__status_input_nd	enumerated	0x800201AA
+variable	__discrete_contained_nd	enumerated	0x800201AB
+variable	__status_output_r	enumerated	0x800201AC
+variable	__discrete_output_nd	enumerated	0x800201AD
+variable	__float_contained	float	0x800201AE
+variable	__status_contained_nd	enumerated	0x800201AF
+variable	__on_off_input_nd	enumerated	0x800201B0
+variable	__itk_ver	unsigned	0x800201B1
+variable	__status_opts_ai	bit-enumerated	0x800201D8
+variable	__io_opts_ai	bit-enumerated	0x800201D9
+variable	__ack_option_ai	bit-enumerated	0x800201DA
+record	__alarm_sum_ai		0x800201DB
+variable	__current_summary_ai	bit-enumerated	0x800201DC
+variable	__unacked_summary_ai	bit-enumerated	0x800201DD
+variable	__unreported_summary_ai	bit-enumerated	0x800201DE
+variable	__disabled_summary_ai	bit-enumerated	0x800201DF
+variable	__io_opts_ao	bit-enumerated	0x800201F8
+variable	__status_opts_ao	bit-enumerated	0x800201F9
+variable	__status_opts_di	bit-enumerated	0x80020218
+variable	__io_opts_di	bit-enumerated	0x80020219
+variable	__ack_option_di	bit-enumerated	0x8002021A
+record	__alarm_sum_di		0x8002021B
+variable	__current_summary_di	bit-enumerated	0x8002021C
+variable	__unacked_summary_di	bit-enumerated	0x8002021D
+variable	__unreported_summary_di	bit-enumerated	0x8002021E
+variable	__disabled_summary_di	bit-enumerated	0x8002021F
+variable	__status_opts_do	bit-enumerated	0x80020238
+variable	__io_opts_do	bit-enumerated	0x80020239
+variable	__ack_option_pd	bit-enumerated	0x8002023A
+record	__alarm_sum_pd		0x8002023B
+variable	__current_summary_pd	bit-enumerated	0x8002023C
+variable	__unacked_summary_pd	bit-enumerated	0x8002023D
+variable	__unreported_summary_pd	bit-enumerated	0x8002023E
+variable	__disabled_summary_pd	bit-enumerated	0x8002023F
+variable	__status_opts_bg	bit-enumerated	0x80020259
+variable	__control_opts_bg	bit-enumerated	0x8002025A
+variable	__status_opts_ml	bit-enumerated	0x80020279
+variable	__control_opts_ml	bit-enumerated	0x8002027A
+variable	__ack_option_ml	bit-enumerated	0x8002027B
+record	__alarm_sum_ml		0x8002027C
+variable	__current_summary_ml	bit-enumerated	0x8002027D
+variable	__unacked_summary_ml	bit-enumerated	0x8002027E
+variable	__unreported_summary_ml	bit-enumerated	0x8002027F
+variable	__disabled_summary_ml	bit-enumerated	0x80020280
+variable	__status_opts_pd	bit-enumerated	0x8002029A
+variable	__control_opts_pd	bit-enumerated	0x8002029B
+variable	__status_opts_pid	bit-enumerated	0x800202BA
+variable	__control_opts_pid	bit-enumerated	0x800202BB
+variable	__ack_option_pid	bit-enumerated	0x800202BC
+record	__alarm_sum_pid		0x800202BD
+variable	__current_summary_pid	bit-enumerated	0x800202BE
+variable	__unacked_summary_pid	bit-enumerated	0x800202BF
+variable	__unreported_summary_pid	bit-enumerated	0x800202C0
+variable	__disabled_summary_pid	bit-enumerated	0x800202C1
+variable	__status_opts_ra	bit-enumerated	0x800202D9
+variable	__control_opts_ra	bit-enumerated	0x800202DA
+variable	__ack_option_ra	bit-enumerated	0x800202DB
+record	__alarm_sum_ra		0x800202DC
+variable	__current_summary_ra	bit-enumerated	0x800202DD
+variable	__unacked_summary_ra	bit-enumerated	0x800202DE
+variable	__unreported_summary_ra	bit-enumerated	0x800202DF
+variable	__disabled_summary_ra	bit-enumerated	0x800202E0
+variable	__status_opts_cs	bit-enumerated	0x800202F7
+variable	__ack_option_res	bit-enumerated	0x80020317
+record	__alarm_sum_res		0x80020318
+variable	__current_summary_res	bit-enumerated	0x80020319
+variable	__unacked_summary_res	bit-enumerated	0x8002031A
+variable	__unreported_summary_res	bit-enumerated	0x8002031B
+variable	__disabled_summary_res	bit-enumerated	0x8002031C
+variable	__status_opts_dc	bit-enumerated	0x80020716
+variable	__ack_option_dc	bit-enumerated	0x80020717
+record	__alarm_sum_dc		0x80020718
+variable	__current_summary_dc	bit-enumerated	0x80020719
+variable	__unacked_summary_dc	bit-enumerated	0x8002071A
+variable	__unreported_summary_dc	bit-enumerated	0x8002071B
+variable	__disabled_summary_dc	bit-enumerated	0x8002071C
+variable	__status_opts_os	bit-enumerated	0x80020738
+variable	__status_opts_ll	bit-enumerated	0x80020777
+variable	__status_opts_dt	bit-enumerated	0x80020797
+variable	__status_opts_it	bit-enumerated	0x800207B9
+variable	__status_opts_pi	bit-enumerated	0x800207D7
+variable	__io_opts_pi	bit-enumerated	0x800207D8
+variable	__ack_option_pi	bit-enumerated	0x800207D9
+record	__alarm_sum_pi		0x800207DA
+variable	__current_summary_pi	bit-enumerated	0x800207DB
+variable	__unacked_summary_pi	bit-enumerated	0x800207DC
+variable	__unreported_summary_pi	bit-enumerated	0x800207DD
+variable	__disabled_summary_pi	bit-enumerated	0x800207DE
+variable	__status_opts_cao	bit-enumerated	0x800207F7
+variable	__io_opts_cao	bit-enumerated	0x800207F8
+variable	__status_opts_cdo	bit-enumerated	0x80020816
+variable	__io_opts_cdo	bit-enumerated	0x80020817
+variable	__status_opts_spid	bit-enumerated	0x80020837
+variable	__control_opts_spid	bit-enumerated	0x80020838
+variable	__io_opts_spid	bit-enumerated	0x80020839
+variable	__ack_option_spid	bit-enumerated	0x8002083A
+record	__alarm_sum_spid		0x8002083B
+variable	__current_summary_spid	bit-enumerated	0x8002083C
+variable	__unacked_summary_spid	bit-enumerated	0x8002083D
+variable	__unreported_summary_spid	bit-enumerated	0x8002083E
+variable	__disabled_summary_spid	bit-enumerated	0x8002083F
+variable	__pi_pointer	unsigned	0x80020840
+variable	__contents_rev	unsigned	0x80020841
+variable	__fdd_locator_elem	unsigned	0x80020842
+array	__fdd_locator		0x80020843
+variable	__fcf_locator_elem	unsigned	0x80020844
+array	__fcf_locator		0x80020845
+variable	__capability_lev	enumerated	0x80020846
+variable	__on_off_output_nd	enumerated	0x80020847
+variable	__on_off_contained_r	enumerated	0x80020848
+variable	__status_opts_spg	bit-enumerated	0x80020857
+variable	__ack_option_spg	bit-enumerated	0x80020858
+record	__alarm_sum_spg		0x80020859
+variable	__current_summary_spg	bit-enumerated	0x8002085A
+variable	__unacked_summary_spg	bit-enumerated	0x8002085B
+variable	__unreported_summary_spg	bit-enumerated	0x8002085C
+variable	__disabled_summary_spg	bit-enumerated	0x8002085D
+variable	__status_opts_is	bit-enumerated	0x80020871
+variable	__status_opts_calca	bit-enumerated	0x800208B8
+variable	__status_opts_tmr	bit-enumerated	0x800208D6
+variable	__status_opts_aal	bit-enumerated	0x800208F7
+variable	__ack_option_aal	bit-enumerated	0x800208F8
+record	__alarm_sum_aal		0x800208F9
+variable	__current_summary_aal	bit-enumerated	0x800208FA
+variable	__unacked_summary_aal	bit-enumerated	0x800208FB
+variable	__unreported_summary_aal	bit-enumerated	0x800208FC
+variable	__disabled_summary_aal	bit-enumerated	0x800208FD
+variable	__status_opts_dal	bit-enumerated	0x80020916
+variable	__ack_option_dal	bit-enumerated	0x80020917
+record	__alarm_sum_dal		0x80020918
+variable	__current_summary_dal	bit-enumerated	0x80020919
+variable	__unacked_summary_dal	bit-enumerated	0x8002091A
+variable	__unreported_summary_dal	bit-enumerated	0x8002091B
+variable	__disabled_summary_dal	bit-enumerated	0x8002091C
+variable	__status_opts_mio	bit-enumerated	0x80020A22
+variable	__ack_option_res2	bit-enumerated	0x80020AF6
+record	__alarm_sum_res2		0x80020AF7
+variable	__current_summary_res2	bit-enumerated	0x80020AF8
+variable	__unacked_summary_res2	bit-enumerated	0x80020AF9
+variable	__unreported_summary_res2	bit-enumerated	0x80020AFA
+variable	__disabled_summary_res2	bit-enumerated	0x80020AFB
+variable	__fd_check_active	bit-enumerated	0x80020B29
+record	__fd_check_alm		0x80020B2A
+variable	__fd_check_map	bit-enumerated	0x80020B2B
+variable	__fd_check_mask	bit-enumerated	0x80020B2C
+variable	__fd_check_pri	unsigned	0x80020B2D
+variable	__fd_check_state	enumerated	0x80020B2E
+variable	__clr_check	enumerated	0x80020B2F
+variable	__fd_fail_active	bit-enumerated	0x80020B30
+record	__fd_fail_alm		0x80020B31
+variable	__fd_fail_map	bit-enumerated	0x80020B32
+variable	__fd_fail_mask	bit-enumerated	0x80020B33
+variable	__fd_fail_pri	unsigned	0x80020B34
+variable	__fd_maint_active	bit-enumerated	0x80020B35
+record	__fd_maint_alm		0x80020B36
+variable	__fd_maint_map	bit-enumerated	0x80020B37
+variable	__fd_maint_mask	bit-enumerated	0x80020B38
+variable	__fd_maint_pri	unsigned	0x80020B39
+variable	__fd_offspec_active	bit-enumerated	0x80020B3A
+record	__fd_offspec_alm		0x80020B3B
+variable	__fd_offspec_map	bit-enumerated	0x80020B3C
+variable	__fd_offspec_mask	bit-enumerated	0x80020B3D
+variable	__fd_offspec_pri	unsigned	0x80020B3E
+variable	__fd_recommen_act	enumerated	0x80020B3F
+array	__resource_directory		0x80020B40
+variable	__resource_type	enumerated	0x80020B41
+variable	__fd_ver	unsigned	0x80020B42
+variable	__resource_directory_elem	unsigned	0x80020B44
+variable	__algorithm_sel	unsigned	0x80020B45
+variable	__file_locator_elem	unsigned	0x80020B46
+array	__file_locator		0x80020B47
+variable	__file_rev	unsigned	0x80020B48
+variable	__sub_code_32	unsigned	0x80020B49
+variable	__value_16	unsigned	0x80020B4A
+variable	__ack_option_ft	bit-enumerated	0x80020B4B
+variable	__current_summary_ft	bit-enumerated	0x80020B4C
+variable	__unacked_summary_ft	bit-enumerated	0x80020B4D
+variable	__unreported_summary_ft	bit-enumerated	0x80020B4E
+variable	__disabled_summary_ft	bit-enumerated	0x80020B4F
+record	__alarm_sum_ft		0x80020B50
+variable	__diagnostic_simulate_value	bit-enumerated	0x80020B51
+variable	__diagnostic_value	bit-enumerated	0x80020B52
+record	__fd_simulate		0x80020B53
+variable	__fd_extended_active_1	bit-enumerated	0x80020B54
+variable	__fd_extended_map_1	bit-enumerated	0x80020B55
+variable	__views_index32	unsigned	0x80020B56
+variable	__software_rev	visiblestring	0x80020B57
+variable	__hardware_rev	visiblestring	0x80020B58
+variable	__status_opts_calcd	bit-enumerated	0x80020F17
+variable	__compatability_rev	unsigned	0x80020F18
+variable	__status_opts_tot	bit-enumerated	0x80020F19
+variable	__block_err_desc_1_tot	bit-enumerated	0x80020F1A
+
+member	BLOCK_TAG	record	0xC0010001
+member	DD_MEMBER	record	0xC0010002
+member	DD_ITEM	record	0xC0010003
+member	DD_REVIS	record	0xC0010004
+member	PROFILE	record	0xC0010005
+member	PROFILE_REVISION	record	0xC0010006
+member	EXECUTION_TIME	record	0xC0010007
+member	EXECUTION_PERIOD	record	0xC0010008
+member	NUM_OF_PARAMS	record	0xC0010009
+member	NEXT_FB_TO_EXECUTE	record	0xC001000A
+member	VIEWS_INDEX	record	0xC001000B
+member	NUMBER_VIEW_3	record	0xC001000C
+member	NUMBER_VIEW_4	record	0xC001000D
+member	STATUS	record	0xC001000F
+member	SIMULATE_STATUS	record	0xC0010010
+member	TRANSDUCER_STATUS	record	0xC0010011
+member	VALUE	record	0xC0010012
+member	SIMULATE_VALUE	record	0xC0010013
+member	TRANSDUCER_VALUE	record	0xC0010014
+member	EU_100	record	0xC001001B
+member	EU_0	record	0xC001001C
+member	UNITS_INDEX	record	0xC001001D
+member	DECIMAL	record	0xC001001E
+member	TARGET	record	0xC001001F
+member	ACTUAL	record	0xC0010020
+member	NORMAL	record	0xC0010021
+member	GRANT	record	0xC0010023
+member	DENY	record	0xC0010024
+member	UNACKNOWLEDGED	record	0xC0010026
+member	ALARM_STATE	record	0xC0010027
+member	TIME_STAMP	record	0xC0010028
+member	SUB_CODE	record	0xC0010029
+member	STATIC_REVISION	record	0xC001002E
+member	RELATIVE_INDEX	record	0xC001002F
+member	CURRENT	record	0xC0010031
+member	UNREPORTED	record	0xC0010033
+member	BLOCK_INDEX	record	0xC0010036
+member	KEY	record	0xC0010037
+member	STANDARD_TYPE	record	0xC0010038
+member	MFGR_TYPE	record	0xC0010039
+member	MESSAGE_TYPE	record	0xC001003A
+member	PRIORITY	record	0xC001003B
+member	PARAMETER_INDEX	record	0xC001003F
+member	SAMPLE_TYPE	record	0xC0010040
+member	SAMPLE_INTERVAL	record	0xC0010041
+member	LAST_UPDATE	record	0xC0010042
+member	SAMPLE_1	record	0xC0010043
+member	SAMPLE_2	record	0xC0010044
+member	SAMPLE_3	record	0xC0010045
+member	SAMPLE_4	record	0xC0010046
+member	SAMPLE_5	record	0xC0010047
+member	SAMPLE_6	record	0xC0010048
+member	SAMPLE_7	record	0xC0010049
+member	SAMPLE_8	record	0xC001004A
+member	SAMPLE_9	record	0xC001004B
+member	SAMPLE_10	record	0xC001004C
+member	SAMPLE_11	record	0xC001004D
+member	SAMPLE_12	record	0xC001004E
+member	SAMPLE_13	record	0xC001004F
+member	SAMPLE_14	record	0xC0010050
+member	SAMPLE_15	record	0xC0010051
+member	SAMPLE_16	record	0xC0010052
+member	SAMPLE_17	record	0xC0010053
+member	SAMPLE_18	record	0xC0010054
+member	SAMPLE_19	record	0xC0010055
+member	SAMPLE_20	record	0xC0010056
+member	STATUS_1	record	0xC0010057
+member	STATUS_2	record	0xC0010058
+member	STATUS_3	record	0xC0010059
+member	STATUS_4	record	0xC001005A
+member	STATUS_5	record	0xC001005B
+member	STATUS_6	record	0xC001005C
+member	STATUS_7	record	0xC001005D
+member	STATUS_8	record	0xC001005E
+member	STATUS_9	record	0xC001005F
+member	STATUS_10	record	0xC0010060
+member	STATUS_11	record	0xC0010061
+member	STATUS_12	record	0xC0010062
+member	STATUS_13	record	0xC0010063
+member	STATUS_14	record	0xC0010064
+member	STATUS_15	record	0xC0010065
+member	STATUS_16	record	0xC0010066
+member	STATUS_17	record	0xC0010067
+member	STATUS_18	record	0xC0010068
+member	STATUS_19	record	0xC0010069
+member	STATUS_20	record	0xC001006A
+member	LOCAL_INDEX	record	0xC0010071
+member	VCR_NUMBER	record	0xC0010072
+member	REMOTE_INDEX	record	0xC0010073
+member	SERVICE_OPERATION	record	0xC0010074
+member	ENABLE_DISABLE	record	0xC0010076
+member	VALUE_1	record	0xC001007A
+member	VALUE_2	record	0xC001007B
+member	VALUE_3	record	0xC001007C
+member	VALUE_4	record	0xC001007D
+member	VALUE_5	record	0xC001007E
+member	VALUE_6	record	0xC001007F
+member	VALUE_7	record	0xC0010080
+member	VALUE_8	record	0xC0010081
+member	VALUE_9	record	0xC0010082
+member	VALUE_10	record	0xC0010083
+member	VALUE_11	record	0xC0010084
+member	VALUE_12	record	0xC0010085
+member	VALUE_13	record	0xC0010086
+member	VALUE_14	record	0xC0010087
+member	VALUE_15	record	0xC0010088
+member	ACTION	record	0xC001008A
+member	FUNCTION	record	0xC001008B
+member	OCCURRENCE	record	0xC001008C
+member	ACK_OPTION	parameter	0xC0010090
+member	VL_ACK_OPTION	variable-list	0xC0010091
+member	ALARM_HYS	parameter	0xC0010092
+member	VL_ALARM_HYS	variable-list	0xC0010093
+member	ALARM_SUM	parameter	0xC0010094
+member	VL_ALARM_SUM	variable-list	0xC0010095
+member	ALERT_KEY	parameter	0xC0010096
+member	VL_ALERT_KEY	variable-list	0xC0010097
+member	BAL_TIME	parameter	0xC0010098
+member	VL_BAL_TIME	variable-list	0xC0010099
+member	BIAS	parameter	0xC001009A
+member	VL_BIAS	variable-list	0xC001009B
+member	BKCAL_HYS	parameter	0xC001009C
+member	VL_BKCAL_HYS	variable-list	0xC001009D
+member	BKCAL_IN	parameter	0xC001009E
+member	VL_BKCAL_IN	variable-list	0xC001009F
+member	BKCAL_OUT	parameter	0xC00100A0
+member	VL_BKCAL_OUT	variable-list	0xC00100A1
+member	BKCAL_OUT_D	parameter	0xC00100A2
+member	VL_BKCAL_OUT_D	variable-list	0xC00100A3
+member	BKCAL_SEL_1	parameter	0xC00100A4
+member	VL_BKCAL_SEL_1	variable-list	0xC00100A5
+member	BKCAL_SEL_2	parameter	0xC00100A6
+member	VL_BKCAL_SEL_2	variable-list	0xC00100A7
+member	BKCAL_SEL_3	parameter	0xC00100A8
+member	VL_BKCAL_SEL_3	variable-list	0xC00100A9
+member	BLOCK_ALM	parameter	0xC00100AA
+member	VL_BLOCK_ALM	variable-list	0xC00100AB
+member	BLOCK_ERR	parameter	0xC00100AC
+member	VL_BLOCK_ERR	variable-list	0xC00100AD
+member	BYPASS	parameter	0xC00100AE
+member	VL_BYPASS	variable-list	0xC00100AF
+member	CAS_IN	parameter	0xC00100B0
+member	VL_CAS_IN	variable-list	0xC00100B1
+member	CAS_IN_D	parameter	0xC00100B2
+member	VL_CAS_IN_D	variable-list	0xC00100B3
+member	CHANNEL	parameter	0xC00100B4
+member	VL_CHANNEL	variable-list	0xC00100B5
+member	CLR_FSTATE	parameter	0xC00100B6
+member	VL_CLR_FSTATE	variable-list	0xC00100B7
+member	CONFIRM_TIME	parameter	0xC00100B8
+member	VL_CONFIRM_TIME	variable-list	0xC00100B9
+member	CONTROL_OPTS	parameter	0xC00100BA
+member	VL_CONTROL_OPTS	variable-list	0xC00100BB
+member	CYCLE_SEL	parameter	0xC00100BC
+member	VL_CYCLE_SEL	variable-list	0xC00100BD
+member	CYCLE_TYPE	parameter	0xC00100BE
+member	VL_CYCLE_TYPE	variable-list	0xC00100BF
+member	DD_RESOURCE	parameter	0xC00100C0
+member	VL_DD_RESOURCE	variable-list	0xC00100C1
+member	DD_REV	parameter	0xC00100C2
+member	VL_DD_REV	variable-list	0xC00100C3
+member	DEV_REV	parameter	0xC00100C4
+member	VL_DEV_REV	variable-list	0xC00100C5
+member	DEV_TYPE	parameter	0xC00100C6
+member	VL_DEV_TYPE	variable-list	0xC00100C7
+member	DISC_ALM	parameter	0xC00100C8
+member	VL_DISC_ALM	variable-list	0xC00100C9
+member	DISC_LIM	parameter	0xC00100CA
+member	VL_DISC_LIM	variable-list	0xC00100CB
+member	DISC_PRI	parameter	0xC00100CC
+member	VL_DISC_PRI	variable-list	0xC00100CD
+member	DV_HI_ALM	parameter	0xC00100CE
+member	VL_DV_HI_ALM	variable-list	0xC00100CF
+member	DV_HI_LIM	parameter	0xC00100D0
+member	VL_DV_HI_LIM	variable-list	0xC00100D1
+member	DV_HI_PRI	parameter	0xC00100D2
+member	VL_DV_HI_PRI	variable-list	0xC00100D3
+member	DV_LO_ALM	parameter	0xC00100D4
+member	VL_DV_LO_ALM	variable-list	0xC00100D5
+member	DV_LO_LIM	parameter	0xC00100D6
+member	VL_DV_LO_LIM	variable-list	0xC00100D7
+member	DV_LO_PRI	parameter	0xC00100D8
+member	VL_DV_LO_PRI	variable-list	0xC00100D9
+member	FAULT_STATE	parameter	0xC00100DA
+member	VL_FAULT_STATE	variable-list	0xC00100DB
+member	FEATURE_SEL	parameter	0xC00100DC
+member	VL_FEATURE_SEL	variable-list	0xC00100DD
+member	FEATURES	parameter	0xC00100DE
+member	VL_FEATURES	variable-list	0xC00100DF
+member	FF_GAIN	parameter	0xC00100E0
+member	VL_FF_GAIN	variable-list	0xC00100E1
+member	FF_SCALE	parameter	0xC00100E2
+member	VL_FF_SCALE	variable-list	0xC00100E3
+member	FF_VAL	parameter	0xC00100E4
+member	VL_FF_VAL	variable-list	0xC00100E5
+member	FIELD_VAL	parameter	0xC00100E6
+member	VL_FIELD_VAL	variable-list	0xC00100E7
+member	FIELD_VAL_D	parameter	0xC00100E8
+member	VL_FIELD_VAL_D	variable-list	0xC00100E9
+member	FREE_SPACE	parameter	0xC00100EA
+member	VL_FREE_SPACE	variable-list	0xC00100EB
+member	FREE_TIME	parameter	0xC00100EC
+member	VL_FREE_TIME	variable-list	0xC00100ED
+member	FSTATE_TIME	parameter	0xC00100EE
+member	VL_FSTATE_TIME	variable-list	0xC00100EF
+member	FSTATE_VAL	parameter	0xC00100F0
+member	VL_FSTATE_VAL	variable-list	0xC00100F1
+member	FSTATE_VAL_D	parameter	0xC00100F2
+member	VL_FSTATE_VAL_D	variable-list	0xC00100F3
+member	GAIN	parameter	0xC00100F4
+member	VL_GAIN	variable-list	0xC00100F5
+member	GRANT_DENY	parameter	0xC00100F6
+member	VL_GRANT_DENY	variable-list	0xC00100F7
+member	HARD_TYPES	parameter	0xC00100F8
+member	VL_HARD_TYPES	variable-list	0xC00100F9
+member	HI_ALM	parameter	0xC00100FA
+member	VL_HI_ALM	variable-list	0xC00100FB
+member	HI_HI_ALM	parameter	0xC00100FC
+member	VL_HI_HI_ALM	variable-list	0xC00100FD
+member	HI_HI_LIM	parameter	0xC00100FE
+member	VL_HI_HI_LIM	variable-list	0xC00100FF
+member	HI_HI_PRI	parameter	0xC0010100
+member	VL_HI_HI_PRI	variable-list	0xC0010101
+member	HI_LIM	parameter	0xC0010102
+member	VL_HI_LIM	variable-list	0xC0010103
+member	HI_PRI	parameter	0xC0010104
+member	VL_HI_PRI	variable-list	0xC0010105
+member	IO_OPTS	parameter	0xC0010106
+member	VL_IO_OPTS	variable-list	0xC0010107
+member	IN	parameter	0xC0010108
+member	VL_IN	variable-list	0xC0010109
+member	IN_1	parameter	0xC001010A
+member	VL_IN_1	variable-list	0xC001010B
+member	L_TYPE	parameter	0xC001010C
+member	VL_L_TYPE	variable-list	0xC001010D
+member	LIM_NOTIFY	parameter	0xC001010E
+member	VL_LIM_NOTIFY	variable-list	0xC001010F
+member	LOW_CUT	parameter	0xC0010110
+member	VL_LOW_CUT	variable-list	0xC0010111
+member	LO_ALM	parameter	0xC0010112
+member	VL_LO_ALM	variable-list	0xC0010113
+member	LO_LIM	parameter	0xC0010114
+member	VL_LO_LIM	variable-list	0xC0010115
+member	LO_PRI	parameter	0xC0010116
+member	VL_LO_PRI	variable-list	0xC0010117
+member	LO_LO_ALM	parameter	0xC0010118
+member	VL_LO_LO_ALM	variable-list	0xC0010119
+member	LO_LO_LIM	parameter	0xC001011A
+member	VL_LO_LO_LIM	variable-list	0xC001011B
+member	LO_LO_PRI	parameter	0xC001011C
+member	VL_LO_LO_PRI	variable-list	0xC001011D
+member	MANUFAC_ID	parameter	0xC001011E
+member	VL_MANUFAC_ID	variable-list	0xC001011F
+member	MAX_NOTIFY	parameter	0xC0010120
+member	VL_MAX_NOTIFY	variable-list	0xC0010121
+member	MEMORY_SIZE	parameter	0xC0010122
+member	VL_MEMORY_SIZE	variable-list	0xC0010123
+member	MIN_CYCLE_T	parameter	0xC0010124
+member	VL_MIN_CYCLE_T	variable-list	0xC0010125
+member	MODE_BLK	parameter	0xC0010126
+member	VL_MODE_BLK	variable-list	0xC0010127
+member	NV_CYCLE_T	parameter	0xC0010128
+member	VL_NV_CYCLE_T	variable-list	0xC0010129
+member	OUT	parameter	0xC001012A
+member	VL_OUT	variable-list	0xC001012B
+member	OUT_D	parameter	0xC001012C
+member	VL_OUT_D	variable-list	0xC001012D
+member	OUT_HI_LIM	parameter	0xC001012E
+member	VL_OUT_HI_LIM	variable-list	0xC001012F
+member	OUT_LO_LIM	parameter	0xC0010130
+member	VL_OUT_LO_LIM	variable-list	0xC0010131
+member	OUT_SCALE	parameter	0xC0010132
+member	VL_OUT_SCALE	variable-list	0xC0010133
+member	OUT_STATE	parameter	0xC0010134
+member	VL_OUT_STATE	variable-list	0xC0010135
+member	PV	parameter	0xC0010136
+member	VL_PV	variable-list	0xC0010137
+member	PV_D	parameter	0xC0010138
+member	VL_PV_D	variable-list	0xC0010139
+member	PV_FTIME	parameter	0xC001013A
+member	VL_PV_FTIME	variable-list	0xC001013B
+member	PV_SCALE	parameter	0xC001013C
+member	VL_PV_SCALE	variable-list	0xC001013D
+member	PV_STATE	parameter	0xC001013E
+member	VL_PV_STATE	variable-list	0xC001013F
+member	RA_FTIME	parameter	0xC0010140
+member	VL_RA_FTIME	variable-list	0xC0010141
+member	RATE	parameter	0xC0010142
+member	VL_RATE	variable-list	0xC0010143
+member	RCAS_IN	parameter	0xC0010144
+member	VL_RCAS_IN	variable-list	0xC0010145
+member	RCAS_IN_D	parameter	0xC0010146
+member	VL_RCAS_IN_D	variable-list	0xC0010147
+member	RCAS_OUT	parameter	0xC0010148
+member	VL_RCAS_OUT	variable-list	0xC0010149
+member	RCAS_OUT_D	parameter	0xC001014A
+member	VL_RCAS_OUT_D	variable-list	0xC001014B
+member	READBACK	parameter	0xC001014C
+member	VL_READBACK	variable-list	0xC001014D
+member	READBACK_D	parameter	0xC001014E
+member	VL_READBACK_D	variable-list	0xC001014F
+member	RESET	parameter	0xC0010150
+member	VL_RESET	variable-list	0xC0010151
+member	RESTART	parameter	0xC0010152
+member	VL_RESTART	variable-list	0xC0010153
+member	ROUT_IN	parameter	0xC0010154
+member	VL_ROUT_IN	variable-list	0xC0010155
+member	ROUT_OUT	parameter	0xC0010156
+member	VL_ROUT_OUT	variable-list	0xC0010157
+member	RS_STATE	parameter	0xC0010158
+member	VL_RS_STATE	variable-list	0xC0010159
+member	SEL_1	parameter	0xC001015A
+member	VL_SEL_1	variable-list	0xC001015B
+member	SEL_2	parameter	0xC001015C
+member	VL_SEL_2	variable-list	0xC001015D
+member	SEL_3	parameter	0xC001015E
+member	VL_SEL_3	variable-list	0xC001015F
+member	SEL_TYPE	parameter	0xC0010160
+member	VL_SEL_TYPE	variable-list	0xC0010161
+member	SET_FSTATE	parameter	0xC0010162
+member	VL_SET_FSTATE	variable-list	0xC0010163
+member	SHED_OPT	parameter	0xC0010164
+member	VL_SHED_OPT	variable-list	0xC0010165
+member	SHED_RCAS	parameter	0xC0010166
+member	VL_SHED_RCAS	variable-list	0xC0010167
+member	SHED_ROUT	parameter	0xC0010168
+member	VL_SHED_ROUT	variable-list	0xC0010169
+member	SIMULATE	parameter	0xC001016A
+member	VL_SIMULTATE	variable-list	0xC001016B
+member	SIMULATE_D	parameter	0xC001016C
+member	VL_SIMULATE_D	variable-list	0xC001016D
+member	SP	parameter	0xC001016E
+member	VL_SP	variable-list	0xC001016F
+member	SP_D	parameter	0xC0010170
+member	VL_SP_D	variable-list	0xC0010171
+member	SP_HI_LIM	parameter	0xC0010172
+member	VL_SP_HI_LIM	variable-list	0xC0010173
+member	SP_LO_LIM	parameter	0xC0010174
+member	VL_SP_LO_LIM	variable-list	0xC0010175
+member	SP_RATE_DN	parameter	0xC0010176
+member	VL_SP_RATE_DN	variable-list	0xC0010177
+member	SP_RATE_UP	parameter	0xC0010178
+member	VL_SP_RATE_UP	variable-list	0xC0010179
+member	ST_REV	parameter	0xC001017A
+member	VL_ST_REV	variable-list	0xC001017B
+member	STATUS_OPTS	parameter	0xC001017C
+member	VL_STATUS_OPTS	variable-list	0xC001017D
+member	STRATEGY	parameter	0xC001017E
+member	VL_STRATEGY	variable-list	0xC001017F
+member	TAG_DESC	parameter	0xC0010180
+member	VL_TAG_DESC	variable-list	0xC0010181
+member	TEST_RW	parameter	0xC0010182
+member	VL_TEST_RW	variable-list	0xC0010183
+member	TRK_IN_D	parameter	0xC0010184
+member	VL_TRK_IN_D	variable-list	0xC0010185
+member	TRK_SCALE	parameter	0xC0010186
+member	VL_TRK_SCALE	variable-list	0xC0010187
+member	TRK_VAL	parameter	0xC0010188
+member	VL_TRK_VAL	variable-list	0xC0010189
+member	UPDATE_EVT	parameter	0xC001018A
+member	VL_UPDATE_EVT	variable-list	0xC001018B
+member	WRITE_ALM	parameter	0xC001018C
+member	VL_WRITE_ALM	variable-list	0xC001018D
+member	WRITE_LOCK	parameter	0xC001018E
+member	VL_WRITE_LOCK	variable-list	0xC001018F
+member	WRITE_PRI	parameter	0xC0010190
+member	VL_WRITE_PRI	variable-list	0xC0010191
+member	XD_SCALE	parameter	0xC0010192
+member	VL_XD_SCALE	variable-list	0xC0010193
+member	XD_STATE	parameter	0xC0010194
+member	VL_XD_STATE	variable-list	0xC0010195
+member	VIEW_1	parameter-list	0xC00101A0
+member	VIEW_2	parameter-list	0xC00101A1
+member	VIEW_3	parameter-list	0xC00101A2
+member	VIEW_4	parameter-list	0xC00101A3
+member	PERMITTED	record	0xC00101A4
+member	UPDATE_STATE	record	0xC00101A5
+member	DISABLED	record	0xC00101A6
+member	VIEW_3_2	parameter-list	0xC00101A7
+member	VIEW_3_3	parameter-list	0xC00101A8
+member	VIEW_3_4	parameter-list	0xC00101A9
+member	VIEW_3_5	parameter-list	0xC00101AA
+member	VIEW_3_6	parameter-list	0xC00101AB
+member	VIEW_3_7	parameter-list	0xC00101AC
+member	VIEW_3_8	parameter-list	0xC00101AD
+member	VIEW_3_9	parameter-list	0xC00101AE
+member	VIEW_3_10	parameter-list	0xC00101AF
+member	VIEW_3_11	parameter-list	0xC00101B0
+member	VIEW_3_12	parameter-list	0xC00101B1
+member	VIEW_3_13	parameter-list	0xC00101B2
+member	VIEW_3_14	parameter-list	0xC00101B3
+member	VIEW_3_15	parameter-list	0xC00101B4
+member	VIEW_3_16	parameter-list	0xC00101B5
+member	VIEW_3_17	parameter-list	0xC00101B6
+member	VIEW_4_2	parameter-list	0xC00101B7
+member	VIEW_4_3	parameter-list	0xC00101B8
+member	VIEW_4_4	parameter-list	0xC00101B9
+member	VIEW_4_5	parameter-list	0xC00101BA
+member	VIEW_4_6	parameter-list	0xC00101BB
+member	VIEW_4_7	parameter-list	0xC00101BC
+member	VIEW_4_8	parameter-list	0xC00101BD
+member	VIEW_4_9	parameter-list	0xC00101BE
+member	VIEW_4_10	parameter-list	0xC00101BF
+member	VIEW_4_11	parameter-list	0xC00101C0
+member	VIEW_4_12	parameter-list	0xC00101C1
+member	VIEW_4_13	parameter-list	0xC00101C2
+member	VIEW_4_14	parameter-list	0xC00101C3
+member	VIEW_4_15	parameter-list	0xC00101C4
+member	VIEW_4_16	parameter-list	0xC00101C5
+member	VIEW_4_17	parameter-list	0xC00101C6
+member	ITK_VER	parameter	0xC00101C7
+member	VL_ITK_VER	variable-list	0xC00101C8
+member	VL_ST_REV_01	variable-list	0xC0010B10
+member	VL_ST_REV_02	variable-list	0xC0010B11
+member	VL_ST_REV_03	variable-list	0xC0010B12
+member	VL_ST_REV_04	variable-list	0xC0010B13
+member	VL_ST_REV_05	variable-list	0xC0010B14
+member	VL_ST_REV_06	variable-list	0xC0010B15
+member	VL_ST_REV_07	variable-list	0xC0010B16
+member	VL_ST_REV_08	variable-list	0xC0010B17
+member	VL_ST_REV_09	variable-list	0xC0010B18
+member	VL_ST_REV_10	variable-list	0xC0010B19
+member	VL_ST_REV_11	variable-list	0xC0010B1A
+member	VL_ST_REV_12	variable-list	0xC0010B1B
+member	VL_ST_REV_13	variable-list	0xC0010B1C
+member	VL_ST_REV_14	variable-list	0xC0010B1D
+member	VL_ST_REV_15	variable-list	0xC0010B1E
+member	VL_ST_REV_16	variable-list	0xC0010B1F
+member	VL_ST_REV_17	variable-list	0xC0010B20
+member	VL_ST_REV_18	variable-list	0xC0010B21
+member	VL_ST_REV_19	variable-list	0xC0010B22
+member	VL_ST_REV_20	variable-list	0xC0010B23
+member	VL_PI_POINTER	variable-list	0xC0010B24
+member	VL_CONTENTS_REV	variable-list	0xC0010B25
+member	VL_FDD_LOCATOR	variable-list	0xC0010B26
+member	VL_FCF_LOCATOR	variable-list	0xC0010B27
+member	VL_CAPABILITY_LEV	variable-list	0xC0010B28
+member	FD_CHECK_ACTIVE	parameter	0xC0010B29
+member	FD_CHECK_ALM	parameter	0xC0010B2A
+member	FD_CHECK_ENABLE	parameter	0xC0010B2B
+member	FD_CHECK_MASK	parameter	0xC0010B2C
+member	FD_CHECK_PRI	parameter	0xC0010B2D
+member	FD_CHECK_STATE	parameter	0xC0010B2E
+member	CLR_CHECK	parameter	0xC0010B2F
+member	FD_FAIL_ACTIVE	parameter	0xC0010B30
+member	FD_FAIL_ALM	parameter	0xC0010B31
+member	FD_FAIL_ENABLE	parameter	0xC0010B32
+member	FD_FAIL_MASK	parameter	0xC0010B33
+member	FD_FAIL_PRI	parameter	0xC0010B34
+member	FD_MAINT_ACTIVE	parameter	0xC0010B35
+member	FD_MAINT_ALM	parameter	0xC0010B36
+member	FD_MAINT_ENABLE	parameter	0xC0010B37
+member	FD_MAINT_MASK	parameter	0xC0010B38
+member	FD_MAINT_PRI	parameter	0xC0010B39
+member	FD_OFFSPEC_ACTIVE	parameter	0xC0010B3A
+member	FD_OFFSPEC_ALM	parameter	0xC0010B3B
+member	FD_OFFSPEC_ENABLE	parameter	0xC0010B3C
+member	FD_OFFSPEC_MASK	parameter	0xC0010B3D
+member	FD_OFFSPEC_PRI	parameter	0xC0010B3E
+member	FD_RECOMMEN_ACT	parameter	0xC0010B3F
+member	RESOURCE_DIRECTORY	parameter	0xC0010B40
+member	RESOURCE_TYPE	parameter	0xC0010B41
+member	FD_VER	parameter	0xC0010B42
+member	VL_RESOURCE_TYPE	variable-list	0xC0010B43
+member	ALGORITHM_SEL	parameter	0xC0010B44
+member	VL_ALGORITHM_SEL	variable-list	0xC0010B45
+member	FILE_LOCATOR	parameter	0xC0010B46
+member	VL_FILE_LOCATOR	variable-list	0xC0010B47
+member	FILE_REV	parameter	0xC0010B48
+member	VL_FILE_REV	variable-list	0xC0010B49
+member	DIAGNOSTIC_SIMULATE_VALUE	record	0xC0010B51
+member	DIAGNOSTIC_VALUE	record	0xC0010B52
+member	PI_POINTER	parameter	0xC0020840
+member	CONTENTS_REV	parameter	0xC0020841
+member	FDD_LOCATOR	parameter	0xC0020843
+member	FCF_LOCATOR	parameter	0xC0020845
+member	CAPABILITY_LEV	parameter	0xC0020846
+member	FD_FAIL_MAP	parameter	0xC0020847
+member	FD_OFFSPEC_MAP	parameter	0xC0020848
+member	FD_MAINT_MAP	parameter	0xC0020849
+member	FD_CHECK_MAP	parameter	0xC002084A
+member	FD_SIMULATE	parameter	0xC002084B
+member	VL_FD_VER	variable-list	0xC002084C
+member	VL_FD_FAIL_ACTIVE	variable-list	0xC002084D
+member	VL_FD_OFFSPEC_ACTIVE	variable-list	0xC002084E
+member	VL_FD_MAINT_ACTIVE	variable-list	0xC002084F
+member	VL_FD_CHECK_ACTIVE	variable-list	0xC0020850
+member	VL_FD_FAIL_MAP	variable-list	0xC0020851
+member	VL_FD_OFFSPEC_MAP	variable-list	0xC0020852
+member	VL_FD_MAINT_MAP	variable-list	0xC0020853
+member	VL_FD_CHECK_MAP	variable-list	0xC0020854
+member	VL_FD_FAIL_MASK	variable-list	0xC0020855
+member	VL_FD_OFFSPEC_MASK	variable-list	0xC0020856
+member	VL_FD_MAINT_MASK	variable-list	0xC0020857
+member	VL_FD_CHECK_MASK	variable-list	0xC0020858
+member	VL_FD_FAIL_ALM	variable-list	0xC0020859
+member	VL_FD_OFFSPEC_ALM	variable-list	0xC002085A
+member	VL_FD_MAINT_ALM	variable-list	0xC002085B
+member	VL_FD_CHECK_ALM	variable-list	0xC002085C
+member	VL_FD_FAIL_PRI	variable-list	0xC002085D
+member	VL_FD_OFFSPEC_PRI	variable-list	0xC002085E
+member	VL_FD_MAINT_PRI	variable-list	0xC002085F
+member	VL_FD_CHECK_PRI	variable-list	0xC0020860
+member	VL_FD_SIMULATE	variable-list	0xC0020861
+member	VL_FD_RECOMMEN_ACT	variable-list	0xC0020862
+member	COMPATABILITY_REV	parameter	0xC0020863
+member	VL_COMPATABILITY_REV	variable-list	0xC0020864
+member	SOFTWARE_REV	parameter	0xC0020865
+member	HARDWARE_REV	parameter	0xC0020866

@@ -1,0 +1,27 @@
+#
+# %W% %G%
+#
+# RIO MBO64 block symbols
+#
+# Items:	0x80023600 -> 0x800236FF
+# Members:	0xC0013600 -> 0xC00136FF
+
+#
+block		__multiple_binary_output_64_block		0x80023600
+var-list	__mbo64_view_1					0x80023601
+var-list	__mbo64_view_2					0x80023602
+var-list	__mbo64_view_3					0x80023603
+var-list	__mbo64_view_4					0x80023604
+record		__mbo64_character				0x80023605
+collection      no_download_mbo64	RESERVED	0x800236FE
+collection      upload_wanted_mbo64	RESERVED	0x800236FF
+
+member        VL_SPM_B64					variable-list			0xC0013601
+member        VL_CAS_INM_B64				variable-list			0xC0013602
+member        VL_FSTATE_ST_64				variable-list			0xC0013603
+member        VL_BKCAL_OUTM_B64				variable-list			0xC0013604
+member        VL_MO_FSTATE_OPTS_64			variable-list			0xC0013605
+member        VL_FSTATE_VAL_B64				variable-list			0xC0013606
+member        VL_MO_POWERUP_OPTS_64			variable-list			0xC0013607
+			
+

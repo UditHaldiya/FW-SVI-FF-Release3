@@ -1,0 +1,17 @@
+#
+# %W% %G%
+#
+# IT block symbols
+#
+# Items:	0x800207B0 -> 0x800207CF
+# Members:	0xC00207B0 -> 0xC00207CF
+#
+block		__integrator	0x800207B0
+var-list	__it_view_1			0x800207B1
+var-list	__it_view_2			0x800207B2
+var-list	__it_view_3			0x800207B3
+var-list	__it_view_4			0x800207B4
+unit            __unit_it_out                  0x800207B5
+record		__it_character			0x800207B6
+collection      no_download_it	RESERVED	0x800207CE
+collection      upload_wanted_it	RESERVED	0x800207CF

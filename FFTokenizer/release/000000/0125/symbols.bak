@@ -1,0 +1,17 @@
+#
+# %W% %G%
+#
+# SPG block symbols
+#
+# Items:	0x80020850 -> 0x8002086F
+# Members:	0xC0020850 -> 0xC002086F
+#
+block		__setpoint_ramp_generator	0x80020850
+var-list	__spg_view_1			0x80020851
+var-list	__spg_view_2			0x80020852
+var-list	__spg_view_3			0x80020853
+var-list	__spg_view_4			0x80020854
+unit            __unit_spg_out                  0x80020855
+record		__spg_character			0x80020856
+collection      no_download_spg	RESERVED	0x8002086E
+collection      upload_wanted_spg	RESERVED	0x8002086F

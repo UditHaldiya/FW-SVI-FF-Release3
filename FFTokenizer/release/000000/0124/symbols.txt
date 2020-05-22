@@ -1,0 +1,17 @@
+#
+# %W% %G%
+#
+# SPID block symbols
+#
+# Items:	0x80020830 -> 0x8002084F
+# Members:	0xC0020830 -> 0xC002084F
+#
+block		__step_output_pid	0x80020830
+var-list	__spid_view_1			0x80020831
+var-list	__spid_view_2			0x80020832
+var-list	__spid_view_3			0x80020833
+var-list	__spid_view_4			0x80020834
+unit            __unit_spid_pv                  0x80020835
+record		__spid_character			0x80020836
+collection      no_download_spid	RESERVED	0x8002084E
+collection      upload_wanted_spid	RESERVED	0x8002084F

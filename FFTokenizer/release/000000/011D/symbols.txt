@@ -1,0 +1,18 @@
+#
+# %W% %G%
+#
+# SC block symbols
+#
+# Items:	0x80020750 -> 0x8002076F
+# Members:	0xC0020750 -> 0xC002076F
+#
+block		__signal_characterizer	0x80020750
+var-list	__sc_view_1			0x80020751
+var-list	__sc_view_2			0x80020752
+var-list	__sc_view_3			0x80020753
+var-list	__sc_view_4			0x80020754
+unit            __unit_sc_x                  0x80020755
+unit            __unit_sc_y                  0x80020756
+record		__sc_character			0x80020757
+collection      no_download_sc	RESERVED	0x8002076E
+collection      upload_wanted_sc	RESERVED	0x8002076F

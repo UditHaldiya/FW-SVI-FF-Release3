@@ -1,0 +1,18 @@
+#
+# %W% %G%
+#
+# Flow Totalizer Function Block symbols
+#
+# Items:    0x80022600-> 0x800226FF
+# Members:    0xC0012700 -> 0xC00127FF
+#
+block       __flow_totalizer                0x80022600
+var-list    __ft_view_1                     0x80022601
+var-list    __ft_view_2                     0x80022602
+var-list    __ft_view_3                     0x80022603
+var-list    __ft_view_4                     0x80022604
+unit        __unit_ft_xd                    0x80022605
+unit        __unit_ft_out                   0x80022606
+record      __ft_character                  0x8002260F
+collection      no_download_ft	RESERVED	0x800226FE
+collection      upload_wanted_ft	RESERVED	0x800226FF

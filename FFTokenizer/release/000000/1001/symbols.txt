@@ -1,0 +1,16 @@
+#
+# %W% %G%
+#
+# SIF Resource block symbols
+#
+# Items:        0x80021F00 -> 0x80021FFF
+# Members:      0xC0011F00 -> 0xC0011FFF
+#
+block           __sif_resource_block            0x80021F00
+var-list        __sif_res_view_1                0x80021F01
+var-list        __sif_res_view_2                0x80021F02
+var-list        __sif_res_view_3                0x80021F03
+var-list        __sif_res_view_4                0x80021F04
+record          __sif_res_character             0x80021F05
+collection      no_download_sif_res	RESERVED	0x80021FFE
+collection      upload_wanted_sif_res	RESERVED	0x80021FFF

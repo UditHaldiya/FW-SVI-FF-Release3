@@ -1,0 +1,15 @@
+#  0.9beta 1999-03-04
+#
+# MAI block symbols
+#
+# Items:        0x800209B0 -> 0x800209CF
+# Members:      0xC00109B0 -> 0xC00109CF
+#
+block           __mai_block                     0x800209B0
+var-list        __mai_view_1                     0x800209B1
+var-list        __mai_view_2                     0x800209B2
+var-list        __mai_view_3                     0x800209B3
+var-list        __mai_view_4                     0x800209B4
+record          __mai_character                  0x800209B7
+collection      no_download_mai	RESERVED	0x800209CE
+collection      upload_wanted_mai	RESERVED	0x800209CF

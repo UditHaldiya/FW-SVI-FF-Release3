@@ -1,0 +1,20 @@
+#
+# %W% %G%
+#
+# Temperature with Calibration for Basic Device block symbols
+#
+# Items:	0x800206D0 -> 0x800206EF
+# Members:	0xC00106D0 -> 0xC00106D0
+#
+block		__temperature_cal_basic			0x800206D0
+var-list	__tcb_view_1					0x800206D1
+var-list	__tcb_view_2					0x800206D2
+var-list	__tcb_view_3					0x800206D3
+var-list	__tcb_view_4					0x800206D4
+unit		__unit_tcb_cal_unit				0x800206D5
+unit		__unit_tcb_sensor_range  		0x800206D6
+unit		__unit_tcb_primary_val_unit 	0x800206D7
+unit		__unit_tcb_second_val_unit		0x800206D8
+record		__tcb_character					0x800206D9
+collection      no_download_tcb	RESERVED	0x800206EE
+collection      upload_wanted_tcb	RESERVED	0x800206EF

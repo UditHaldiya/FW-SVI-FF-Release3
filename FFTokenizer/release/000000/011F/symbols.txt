@@ -1,0 +1,17 @@
+#
+# %W% %G%
+#
+# DT block symbols
+#
+# Items:	0x80020790 -> 0x800207AF
+# Members:	0xC0020790 -> 0xC00207AF
+#
+block		__deadtime	0x80020790
+var-list	__dt_view_1			0x80020791
+var-list	__dt_view_2			0x80020792
+var-list	__dt_view_3			0x80020793
+var-list	__dt_view_4			0x80020794
+unit            __unit_dt_out                  0x80020795
+record		__dt_character			0x80020796
+collection      no_download_dt	RESERVED	0x800207AE
+collection      upload_wanted_dt	RESERVED	0x800207AF

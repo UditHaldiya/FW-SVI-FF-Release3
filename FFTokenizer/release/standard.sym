@@ -1,0 +1,170 @@
+##
+## @(#)Standard.sym 1.8  2009-06-15
+##
+## FF standard Symbols Files
+## Filename: Standard.sym
+## Spec revision:       FF-900 FS 5.1 DDL spec
+##                      FF-890 FS 1.8 FBAP spec part 1
+##                      FF-891 FS 1.8 FBAP spec part 2
+##			FF-892 FS 1.8 FBAP spec part 3
+##                      FF-893 FS 1.2 FBAP spec part 4
+##			FF-894 FS 1.1 FBAP spec part 5
+##			FF-895 PS 1.1 FF-SIS FB spec part 1
+##			FF-902 FS 1.1 XDCR common structures
+##			FF-903 FS 1.1 XDCR pressure
+##			FF-904 FS 1.1 XDCR temperature
+##			FF-906 FS 1.0 XDCR positioner
+##			FF-912 FS 1.0 Field Diagnostics
+##			
+## Date of last change: 2009-06-15
+## Description:
+## The standard symbol file is created by assembling the
+## files referred to in the "include" statements below.
+##
+##
+## DISCLAIMER OF WARRANTIES
+##
+## THIS DOCUMENT IS PROVIDED ON AN "AS IS" BASIS AND MAY BE SUBJECT TO FUTURE
+## ADDITIONS, MODIFICATIONS, OR CORRECTIONS DEPENDING ON THE RESULTS OF FIELD
+## TRIAL TESTING.  THE FIELDBUS FOUNDATION(TM) HEREBY DISCLAIMS ALL WARRANTIES
+## OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING ANY WARRANTY OF MERCHANTABILITY
+## OR FITNESS FOR A PARTICULAR PURPOSE, FOR THIS DOCUMENT.  IN NO EVENT WILL
+## THE FIELDBUS FOUNDATION(TM) BE RESPONSIBLE FOR ANY LOSS OR DAMAGE ARISING
+## OUT OF OR RESULTING FROM ANY DEFECT, ERROR OR OMISSION IN THIS DOCUMENT OR
+## FROM ANYONE'S USE OF OR RELIANCE ON THIS DOCUMENT.
+## DISCLAIMER OF WARRANTIES
+##
+## (c) Fieldbus Foundation(TM) (1994-2011)
+##
+##
+
+##
+## HISTORY:
+##  JPH  Revision 0.9  19950515
+##  TAB  Revision 1.0  19961015
+##  QLQ  Revision 1.1  19970731
+##  DAD  Revision 1.21beta 1999-03-04
+##  SBM  Revision 1.22beta 1999-12-01
+##              added resource block 2
+##  SBM  Revision 1.3  2002-06-13
+##              added FBAP Part 3 blocks
+##  FI   Revision 1.4  2005-11-09
+##              added label comments for each entry
+##              added entry for resource block 3
+##  ED   Revision 1.5  2006-08-09
+##		add dual sensor temperature transducer
+##  ED	 Revision 1.6  2007-08-29
+##		add SIS resource, AI, DO blocks
+##	MS	 Revision 1.6  2007-21-12
+##		add programmable resource
+##		ARs 2285 & 2287
+##  ED	 Revision 1.7  2007-12-03
+##		Change sis to sif
+##  MS	 Revision 1.8 2009.06.15
+##		ARs 3057, 4038
+##  MS	 Revision 1.9 2011.04.25
+##		ARs 5663
+
+
+include 000000/0100/symbols.txt                         # std_parm.ddl     
+include 000000/0134/symbols.txt                         # adv_parm.ddl
+include 000000/0101/symbols.txt                         # ai_block.ddl    
+include 000000/0102/symbols.txt                         # ao_block.ddl     
+include 000000/0103/symbols.txt                         # di_block.ddl     
+include 000000/0104/symbols.txt                         # do_block.ddl   
+include 000000/0105/symbols.txt                         # bg_block.ddl   
+include 000000/0106/symbols.txt                         # ml_block.ddl   
+include 000000/0107/symbols.txt                         # pd_block.ddl   
+include 000000/0108/symbols.txt                         # pidblock.ddl   
+include 000000/0109/symbols.txt                         # ra_block.ddl   
+include 000000/010a/symbols.txt                         # cs_block.ddl   
+include 000000/010b/symbols.txt                         # resblock.ddl   
+include 000000/0133/symbols.txt                         # resblock2.ddl   
+include 000000/0143/symbols.txt                         # prog_resblock.ddl   
+
+include 000000/013E/symbols.txt                         # xdcr_parm.ddl
+include 000000/010c/symbols.txt                         # gen_xdcr_block.ddl   
+include 000000/013d/symbols.txt                         # cmplx_xdcr_block.ddl   
+include 000000/010d/symbols.txt                         # adv_pvb.ddl     
+include 000000/010f/symbols.txt                         # bas_pvb.ddl     
+include 000000/0111/symbols.txt                         # dsc_pvb.ddl     
+include 000000/0113/symbols.txt                         # flow_cb.ddl     
+include 000000/0115/symbols.txt                         # press_cb.ddl
+include 000000/0158/symbols.txt                         # press_cb2.ddl    
+include 000000/0117/symbols.txt                         # rdrl_cb.ddl
+include 000000/0119/symbols.txt                         # temp_c2s.ddl
+include 000000/0159/symbols.txt                         # temp_c2s2.ddl
+include 000000/011a/symbols.txt                         # temp_cb.ddl
+include 000000/0160/symbols.txt                         # temp_cb2.ddl     
+include 000000/0145/symbols.txt                         # pos_a_block.ddl      
+include 000000/0146/symbols.txt                         # pos_d_block.ddl      
+include 000000/0147/symbols.txt                         # pos_a_d_block.ddl      
+
+include 000000/012e/symbols.txt                         # mdi_block.ddl   
+include 000000/012f/symbols.txt                         # mdo_block.ddl   
+include 000000/0130/symbols.txt                         # mai_block.ddl   
+include 000000/0131/symbols.txt                         # mao_block.ddl   
+include 000000/0132/symbols.txt                         # mio_parm.ddl    
+
+include 000000/011B/symbols.txt                         # dc_block.ddl
+include 000000/011C/symbols.txt                         # os_block.ddl
+include 000000/011D/symbols.txt                         # sc_block.ddl 
+include 000000/011E/symbols.txt                         # spg_block.ddl
+include 000000/011F/symbols.txt                         # dt_block.ddl
+include 000000/0120/symbols.txt                         # it_block.ddl  
+include 000000/0125/symbols.txt                         # spg_block.ddl 
+include 000000/0126/symbols.txt                         # is_block.ddl  
+include 000000/0127/symbols.txt                         # ar_block.ddl  
+include 000000/0129/symbols.txt                         # tmr_block.ddl  
+include 000000/012A/symbols.txt                         # aal_block.ddl  
+include 000000/0128/symbols.txt                         # calca_block.ddl 
+include 000000/0121/symbols.txt                         # pi_block.ddl  
+include 000000/0122/symbols.txt                         # cao_block.ddl  
+include 000000/0123/symbols.txt                         # cdo_block.ddl  
+include 000000/0124/symbols.txt                         # spid_block.ddl  
+include 000000/012B/symbols.txt                         # dal_block.ddl  
+include 000000/012C/symbols.txt                         # ahi_block.ddl  
+include 000000/012D/symbols.txt                         # dhi_block.ddl 
+include 000000/0135/symbols.txt                         # calcd_block.ddl
+include 000000/0144/symbols.txt                         # ft_block.ddl   
+
+include 000000/013f/symbols.txt                         # cust_in_block.ddl   
+include 000000/0140/symbols.txt                         # cust_cntrl_block.ddl   
+include 000000/0141/symbols.txt                         # cust_out_block.dd   
+include 000000/0142/symbols.txt                         # cust_calc_block.ddl   
+
+include 000000/1000/symbols.txt                         # sif_parm.ddl 
+include 000000/1001/symbols.txt                         # sif_resblock.ddl 
+include 000000/1002/symbols.txt                         # sif_aiblock.ddl 
+include 000000/1004/symbols.txt                         # sif_doblock.ddl 
+include 000000/0148/symbols.txt                         # rio_assoc_prim_block.ddl 
+include 000000/0149/symbols.txt                         # rio_assoc_block.ddl 
+include 000000/014B/symbols.txt                         # rio_h1_block.ddl 
+include 000000/014C/symbols.txt                         # rio_hart_block.ddl 
+include 000000/014D/symbols.txt                         # rio_mbi64_block.ddl 
+include 000000/014E/symbols.txt                         # rio_mbo64_block.ddl 
+include 000000/014F/symbols.txt                         # rio_mai16_block.ddl 
+include 000000/0150/symbols.txt                         # rio_mao16_block.ddl 
+include 000000/0151/symbols.txt                         # rio_vfd_block.ddl 
+include 000000/0152/symbols.txt                         # rio_parm.ddl 
+include 000000/0153/symbols.txt                         # rio_xdcr_parm.ddl
+include 000000/0155/symbols.txt                         # rio_hart_xdcr_parm.ddl
+include 000000/0156/symbols.txt                         # rio_wless_hart_block.ddl
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 

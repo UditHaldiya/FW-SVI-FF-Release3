@@ -1,0 +1,18 @@
+#
+# %W% %G%
+#
+# AR block symbols
+#
+# Items:	0x80020890 -> 0x800208AF
+# Members:	0xC0020890 -> 0xC00208AF
+#
+block		__arithmetic	0x80020890
+var-list	__ar_view_1			0x80020891
+var-list	__ar_view_2			0x80020892
+var-list	__ar_view_3			0x80020893
+var-list	__ar_view_4			0x80020894
+unit            __unit_ar_pv                  0x80020895
+unit            __unit_ar_out                  0x80020896
+record		__ar_character			0x80020897
+collection      no_download_ar	RESERVED	0x800208AE
+collection      upload_wanted_ar	RESERVED	0x800208AF
