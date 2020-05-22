@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<HART Version="1.0">
+  <Include></Include>
+  <Commands>
+    <SubCmdOnly CmdNum="255">
+      <SubCommands>
+        <Command Name="ReadAndClearBlockProfiles" CmdNum="25" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_UNPUBLISHED_COMMAND" Description="Reports max block execution times in ms">
+          <ResponseParams>
+            <Param>Block Exec Times</Param>
+          </ResponseParams>
+        </Command>
+      </SubCommands>
+    </SubCmdOnly>
+  </Commands>
+  <Variables>
+    <Variable Name="Block Exec Times" DataType="H_UINT" Description="In ms" MaxSize="17"></Variable>
+  </Variables>
+</HART>

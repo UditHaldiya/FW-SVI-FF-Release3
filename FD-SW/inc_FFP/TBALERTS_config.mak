@@ -1,0 +1,16 @@
+#Specify whether alerts carry alert state cache
+TBALERTS_OPTIONS_CACHE = INCLUDE, EXCLUDE
+TBALERTS_SELECTION_CACHE = INCLUDE
+
+#Specify whether alerts carry alert historic state value
+TBALERTS_OPTIONS_HISTORY = INCLUDE, EXCLUDE
+TBALERTS_SELECTION_HISTORY = INCLUDE
+
+#Specify behavior of near-closed alert w.r.t. CUTOFF_LO
+TBALERTS_OPTIONS_NEARCLOSED_CUTOFF = IGNORED, SUSPENDED, CLEARED #SUSPENDED freezes time to alert, CLEARED clears the time 
+TBALERTS_SELECTION_NEARCLOSED_CUTOFF = SUSPENDED
+
+#Specify behavior of near-closed alert w.r.t. CUTOFF_LO and CUTOFF_HI
+TBALERTS_OPTIONS_DEVIATION_CUTOFF = IGNORED, SUSPENDED, CLEARED #SUSPENDED freezes time to alert, CLEARED clears the time 
+TBALERTS_SELECTION_DEVIATION_CUTOFF = SUSPENDED
+

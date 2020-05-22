@@ -1,0 +1,10 @@
+//    co.lnt
+//    Compiler Options for Generic C compiler
+
+//    This file contains options to allow PC-lint to process source
+//    files for your compiler.  It is used as follows:
+//
+//    lint  co.lnt  source-file(s)
+//
+
+..\FIRMWARE\LintCfg\co5.lnt

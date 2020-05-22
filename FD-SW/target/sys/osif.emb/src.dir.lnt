@@ -1,0 +1,6 @@
+-e970 //Type outside typedef
+-e640 //Expected strong type
+-e960 -e961 //MISRA 2 specific
+-e957 //defined without prototype
+-e732 //endemic loss of sign with OS_GetTime32
+-esym(586, malloc, free)

@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<HART Title="FF FFP HART Intercept Commands Definition" Version="1.0">
+  <Commands>
+    <!--Sample commands; params are ordered-->
+  </Commands>
+  <Include>
+    <FileName>..\FIRMWARE\inc_FFAP\HARTCommands5_APP.xml</FileName>
+  </Include>
+</HART>

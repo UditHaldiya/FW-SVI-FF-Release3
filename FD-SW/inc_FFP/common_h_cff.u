@@ -1,0 +1,65 @@
+#MP If 0 ;Tombstone header
+/*
+Copyright 2020 by Dresser, Inc., as an unpublished trade secret.  All rights reserved.
+This document and all information herein are the property of Dresser, Inc.
+It and its contents are  confidential and have been provided as a part of
+a confidential relationship.  As such, no part of it may be made public,
+decompiled, reverse engineered or copied and it is subject to return upon
+demand.
+*/
+/**
+    \file common_h_cff.u
+    \brief Replacement in fdev_cfg.h of artifacts common to .h and .cff files
+    based on included "Raw materials"
+    Probably, may be expandable over time
+
+    CPU: Any
+
+    OWNER: AK
+
+    \ingroup framework
+*/
+#MP Endif ;Tombstone header
+#MP Setstr basename = uAutoLine
+#MP Include "common_h_cff.inc"
+#MP Include "ustd.inc"
+#MP Setstr headername = basename ".h"
+#MP toupper[basename]
+#MP Setstr guard = toupper "_H_"
+#MP Export (0) {uJoin, basename, ".c"}
+//Dummy to satisfy IAR IDE
+#MP Export (0) headername
+/*
+Copyright 2020 by Dresser, Inc., as an unpublished trade secret.  All rights reserved.
+This document and all information herein are the property of Dresser, Inc.
+It and its contents are  confidential and have been provided as a part of
+a confidential relationship.  As such, no part of it may be made public,
+decompiled, reverse engineered or copied and it is subject to return upon
+demand.
+*/
+/**
+    \file #mp%sheadername
+    \brief Replacement in fdev_cfg.h of artifacts common to .h and .cff files
+    based on included "Raw materials"
+    Probably, may be expandable over time
+
+    CPU: Any
+
+    #MP Setstr owner basename ".u"
+    OWNER: #mp%sowner
+
+    \ingroup framework
+*/
+#ifndef #mp%sguard
+#define #mp%sguard
+
+/* --- NV RAM cycle time -------------------------------- */
+#define NV_RAM_CYCLE_TIME #mp%uFF_NV_CYCLE_T    /* Unit [s]; in MN implemetation it is for show only */
+
+/* --- DLL bus parameters -------------------------------------------------- */
+#define DEV_ST_MIN                #mp%uFF_DLL_min_slot_time
+#define DEV_MID_MIN               #mp%uFF_DLL_MinimumInterPduDelay
+#define DEV_MRD_MIN               #mp%uFF_DLL_min_MaxResponseDelay
+
+#endif //#mp%sguard
+

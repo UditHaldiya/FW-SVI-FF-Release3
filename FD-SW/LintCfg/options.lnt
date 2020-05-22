@@ -1,0 +1,177 @@
+// Please note -- this is a representative set of error suppression
+//                options.  Please adjust to suit your own policies
+//                See  manual (chapter LIVING WITH LINT)
+//                for further details.
+
+//----------- AK ----------------------
+//Enforce strongest typing by default. You may need to relax
+//it for your particular types
+//-strong(AJX)
+
+//Strong boolean type
+-strong(AJXB, bool_t)
+
+//For type tree, use ASCII graphics (instead of IBM symbols)
+-fhg
+
+//Generate type tree in the report
++vh
+
+//Enforce initialization checking
++e943 +e745
+
+//------- AK: indentation --------------
+-t4 //Tabs are not to be used, but in case they are, they are 4 spaces
++fil //check indentation on labels
+
+//indentation messages are on by default: +e525 +e725
+
+//------- AK: target --------------
+-d__ARM4TM__
+-d__LITTLE_ENDIAN__
+-d__CPU_MODE__=2 //doesn't matter for lint; matters for libraries
+
+//------- AK: language --------------
+-feb //enums cannot be bitfields
++fll //long long is OK
++fmd //tentative definitions are OK
++fsc //String constants are Const char
++fce //continue on #error
+-d__STDC__
+
+
+//--------- AK: include direcory ----------------
++fdi //start search for ""-include in the including file's directory
+
+//--------- AK: passes ------------------
+-passes(2) //may need more
+
+//--------- AK: arguments ------------------
+//Commented out on a consensus decision +fpn //NULL pointers can be passed to functions
+
+//--------- AK: assert semantics -----------
+-sem(mn_assert, r_no)
+
+//---------- AK: Purity semantics -----------
+-sem(*_Is*, pure)
+
+//---------- AK: implicit conversions ---------
++e919 //Suspicious narrowing conversions
+-append(919,[Misra 2004 Rules 10.1, 10.2])
+
+//---------- switch -------------
+-e788 //with default, no need to have all cases for all enum values
+
+//---------- AK: print summary -------------
++e900
+
+//---------- const enforcement -----------------
++fv9 +e843
+
+//---------- library headers -----------------
++libclass(angle)
+-esym(960,8.5) //[code in header] temporary, until lint knows to allow "static inline"
+
+-idlen(200) //per IAR compiler documentation
+-e793 // ANSI/ISO limit of 31 'significant characters in an external identifier'
+
+//--------------------- Expressions eval ---------------------------------
+-e778 -e941 //Who cares if a constant evaluates to 0?
+
+//-esym(960, 10.1) //implicit conversions
+-esym(960, Implicit conversion changes signedness)
+-esym(960, Implicit conversion of complex integer expression)
+-esym(960, Implicit conversion from integer to floating point type)
+-esym(960, Implicit conversion of integer to smaller type) //OK to suppress
+
+//-esym(960, 10.3) //cast of a complex expression can only be narrowing and to the same signedness
+-esym(960, Cast of complex expression changes signedness)
+-esym(960, Cast of complex integer expression to larger type) //MISRA 10.3 overreached
+
+-esym(960, 10.5) //re-cast the result of ~ or << to the same underlying type
+
++e713 //assignment of an unsigned type to same-sized signed type
++e732 //assignment of a possibly negative to an unsigned type
++e720 //boolean test in assignment - use equiv()
++e946 +e947 //relational or subtraction of pointers
++e701 +e703 //left shift of a signed
++e702 +e704 //right shift of a signed
+
++e767 +e962 //conflicting or identical macro definitions in different places
+
+//---------------- Lint 9 adaptation ----------------------
+-restore_at_end //disregard error suppression leftovers from the previous source
+//-static_depth(8) //analyze static-duration variable up to 8 levels of call nesting
+-static_depth(2) //analyze static-duration variable up to 8 levels of call nesting
++typename(*)
++fsn
+-e835 -e845 //zero argument to an operator
+//Unusual argument to sizeof disabled within Struct_ macros (a Lint bug with just *)
+-emacro(866,STRUCT*) //Struct-related macros use sizeof in a way suspicious to lint
+-emacro(866,Struct*) //Struct-related macros use sizeof in a way suspicious to lint
+
+//---------------- more adaptation ---------------------
+-estring(960, "function identifier used without '&' or parenthisized parameter list") //16.9; su[ppression broken in Lint as of 9.00e
+-esym(960,16.9) //MISRA 2004 Required Rule 16.9, function identifier used without '&' or parenthisized parameter list
+
+-estring(960, "pointer arithmetic other than array indexing used") //17.4
+-estring(960, "pointer arithmetic by increment or decrement used") //17.4
+-atomic( any_type Atomic_ ) -esym(950, Atomic_) //non-ansi construct is lint's own
+
+-e537 //No problem with multiple inclusion of guarded headers
+
+//------------- Lint too literal approach to operator precedence --------
+-esym(961, 12.1, dependence placed on C's operator precedence; operators: '+' and '-')
+-esym(961, 12.1, dependence placed on C's operator precedence; operators: '+' and '*')
+-esym(961, 12.1, dependence placed on C's operator precedence; operators: '+' and '/')
+-esym(961, 12.1, dependence placed on C's operator precedence; operators: '-' and '+')
+-esym(961, 12.1, dependence placed on C's operator precedence; operators: '-' and '*')
+-esym(961, 12.1, dependence placed on C's operator precedence; operators: '-' and '/')
+-esym(961, 12.1, dependence placed on C's operator precedence; operators: '-' and '-')
+-esym(961, 12.1, dependence placed on C's operator precedence; operators: '*' and '/')
+-esym(961, 12.1, dependence placed on C's operator precedence; operators: '*' and '+')
+-esym(961, 12.1, dependence placed on C's operator precedence; operators: '*' and '-')
+-esym(961, 12.1, dependence placed on C's operator precedence; operators: '/' and '+')
+-esym(961, 12.1, dependence placed on C's operator precedence; operators: '/' and '-')
+
+//Common semantics
+-sem(abs,pure)
+-sem(memcpy,pure)
+-sem(memset,pure)
+-sem(memcmp,pure)
+
+//For us, Lint's Atomic_ will mean that either the type is atomic or that we don't care.
+//Be careful with assigning Atomic_ attribute
+-etype(457, "* Atomic_")
+-estring(950,Atomic_) //Non-ANSI reserved word or construct: 'Atomic_' [MISRA 2004 Rule 1.1]
+
+//Allow ourselves unused struct members with self-explanatory names (and for self-explanatory purposes)
+-esym(768,*::Reserved)
+-esym(768,*::Padding)
+-esym(768,*::Unused)
+
+//We **PERMANENTLY** mask RTOS noncompliance by suppressing the "Header not used" message 766 in rtos directory
+-efile(766,*\rtos\*.?)
+
+//------------ begin TBD! -----------------
+-esym(961,12.13) // Note 961: Violates MISRA 2004 Advisory Rule 12.13, increment or decrement combined with another operator
+-esym(960,8.7) // Note 960: Violates MISRA 2004 Required Rule 8.7, could define variable at block scope: ktr5ms
+//------------ end TBD! -----------------
+
+
+//============== Lint Bugs! =====================
+// Lint bugs: No attention to atomicity. Address passed to a thread-safe function treated as thread-unsafe
+-e459 //Function address taken => unprotected access flagged.//Useless as of 9.00b2
+//Not in 9.00f. -e458 //Taking an address of an object constitutes unsafe read access in 9.00b2
+
+-esym(960, Non-constant argument to function) //Prohibited Implicit Conversion (Lint bug: f(a==b); triggers it) (we use 919)
+-esym(960, Non-constant return expression) //Prohibited Implicit Conversion (Lint bug: return a==b; triggers it) (we use 919)
+
+//Lint 9.00e bugs
+-esym(961,12.6) //MISRA 2004 Advisory Rule 12.6, boolean expression required for operator: e.g. || (wrong with defined() !)
+-esym(960,12.5) // Note 960: Violates MISRA 2004 Required Rule 12.5, non-primary expression used with logical operator
+
+-esym(961,19.7) //Gimpel issue GSRN-MI-081003-1 Function-like macros are allowed; they seldom can be implemented as functions
+-e522 //Gimpel unconfirmed wrong conclusions about no side effects; see KnownBugs\522.c; also sometimes correct but no big deal
+
+

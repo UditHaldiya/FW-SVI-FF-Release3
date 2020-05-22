@@ -1,0 +1,2 @@
+-esym(578 752, xcp_dscr) //redef hides, not referenced
+-e701 -e641 -e923 //composition of "pointer" for mn_assert() FIXME

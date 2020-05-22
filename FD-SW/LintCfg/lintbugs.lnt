@@ -1,0 +1,16 @@
+//============== Lint Bugs! =====================
+
+// Lint bugs: No attention to atomicity. Address passed to a thread-safe function treated as thread-unsafe
+-e459 //Function address taken => unprotected access flagged.//Useless as of 9.00b2
+//Not in 9.00f. -e458 //Taking an address of an object constitutes unsafe read access in 9.00b2
+
+-esym(960, Non-constant argument to function) //Prohibited Implicit Conversion (Lint bug: f(a==b); triggers it) (we use 919)
+-esym(960, Non-constant return expression) //Prohibited Implicit Conversion (Lint bug: return a==b; triggers it) (we use 919)
+
+//Lint 9.00e bugs
+-esym(961,12.6) //MISRA 2004 Advisory Rule 12.6, boolean expression required for operator: e.g. || (wrong with defined() !)
+-esym(960,12.5) // Note 960: Violates MISRA 2004 Required Rule 12.5, non-primary expression used with logical operator
+
+-esym(961,19.7) //Gimpel issue GSRN-MI-081003-1 Function-like macros are allowed; they seldom can be implemented as functions
+-e522 //Gimpel unconfirmed wrong conclusions about no side effects; see KnownBugs\522.c; also sometimes correct but no big deal
+

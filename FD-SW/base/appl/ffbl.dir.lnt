@@ -1,0 +1,3 @@
+//Softing stuff
++libdir(*\ffbl\inc)
++libm(*\ffbl\src\*)

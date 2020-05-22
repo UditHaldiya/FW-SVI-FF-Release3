@@ -1,0 +1,109 @@
+#MP NUM_STATUS_BYTES = 12 ; to match the code
+                    #MP
+#MP Macro FaultDef ;(name, number)
+#MP #1# = #2#
+#MP numcount = numcount + 1
+#MP If #2# > maxnum
+    #MP maxnum = #2#
+#MP Endif
+#MP Endm
+                    #MP
+#MP Macro FaultDDTextDef ;(name, English_text)
+#MP If !Defined(#1# {NUM})
+    Error: text defined for non-existent fault
+#MP Else
+    #MP Setstr Name_%dnamecount = "|en|" #2#
+    #MP Name_%dnamecount = #1#
+    #MP namecount = namecount+1
+#MP Endif
+#MP Endm
+                    #MP
+#MP Macro StartFaultDef ;()
+#MP numcount=0
+#MP namecount=0
+#MP maxnum=0
+#MP Endm
+                    #MP
+#MP Macro EndFaultDef ;()
+#MP If maxnum >= NUM_STATUS_BYTES*8
+    Error: Not enough status bytes
+#MP Endif
+#MP If numcount!=namecount
+    Error: Mismatch of numbers of faults and names
+#MP Else
+    #MP For n=0, namecount-1
+        #MP fbit = Name_%dn-1
+        #MP bytenum = fbit/8
+        #MP bitnum = fbit%8
+        #MP enumval_%dbytenum%n_%dbitnum = 1<<(7-bitnum)
+        #MP inplay_%dbytenum = 1 ;just have it defined
+#define FAULT_NAME_#mp{%dbytenum}_#mp%dbitnum "#mp%sName_%dn"
+    #MP Endfor
+                    #MP
+    #MP ;Prepare the DD enum definitions
+#define FAULTS_ENUMS_TBD \
+{ 0x01, "|en|TBD." }
+
+    #MP For bytenum=0, NUM_STATUS_BYTES-1
+        #MP Ifdef inplay_%dbytenum
+#define FAULTS_ENUMS#mp%dbytenum \
+            #MP For bitnum=0,7
+                #MP Ifdef enumval_%dbytenum%n_%dbitnum
+                    #MP val= enumval_%dbytenum%n_%dbitnum
+{ 0x#mp%02xval, FAULT_NAME_#mp{%dbytenum}_#mp%dbitnum } \
+                #MP Endif
+            #MP Endfor
+ /*empty*/
+
+VARIABLE device_status_#mp{%dbytenum}_c
+{
+    LABEL "|en|device status #mp{%dbytenum}(c)";
+#ifndef DD4
+    HELP "|en|Device status #mp{%dbytenum}";
+#endif
+    CLASS CONTAINED & DYNAMIC;
+    HANDLING READ;
+    TYPE BIT_ENUMERATED (1)
+    {
+        FAULTS_ENUMS#mp%dbytenum
+    }
+}
+
+        #MP Else
+VARIABLE device_status_#mp{%dbytenum}_c
+{
+    LABEL "|en|DEVICE_STATUS_#mp{%dbytenum}(C)" ;
+#ifndef DD4
+    HELP                        "|en|TBD";
+#endif
+    CLASS CONTAINED & DYNAMIC;
+    HANDLING READ;
+    TYPE BIT_ENUMERATED (1)
+    {
+        FAULTS_ENUMS_TBD
+    }
+}
+        #MP Endif
+device_status_#mp{%dbytenum}_h LIKE VARIABLE device_status_#mp{%dbytenum}_c
+{
+    REDEFINE LABEL "|en|DEVICE_STATUS_#mp{%dbytenum}(H)";
+}
+    #MP Endfor
+                    #MP
+                    #MP
+#define DEVICE_STATUS                        \
+    #MP For bytenum=0, NUM_STATUS_BYTES-1
+    CURRENT_STATUS_#mp{%dbytenum}_C, device_status_#mp{%dbytenum}_c;   \
+    #MP Endfor
+    #MP For bytenum=0, NUM_STATUS_BYTES-2
+    HISTORY_STATUS_#mp{%dbytenum}_H, device_status_#mp{%dbytenum}_h;   \
+    #MP Endfor
+    #MP bytenum=NUM_STATUS_BYTES-1
+    HISTORY_STATUS_#mp{%dbytenum}_H, device_status_#mp{%dbytenum}_h
+
+#MP Endif
+#MP Endm
+                    #MP
+                    #MP
+#MP Include "faultdef_ff.inc"
+

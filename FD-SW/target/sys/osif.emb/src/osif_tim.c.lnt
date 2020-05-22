@@ -1,0 +1,4 @@
+-esym(749, _T_TIMER_SOURCE::*) //local enum constant not referenced
+-e641 //converting enum to int
+-e656 //arithmetic on compatible enums
+-e655 //bitwise on compatible enums
