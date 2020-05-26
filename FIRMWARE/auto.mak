@@ -9,9 +9,9 @@ appserverc = $(firstword $(shell cmd /C sort /R appserverc.txt))
 
 #output files (e.g. .mns, .map etc.) will be at FF_Auto_Builds\CXXXXX
 #out_dir := C:\FF_Auto_Builds\FromDevelBranch
-out_dir := C:\Ddrive\Auto_Builds\SVIFF\FromDevelBranch
+out_dir := C:\Ddrive\Auto_Builds\SVIFF\FromReleasesBranch
 buildname = C$(appserverc)
-uniqroot = C:\Ddrive\tfsbuildR\SVIFF\Devel
+uniqroot = C:\Ddrive\tfsbuildR\SVIFF\Release3
 OFFroot = $(uniqroot)\FIRMWARE
 OFFmodroot = $(uniqroot)\Core\FIRMWARE
 
