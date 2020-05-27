@@ -34,12 +34,14 @@ endif
 
 FFP_MNS_OFFICIAL_BNAME1=FFFP_$(OFFDir)_$(OFFver)_$(FFP_FW_VERID1)_$(FFP_FW_CRCID1)_1
 
+ReleaseDir?=.
+
 #What to do after FFAP modules are sync'ed: Get FFP and tokenizer
 define VC_PLUGIN
     -$(MN_RM) -f -r $(SISTER_OFFroot)
     @echo Now getting FFP
-    $(OFFVCS) workfold /map "$$/$(TFSProject)/FD-SW" $(SISTER_OFFroot) /workspace:$(OFFworkspace) $(OFFlogin)
-    $(OFFVCS) workfold /map "$$/$(TFSProject)/FD-SW/$(TokenizerDir)" $(SISTER_OFFroot)/$(TokenizerDir) /workspace:$(OFFworkspace) $(OFFlogin)
+    $(OFFVCS) workfold /map "$$/$(TFSProject)/$(ReleaseDir)/FD-SW" $(SISTER_OFFroot) /workspace:$(OFFworkspace) $(OFFlogin)
+    $(OFFVCS) workfold /map "$$/$(TFSProject)/$(ReleaseDir)/FD-SW/$(TokenizerDir)" $(SISTER_OFFroot)/$(TokenizerDir) /workspace:$(OFFworkspace) $(OFFlogin)
     $(PAUSE)
     echo %TIME% Sync FF >> $(PROJDIR)\buildtime.log
     $(OFFVCS) get $(SISTER_OFFroot);$(OFFver) /recursive /force $(OFFlogin)
