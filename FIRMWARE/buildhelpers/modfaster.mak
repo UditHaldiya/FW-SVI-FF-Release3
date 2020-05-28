@@ -3,8 +3,8 @@ ifeq (yin,yang)
 endif
 
 modexec:=$(lastword $(MAKEFILE_LIST))
-#mycopy:=xcopy /R/K/Y
-mycopy:=.\cp.exe -f -p
+mycopy:=xcopy /R/K/Y
+#mycopy:=.\cp.exe -f -p
 OFFVCS?="$(ProgramFiles)\Microsoft Visual Studio 10.0\Common7\IDE\tf.exe"
 
 comma:=,
