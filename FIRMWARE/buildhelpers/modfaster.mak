@@ -3,8 +3,8 @@ ifeq (yin,yang)
 endif
 
 modexec:=$(lastword $(MAKEFILE_LIST))
-mycopy:=xcopy /R/K/Y
-#mycopy:=.\cp.exe -f -p
+#mycopy:=xcopy /R/K/Y/-I
+mycopy:=.\cp.exe -f -p
 OFFVCS?="$(ProgramFiles)\Microsoft Visual Studio 10.0\Common7\IDE\tf.exe"
 
 comma:=,
@@ -31,7 +31,8 @@ MEMBERS=$(FILEMEMBERS) $(SUB) $(MCPY) $(MKINC)
 
 MODULES :
 	$(Hide)-mkdir modules
-    $(Hide)$(mycopy) inc_$(PROJ)\modules_$(PROJ).mak modules\modules_$(PROJ).mak
+    -$(Hide)attrib -R modules\modules_$(PROJ).mak
+	$(Hide)$(mycopy) inc_$(PROJ)\modules_$(PROJ).mak modules\modules_$(PROJ).mak
     $(Hide)$(MAKE) --no-print-directory -f $(modexec) module=modules\modules_$(PROJ).mak modread
 ifeq ($(Hide),)
     @echo finished at level $(MAKELEVEL)
@@ -163,6 +164,7 @@ modget : $(FILEMEMBERS)
 #Create read marker in the last operation
 define modgetMod
     $(Hide)echo $(VCS_MODULES_ROOT)/modules_store/$(notdir $(mitem)) \>>modlist.txt
+    -$(Hide)attrib -R modules\$(firstword $(subst $(comma),$(space),$(notdir $@)))  
 	$(Hide)echo $(Hide)$(mycopy) $(modules_path)\modules_store\$(firstword $(subst $(comma),$(space),$(notdir $@))) modules\$(firstword $(subst $(comma),$(space),$(notdir $@))) >>modcpy.butt
     @echo $@
 endef
@@ -170,6 +172,7 @@ endef
 modmember=$(subst /,\,$(firstword $(subst $(comma),$(space),$@)))
 
 define modget
+    -$(Hide)attrib -R $(modmember)
 	$(if $(call mod_test_removal, $(modmember)),, $(Hide)echo $(Hide)$(mycopy) $(modules_path)\$(modmember) $(modmember) >> filecpy.butt)
     $(pause)
 endef
