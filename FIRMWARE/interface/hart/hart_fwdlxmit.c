@@ -81,7 +81,7 @@ static fwdl_state_t fwdl_state =
 {
     .lastaddr = 0,
     .last_result = 0,
-    .interleaved = false,
+    .interleaved = true,
     .working = false,
     .CheckWord = CRC_SEED,
 };
@@ -90,11 +90,13 @@ static os_event_t proxy_sem = NULL;
 
 static u32 flash_OpenPartition1(u32 crc)
 {
-    fwdl_state.last_result = crc;
-    fwdl_state.lastaddr = 0;
-    fwdl_state.interleaved = (facdef_GetState(NULL)->fwdl_mode == 0);
-    fwdl_state.working = false;
-    STRUCT_CLOSE(fwdl_state_t, &fwdl_state);
+    MN_ENTER_CRITICAL();
+        fwdl_state.last_result = crc;
+        fwdl_state.lastaddr = 0;
+        fwdl_state.interleaved = (facdef_GetState(NULL)->fwdl_mode == 0);
+        fwdl_state.working = false;
+        STRUCT_CLOSE(fwdl_state_t, &fwdl_state);
+    MN_EXIT_CRITICAL();
     return flash_OpenPartition(crc);
 }
 
@@ -107,7 +109,9 @@ static void fwdl_Mopup(void)
         //Only errors reported
         u32 result = flash_ProgramBlock(flashbuf, HARDWARE(u16*, fwdl_state.lastaddr), len, flags & ~UPD_CRC);
         result = (fwdl_state.last_result & 0xffffU)|(result & 0xffff0000U);
-        storeMemberInt(&fwdl_state, last_result, result);
+        MN_ENTER_CRITICAL();
+            storeMemberInt(&fwdl_state, last_result, result);
+        MN_EXIT_CRITICAL();
     }
 }
 
@@ -127,18 +131,24 @@ static u32 flash_pgm(u32 addr)
 
     if (fwdl_state.lastaddr != addr)
     {
-        storeMemberInt(&fwdl_state, lastaddr, addr);
+        MN_ENTER_CRITICAL();
+            storeMemberInt(&fwdl_state, lastaddr, addr);
+        MN_EXIT_CRITICAL();
         //Wait as long as needed for cycle task to complete; it will preempt and do the job
         if(fwdl_state.working)
         {
             u16_least event_count = oswrap_WaitSem(proxy_sem);
             UNUSED_OK(event_count); //don't care of how many - always 1 by design
-            storeMemberBool(&fwdl_state, working, false);
+            MN_ENTER_CRITICAL();
+                storeMemberBool(&fwdl_state, working, false);
+            MN_EXIT_CRITICAL();
         }
         u32 result;
         if( ((flags & FWDL_WRITE_INLINE) == 0U) && fwdl_state.interleaved)
         {
-            storeMemberBool(&fwdl_state, working, true);
+            MN_ENTER_CRITICAL();
+                storeMemberBool(&fwdl_state, working, true);
+            MN_EXIT_CRITICAL();
             u16 fCrc = Crc16((const u8 *)bdata, len, fwdl_state.last_result & 0xFFFFU);
 
             //Delegate the write off_line
@@ -155,7 +165,9 @@ static u32 flash_pgm(u32 addr)
                 result = (fwdl_state.last_result & 0xffffU)|(result & 0xffff0000U); //errors only
             }
         }
-        storeMemberInt(&fwdl_state, last_result, result);
+        MN_ENTER_CRITICAL();
+            storeMemberInt(&fwdl_state, last_result, result);
+        MN_EXIT_CRITICAL();
     }
     return fwdl_state.last_result;
 }
