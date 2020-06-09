@@ -16,6 +16,7 @@ demand.
 
     \ingroup HARTapp
 */
+#define NDEBUG
 #include "mnwrap.h"
 #include "oswrap.h"
 #include "mn_instrum.h"
@@ -55,8 +56,13 @@ s8_least hartcmd_ReadProfilingData(const u8 *src, u8 *dst)
     util_PutU8(d->FreeCPUtimeH[0], (u8)selftest_GetStat()->percentCpuFree);
 
     ProfilerConfiguration_t *d1 = (void *)d->ProfilerConfiguration[0];
+#ifndef NDEBUG
     util_PutU8(d1->ProfilerTaskID[0], profiler_task_id);
     util_PutU32(d1->ProfilerExtratimeload[0], profiler_extra_task_load);
+#else
+    util_PutU8(d1->ProfilerTaskID[0], 0U);
+    util_PutU32(d1->ProfilerExtratimeload[0], 0U);
+#endif
 
     return HART_NO_COMMAND_SPECIFIC_ERRORS;
 }
@@ -74,6 +80,8 @@ s8_least hartcmd_WriteProfilerConfiguration(const u8 *src, u8 *dst)
     UNUSED_OK(d->ProfilerConfiguration); //HART framework fills it out
     return HART_NO_COMMAND_SPECIFIC_ERRORS; //response is copied automatically
 #else
+    UNUSED_OK(src);
+    UNUSED_OK(dst);
     return COMMAND_NOT_IMPLEMENTED;
 #endif
 }
