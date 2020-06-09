@@ -23,7 +23,7 @@ demand.
     \ingroup OSWrap
 */
 /* $History: critsect.c $
- * 
+ *
  * *****************  Version 1  *****************
  * User: Arkkhasin    Date: 9/01/09    Time: 11:31a
  * Created in $/MNCB/Dev/FIRMWARE/mn_instrum/profiler
@@ -32,6 +32,8 @@ demand.
 #include "mnwrap.h"
 #include "mn_coinstrum.h"
 
+#ifndef NDEBUG
 CritSectStat_t CritSectStat; //critical sections profiler
+#endif
 
 /* This line marks the end of the source */

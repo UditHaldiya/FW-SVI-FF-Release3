@@ -39,9 +39,12 @@ void profile_TimeStamp(taskid_t taskid)
     {
         need_init = false;  //lint !e633 spurious warning because of Atomic_
         instrum_EnableCycleCount();
+#ifndef NDEBUG
         //Before timer init, any capture of critical sections is useless
         CritSectStat.maxlen = 0;
+#endif
     }
+#ifndef NDEBUG
     TaskProfile[taskid].start = instrum_GetHighResolutionTimer();
     if((u8)taskid == profiler_task_id)
     {
@@ -51,11 +54,14 @@ void profile_TimeStamp(taskid_t taskid)
             diff = (instrum_GetHighResolutionTimer() - TaskProfile[taskid].start);
         } while(diff < profiler_extra_task_load);
     }
+#endif //NDEBUG
 }
 
 
+#ifndef NDEBUG
 ccount_t profiler_extra_task_load = 0;
 u8 profiler_task_id = 0;
+#endif //NDEBUG
 
 void profile_MeasureTime(taskid_t taskid)
 {

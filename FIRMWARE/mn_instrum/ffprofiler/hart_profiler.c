@@ -42,12 +42,16 @@ s8_least hartcmd_ReadProfilingData(const u8 *src, u8 *dst)
     util_PutU32(d->Longestprocesssegment[0], profile[TASKID_PROCESS]);
     util_PutU32(d->LongestProxytask[0], profile[TASKID_PROXY]);
 
+#ifndef NDEBUG
     MN_ENTER_CRITICAL();
         util_PutU32(d->Addressofcritsect[0], CritSectStat.addr);
         util_PutU32(d->Longestcritsect[0], (u32)CritSectStat.maxlen);
         CritSectStat.maxlen = 0U;
     MN_EXIT_CRITICAL();
-
+#else
+        util_PutU32(d->Addressofcritsect[0], 0U);
+        util_PutU32(d->Longestcritsect[0], 0U);
+#endif
     util_PutU8(d->FreeCPUtimeH[0], (u8)selftest_GetStat()->percentCpuFree);
 
     ProfilerConfiguration_t *d1 = (void *)d->ProfilerConfiguration[0];
@@ -59,6 +63,7 @@ s8_least hartcmd_ReadProfilingData(const u8 *src, u8 *dst)
 
 s8_least hartcmd_WriteProfilerConfiguration(const u8 *src, u8 *dst)
 {
+#ifndef NDEBUG
     const Req_WriteProfilerConfiguration_t *s1 = (const void *)src;
     const ProfilerConfiguration_t *s = (const void *)s1->ProfilerConfiguration[0];
     MN_ENTER_CRITICAL();
@@ -68,6 +73,9 @@ s8_least hartcmd_WriteProfilerConfiguration(const u8 *src, u8 *dst)
     Rsp_WriteProfilerConfiguration_t *d = (void *)dst;
     UNUSED_OK(d->ProfilerConfiguration); //HART framework fills it out
     return HART_NO_COMMAND_SPECIFIC_ERRORS; //response is copied automatically
+#else
+    return COMMAND_NOT_IMPLEMENTED;
+#endif
 }
 
 /* This line marks the end of the source */

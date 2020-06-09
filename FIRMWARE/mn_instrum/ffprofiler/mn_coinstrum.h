@@ -43,9 +43,12 @@ MN_INLINE void instrum_EnableCycleCount(void)
 
 #define ASSERT_DISPLAY_TIME (5*CORE_FREQ) //5 seconds display at the most
 
+#ifdef NDEBUG
+#define MN_ENTER_CRITICAL_HOOK(psw)
+#define MN_EXIT_CRITICAL_HOOK(psw)
+#else
 #define MN_ENTER_CRITICAL_HOOK(psw) \
     ccount_t stamp = instrum_GetHighResolutionTimer();
-
 
 #define MN_EXIT_CRITICAL_HOOK(psw) \
     if(((psw) & CPU_NO_INTERRUPTS) != CPU_NO_INTERRUPTS) \
@@ -58,11 +61,13 @@ MN_INLINE void instrum_EnableCycleCount(void)
             CritSectStat.addr = mn_getPC(); \
         } \
     }
+#endif //NDEBUG
 
 //lint -esym(526, mn_getPC) An assembler routine returning its LR in R0
 LINT_PURE(mn_getPC)
 extern u32 mn_getPC(void);
 
+#ifndef NDEBUG
 typedef struct CritSectStat_t
 {
     ccount_t maxlen; //max length of a critical section so far
@@ -75,6 +80,7 @@ extern CritSectStat_t CritSectStat; //critical sections profiler
 
 extern u32 profiler_extra_task_load;
 extern u8 profiler_task_id;
+#endif //NDEBUG
 
 
 //lint -estring(453,instrum_GetHighResolutionTimer) OK to read timer in an otherwise pure function
