@@ -16,7 +16,6 @@ demand.
 
     \ingroup HARTapp
 */
-#define NDEBUG
 #include "mnwrap.h"
 #include "oswrap.h"
 #include "mn_instrum.h"
