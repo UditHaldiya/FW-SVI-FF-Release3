@@ -87,6 +87,8 @@ endif
 
 SOURCE+=hart_setpoint.c hart_lowpwrdata.c hart_refvoltage.c
 
+SOURCE+=hart_selftest.c
+
 #SUBDIR, if defined,  is a space-separated list of subdirectories with sources
 #ISUBDIR, if defined,  is a space-separated list of header subdirectories
 #Compiler flags private to this directory are below
