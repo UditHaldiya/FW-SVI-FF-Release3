@@ -44,8 +44,8 @@ void profile_TimeStamp(taskid_t taskid)
         CritSectStat.maxlen = 0;
 #endif
     }
-#ifndef NDEBUG
     TaskProfile[taskid].start = instrum_GetHighResolutionTimer();
+#ifndef NDEBUG
     if((u8)taskid == profiler_task_id)
     {
         ccount_t diff;
