@@ -155,12 +155,12 @@ export PROG=$(PROJ)
 #IAR C environment initialization methods
 export verlist_init1:=4.20A 4.31A 4.41A 5.10 5.11
 export verlist_init2:=5.20 5.30 5.40
-export verlist_init3:=5.50 6.30 6.50 7.70 7.71 8.30 8.32 EWARM_FS_8_22_3.17334
+export verlist_init3:=5.50 6.30 6.50 7.70 7.71 8.30 8.32 8.40 8.42 8.50 EWARM_FS_8_22_3.17334 EWARM_FS_8_40_3_23190
 
 #Supported IAR toolchains
 verlist:=$(verlist_init1) $(verlist_init2) $(verlist_init3)
 
-ifeq ($(basename $(ver)),EWARM_FS_8_22_3)
+ifeq ($(basename $(ver)),EWARM_FS_8_22_3 EWARM_FS_8_40_3_23190)
 toolver:=8
 else
 toolver:=$(basename $(ver))
