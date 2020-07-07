@@ -36,7 +36,7 @@ all : appserverc.txt
     $(synccmd)
 	$(modcmd)
     if not exist $(out_dir)\$(buildname) cmd /C mkdir $(out_dir)\$(buildname) && $(MAKE) OFFDir=Rel proj=FFAP plugin=ffplug.mak OFFICIAL notask=1 buildname=$(buildname) OFFver=$(buildname) \
-	ver=EWARM_FS_8_22_3.17334 Hide= \
+	ver=EWARM_FS_8_40_3_23190 Hide= \
 	NO_MNS=1 OFFroot=$(OFFroot) OFFmodroot=$(OFFmodroot) MNS_OFFICIAL_DIR=$(out_dir)\$(buildname) avplugin=avplugin.mak silent=1 >$(out_dir)\$(buildname)\build.log 2>&1
 
 appserverc.txt : force
