@@ -5,7 +5,7 @@ endif
 modexec:=$(lastword $(MAKEFILE_LIST))
 #mycopy:=xcopy /R/K/Y
 mycopy:=.\cp.exe -f -p
-OFFVCS?="C:\Program Files (x86)\Microsoft Visual Studio\2017\TeamExplorer\Common7\IDE\CommonExtensions\Microsoft\TeamFoundation\Team Explorer\tf.exe"
+OFFVCS?="C:\Program Files (x86)\Microsoft Visual Studio 11.0\Common7\IDE\tf.exe"
 
 comma:=,
 empty:=
