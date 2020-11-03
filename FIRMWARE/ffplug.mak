@@ -79,6 +79,7 @@ define SEND_PLUGIN
     $(MAKE) -C $(SISTER_OFFroot) -f makefile SEND proj=$(SISTER_PROJ) MNS_OFFICIAL_DIR=$(MNS_OFFICIAL_DIR)
     @echo Also checking in .ffd files
     cp.exe -f -p $(BTARGET:.mns=.ffd) $(MNS_OFFICIAL_DIR)\ALLFF_$(OFFDir)_$(OFFver)_F$(FFP_FW_VERID0)_$(FFP_FW_CRCID0)_A$(FW_VERID)_$(FW_CRCID).ffd
+    cp.exe -f -p $(BTARGET:.mns=.Upgrade.ffd) $(MNS_OFFICIAL_DIR)\ALLFF_$(OFFDir)_$(OFFver)_F$(FFP_FW_VERID0)_$(FFP_FW_CRCID0)_A$(FW_VERID)_$(FW_CRCID).Upgrade.ffd
     $(ffdpieces_cp) -f -p $(BTARGET:.mns=.tmp.ffd) $(MNS_OFFICIAL_DIR)\ALLFF_$(OFFDir)_$(OFFver)_F$(FFP_FW_VERID0)_$(FFP_FW_CRCID0)_A$(FW_VERID)_$(FW_CRCID).tmp.ffd
     $(ffdpieces_cp) -f -p $(BTARGET:.mns=1.ffd) $(MNS_OFFICIAL_DIR)\FFAP_$(OFFDir)_$(OFFver)_$(FW_VERID)_$(FW_CRCID).ffd
     $(ffdpieces_cp) -f -p $(BTARGET:.mns=0.ffd) $(MNS_OFFICIAL_DIR)\FFFP_$(OFFDir)_$(OFFver)_$(FFP_FW_VERID0)_$(FFP_FW_CRCID0).ffd
@@ -121,6 +122,8 @@ define BUILD_PLUGIN
 	echo $(OFFver)>newstamp
 	hex2ffd.exe /C newstamp $(SISTER_BUILD_DIR)\$(SISTER_PROJ)_0.hex $(SISTER_BUILD_DIR)\$(SISTER_PROJ)_1.hex $(BTARGET:$(PROG).mns=$(PROJ).hex) $(BTARGET:$(PROG).mns=$(PROJ)_1.hex) $(BTARGET:.mns=.tmp.ffd)
 	hex2ffd.exe /h $(BTARGET:.mns=.tmp.ffd) $(BTARGET:.mns=.ffd)
+	hex2ffd.exe /M 004745 /C newstamp $(SISTER_BUILD_DIR)\$(SISTER_PROJ)_0.hex $(SISTER_BUILD_DIR)\$(SISTER_PROJ)_1.hex $(BTARGET:$(PROG).mns=$(PROJ).hex) $(BTARGET:$(PROG).mns=$(PROJ)_1.hex) $(BTARGET:.mns=.tmp.ffd)
+	hex2ffd.exe /h $(BTARGET:.mns=.tmp.ffd) $(BTARGET:.mns=.Upgrade.ffd)
 endef
 
 #What else to clean
