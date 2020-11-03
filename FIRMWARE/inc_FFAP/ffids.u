@@ -44,7 +44,7 @@ export DEVICE_REV = #mp%sDEVICE_REV
 export DD_REV:=#mp%sDD_REV
 export manufacturer_ID:=#mp%smanufacturer_ID
 export DEVICE_TYPE:=#mp%04XDEVICE_TYPE
-export COMPATIBILITY_REV:=#mp%dCOMPATIBILITY_REV
+export COMPATIBILITY_REVISION:=#mp%dCOMPATIBILITY_REVISION
 
 #MP Else
 #MP Export (0) {uJoin, basename, ".h"}
@@ -52,14 +52,16 @@ export COMPATIBILITY_REV:=#mp%dCOMPATIBILITY_REV
 */
 #ifndef #mp{%s toupper}_H_
 #define #mp{%s toupper}_H_
-//lint ++flb definitions here are mandated ids and may or may not be used
+/*lint ++flb definitions here are mandated ids and may or may not be used
+*/
 #MP ;#define UI_FFID "#mp%sUI_FFID"
 #define UI_FFID "#mp%02dRES_VAL_DEV_REV#mp%02dSW_FF_MINOR#mp%02dSW_FF_BUILD#mp%02dSW_FF_REVISION"
 
-#define COMPATIBILITY_REV #mp%dCOMPATIBILITY_REV
-
+#define COMPATIBILITY_REVISION #mp%dCOMPATIBILITY_REVISION
+#define MN_MFG_ID_STRING "|en|Masoneilan"
 #MP; Lifted from svi2_rb.gw
-// Current definition:  RES_VAL_DEV_REV.RES_DEV_MINOR_REV.RES_BUILD.RES_BUILD_REV, thus:
+/* Current definition:  RES_VAL_DEV_REV.RES_DEV_MINOR_REV.RES_BUILD.RES_BUILD_REV, thus:
+*/
 #MP If 0
 //#define SW_FF_MAJOR (#mp%dRES_VAL_DEV_REV)
 //#define SW_FF_MINOR #mp%dRES_DEV_MINOR_REV
@@ -72,17 +74,23 @@ export COMPATIBILITY_REV:=#mp%dCOMPATIBILITY_REV
 #define SOFTWARE_FF_REVISION  0x#mp{%08XSW_APP_DEFAULT_REVISION}U //same as SW_APP_DEFAULT_REVISION
 #MP
 #MP; Lifted from svi2_rb.gw
-//Specials for RB:
+/*Specials for RB:
+*/
 #define RES_VAL_DEV_TYPE 0x#mp{%04XDEVICE_TYPE}U
 #define RES_VAL_DEV_REV 0x#mp%xRES_VAL_DEV_REV
-//This is the *minimum* DD revision compatible with the firmware
+/*This is the *minimum* DD revision compatible with the firmware
+*/
 #define MIN_DD_REV #mp%dMIN_DD_REV
-//This is the *current* DD revision compatible with the firmware
+/*This is the *current* DD revision compatible with the firmware
+*/
 #define RES_VAL_DD_REV #mp%dDD_REV
 #MP; Lifted from swdl_cfg.h
   #define FD_DOM_MFG_ID         "#mp%smanufacturer_ID"
+  #define FD_DOM_MFG_ID_HEX     0x#mp%smanufacturer_ID
+  #define FD_DOM_MFG_ID_NAKED   #mp%smanufacturer_ID
   #define FD_DOM_FAMILY         "#mp%sRES_VAL_DEV_TYPE"
   #define FD_DOM_DEV_TYPE       "#mp%sRES_VAL_DEV_TYPE"
+  #define FD_DEV_TYPE_NAKED     #mp{%04XDEVICE_TYPE}
   #define FD_DOM_DEV_REV        #mp%uRES_VAL_DEV_REV
   #define FD_DOM_DD_REV         #mp%uDD_REV
   #define FD_DOM_SW_REV         "2-42    "
@@ -98,7 +106,8 @@ export COMPATIBILITY_REV:=#mp%dCOMPATIBILITY_REV
   #define AP_DOM_SW_NAME        "AP-SW   "
   #define AP_DOM_DOM_NAME       "AP-DOM  "
 
-//lint --flb
+/*lint --flb
+*/
 #endif //#mp{%s toupper}_H_
 #MP Endif
 #MP;/* This line marks the end of the source */

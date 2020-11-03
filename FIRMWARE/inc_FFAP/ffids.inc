@@ -21,7 +21,7 @@ demand.
 #MP;  ======== FFP-specific ===============
 #MP;  Device identification strings
 #MP; Do not change unless instructed
-#MP Setstr manufacturer_ID="004745"
+#MP Setstr manufacturer_ID="445644" ;was "004745"
 #MP Setstr DEVICE_TYPE = "0008"
 #MP ;FD_DOM_... used in ffid.u directly for now
 #MP ;Setstr FD_DOM_DEV_REV="2"
@@ -42,5 +42,5 @@ demand.
 
 #MP ;Compatibility
 #MP Setstr SW_FF_MAJOR = RES_VAL_DEV_REV
-#MP COMPATIBILITY_REV = 3
+#MP COMPATIBILITY_REVISION = 3
 #MP;/* This line marks the end of the source */
