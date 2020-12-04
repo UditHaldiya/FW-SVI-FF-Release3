@@ -589,7 +589,7 @@ static procresult_t pst_Iterator(s16 *procdetails, const PSTstep_t *pststeps, si
     //Start data collection
     if(err == ERR_OK)
     {
-        err = datahog_Control(DatahogStart, HogConfTemporary);
+        err = datahog_Control(DatahogForceStart, HogConfTemporary);
     }
     if(err == ERR_OK)
     {

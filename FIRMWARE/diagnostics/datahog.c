@@ -286,11 +286,23 @@ ErrorCode_t datahog_Control(DatahogStatus_t op, DatahogConfId_t confid)
         {
             if(confid < HogConfsCount)
             {
-                storeMemberInt(&DatahogState, status, op);
-                storeMemberInt(&DatahogState, DatahogConfId, confid);
+                bool_t allowed = true;
                 if(op == DatahogStart)
                 {
-                    datahog_InitDeviationFilters();
+                    allowed = (process_GetResourceFlags() & PROCINIT_CLAIMDIAGBUFFER) == 0U; //don't step on a running process
+                    if(allowed)
+                    {
+                        datahog_InitDeviationFilters();
+                    }
+                }
+                if(allowed)
+                {
+                    if(op == DatahogForceStart)
+                    {
+                        op = DatahogStart;
+                    }
+                    storeMemberInt(&DatahogState, status, op);
+                    storeMemberInt(&DatahogState, DatahogConfId, confid);
                 }
             }
             else
