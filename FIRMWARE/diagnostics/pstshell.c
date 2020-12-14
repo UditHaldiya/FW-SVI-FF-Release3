@@ -39,6 +39,7 @@ demand.
 
 #include "ctllimits.h"
 #include "digitalsp.h"
+#include "ipcdefs.h"
 
 #include "datahog.h"
 
@@ -381,9 +382,16 @@ static void pst_AIDImon_Run(void)
     //Cheap test first
     MN_RT_ASSERT((started==START_NONE) || (started==START_FROM_AI) || (started==START_FROM_DI));
 
-    pstmon_helper(&dimon_state, equiv(!bios_ReadDiState(), (PSTrigger.PstDiTrigger==DhogDiEnableClosed)), &DIconf); //DI switch is active low
-    sig_least_t signal      = inpv_GetPV();
-    pstmon_helper(&aimon_state, equiv((signal > PSTrigger.pvthreshold), (PSTrigger.PstPvTrigger == DhogPvEnableAbove)), &AIconf);
+    if(digsp_GetExternalMode() == IPC_MODE_AUTO)
+    {
+        pstmon_helper(&dimon_state, equiv(!bios_ReadDiState(), (PSTrigger.PstDiTrigger==DhogDiEnableClosed)), &DIconf); //DI switch is active low
+        sig_least_t signal      = inpv_GetPV();
+        pstmon_helper(&aimon_state, equiv((signal > PSTrigger.pvthreshold), (PSTrigger.PstPvTrigger == DhogPvEnableAbove)), &AIconf);
+    }
+    else
+    {
+        pstmon_Init();
+    }
 }
 
 static pst_abort_t pst_abort; //PST abort monitoring object

@@ -14,7 +14,7 @@
     </SubCmdOnly>
     <SubCmdOnly CmdNum="170">
       <SubCommands>
-        <Command Name="Read Data Collection Configuration" CmdNum="22" CmdType="Read" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_PROCESS_COMMAND">
+        <Command Name="Read Data Collection Configuration" CmdNum="22" CmdType="Read" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_READ_COMMAND">
           <RequestParams>
             <Param>Data Collection Conf Selector</Param>
           </RequestParams>

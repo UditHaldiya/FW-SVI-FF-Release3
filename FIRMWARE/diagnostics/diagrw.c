@@ -305,6 +305,7 @@ procresult_t diag_ReadBuffer(s16 *procdetails)
 }
 
 //Utilities
+static diag_t buf_use_count = 0;
 
 /** \brief A quickie util to populate the buffer header
 \param header - the header to copy
@@ -329,10 +330,11 @@ void diag_WriteBufferHeader(const diag_t header[], size_t numentries)
     {
         p[i] = header[i];
     }
-    for(; i < (DIAGRW_HEADERSZ - DEVID_SIZE); i++)
+    for(; i < ((DIAGRW_HEADERSZ - DEVID_SIZE) - 1); i++)
     {
         p[i] = DIAGRW_HEADER_FILLER; //just fill the space with a pleasing filler
     }
+    p[DIAGRW_HEADERSZ-1] = buf_use_count++;
 }
 
 /* This line marks the end of the source */

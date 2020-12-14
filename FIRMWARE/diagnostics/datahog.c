@@ -23,6 +23,8 @@ demand.
 #include "mnassert.h"
 #include "diagrw.h"
 #include "oswrap.h"
+#include "digitalsp.h"
+#include "ipcdefs.h"
 
 #ifdef DATAHOG_POSITION
 #include "position.h"
@@ -273,6 +275,27 @@ ErrorCode_t datahog_SetPerm(const DatahogConf_t *src)
     MN_ENTER_CRITICAL(); \
     storeMemberInt((structptr), member, (value)); \
     MN_EXIT_CRITICAL()
+
+
+/** \brief A wrapper for automatically triggered data collection
+\param op - command to data collection
+\param confid - permanent or temporary
+\return an error code
+*/
+ErrorCode_t datahog_ControlAuto(DatahogStatus_t op, DatahogConfId_t confid)
+{
+    ErrorCode_t err;
+    u8 tbmode = digsp_GetExternalMode();
+    if((tbmode != IPC_MODE_AUTO) && (op != DatahogStop))
+    {
+        err = ERR_CNFG_PROTECTED_LIMITS; //map to HART_ACCESS_RESTRICTED
+    }
+    else
+    {
+        err = datahog_Control(op, confid);
+    }
+    return err;
+}
 
 ErrorCode_t datahog_Control(DatahogStatus_t op, DatahogConfId_t confid)
 {

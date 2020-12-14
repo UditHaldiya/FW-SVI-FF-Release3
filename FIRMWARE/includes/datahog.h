@@ -76,6 +76,7 @@ extern ErrorCode_t datahog_Set(const DatahogConf_t *src);
 extern void datahog_Collect(void);
 extern u8_least datahog_TestDataMap(u16 datamask);
 
+extern ErrorCode_t datahog_ControlAuto(DatahogStatus_t op, DatahogConfId_t confid);
 extern ErrorCode_t datahog_Control(DatahogStatus_t op, DatahogConfId_t confid);
 
 ErrorCode_t datahog_SetPerm(const DatahogConf_t* src);

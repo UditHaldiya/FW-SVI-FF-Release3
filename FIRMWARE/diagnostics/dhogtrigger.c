@@ -219,8 +219,7 @@ void datahog_TriggerMon(void)
     }
     if(need_trigger)
     {
-        (void)datahog_Control(DatahogStart, HogConfPerm);
-        datahog_InitDeviationFilters();
+        (void)datahog_ControlAuto(DatahogStart, HogConfPerm);
     }
 }
 
