@@ -42,7 +42,7 @@ SUBMODULES+=lint_3-0.mak,72784 \
     ideutils_1-0.mak,70660 \
     makefiles_3-2.mak,83162
 
-
+MOD_OVERRIDE+=nvram.c #Bug 64096
 SUBMODULES+= MNEnvir_5-0.mak,72775 \
     process_3-1.mak,81955 \
     faultman_2-0.mak,77195 \
