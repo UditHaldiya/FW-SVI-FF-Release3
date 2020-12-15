@@ -2,8 +2,7 @@
 UFILES_C=
 #SOURCE, if defined, is a space-separated list of the sources in this directory
 SOURCE:=vertran.c firstrun.c
-SOURCE+=nvram.c #Extracted from module because of bug 64096
-# confchanged.c
+#nvram.c confchanged.c
 
 ifeq ($(FEATURE_LOGFILES),USED)
 SOURCE+=logfile.c
