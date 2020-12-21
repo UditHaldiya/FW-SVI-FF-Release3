@@ -964,6 +964,7 @@ const proctable_t proctable[] =
         .id = PROC_CLONE_NVMEM,
         .procf = nvmem_Clone,
         .flags = {.throughflags=0U, .initflags = PROCINIT_CLAIMDIAGBUFFER},
+        //NOTE: termflags below are crucially important. They (may) affect FW activation
         .action =
         {
             [PROCRESULT_OK] =
@@ -974,9 +975,9 @@ const proctable_t proctable[] =
             },
             [PROCRESULT_CANCELED] =
             {
-                .event = FAULT_NV_XLATE,
+                .event = FAULT_NONE,
                 .UIplace = -1,
-                .termflags = PROCTERMFLAG_NOCTLMODE|PROCTERMFLAG_KEEPON,
+                .termflags = PROCTERMFLAG_NOCTLMODE,
             },
             [PROCRESULT_FAILED] =
             {
