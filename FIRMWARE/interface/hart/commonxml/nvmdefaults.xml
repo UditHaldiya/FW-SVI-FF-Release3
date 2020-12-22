@@ -4,8 +4,8 @@
   <Commands>
     <Command CmdNum="190" SubCmdOnly="1">
       <SubCommands>
-        <Command Name="Save Nvmem As Factory Default" CmdNum="130" CmdType="Process" AllowedModes="HC_ALLOWED_MODE_FS" CmdFlags="HC_PROCESS_COMMAND" Description="Starts a process to copy NVMEM standard image to a NVMEM log file"></Command>
-        <Command Name="Restore Factory Default Nvmem" CmdNum="129" CmdType="Process" AllowedModes="HC_ALLOWED_MODE_FS" CmdFlags="HC_PROCESS_COMMAND" Description="Starts a process to restore NVMEM standard image from a previously created NVMEM log file">
+        <Command Name="Save Nvmem As Factory Default" CmdNum="130" CmdType="Process" AllowedModes="HC_ALLOWED_MODE_FS" CmdFlags="HC_WRITE_COMMAND | HC_PROCESS_COMMAND" Description="Starts a process to copy NVMEM standard image to a NVMEM log file"></Command>
+        <Command Name="Restore Factory Default Nvmem" CmdNum="129" CmdType="Process" AllowedModes="HC_ALLOWED_MODE_FS" CmdFlags="HC_WRITE_COMMAND | HC_PROCESS_COMMAND" Description="Starts a process to restore NVMEM standard image from a previously created NVMEM log file">
           <RequestParams>
             <Param>Nvmem Volume Id</Param>
             <Param>Nvmem Defaults Mask Flags</Param>

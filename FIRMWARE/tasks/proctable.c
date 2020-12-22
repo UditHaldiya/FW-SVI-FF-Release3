@@ -977,7 +977,7 @@ const proctable_t proctable[] =
             {
                 .event = FAULT_NONE,
                 .UIplace = -1,
-                .termflags = PROCTERMFLAG_NOCTLMODE,
+                .termflags = PROCTERMFLAG_NOCTLMODE|PROCTERMFLAG_KEEPON,
             },
             [PROCRESULT_FAILED] =
             {

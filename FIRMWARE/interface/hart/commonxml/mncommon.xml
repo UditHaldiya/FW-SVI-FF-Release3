@@ -270,7 +270,7 @@
       </ResponseParams>
       <SubCommands></SubCommands>
     </Command>
-    <Command Name="Run a Process" CmdNum="190" CmdType="Process" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_COMMAND_COMMAND | HC_PROCESS_COMMAND | HC_WRITE_PROTECT" Description="Executes the requested process">
+    <Command Name="Run a Process" CmdNum="190" CmdType="Process" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_PROCESS_COMMAND" Description="Executes the requested process">
       <RequestParams>
         <Param>SubCmdNum</Param>
       </RequestParams>
