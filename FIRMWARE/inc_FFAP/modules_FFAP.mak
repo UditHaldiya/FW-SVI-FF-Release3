@@ -17,7 +17,7 @@ PREMODULES:=projconf_1-2.mak,72964
 
 #HART
 SUBMODULES+=hartslave_1-3.mak,77968
-MOD_OVERRIDE+=hartutils.c hartfunc.h mnhartcmd.h
+MOD_OVERRIDE+=hartutils.c hartfunc.h mnhartcmd.c
 
 SUBMODULES+=hcframework_2-3.mak,75969
 
