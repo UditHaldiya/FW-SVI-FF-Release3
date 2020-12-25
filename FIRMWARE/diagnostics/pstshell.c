@@ -759,6 +759,7 @@ procresult_t pstshell(s16 *procdetails, const PSTstep_t *pststeps, size_t nsteps
         //TODO: Populate second page of the header here with pst computed results
 #endif
 
+#if 0
         s16 wdetails = 0;
         procresult_t wresult = diag_WriteBufferEx(&wdetails, PST_LOGFILE_MAXSIZE);
         UNUSED_OK(wresult); //we set a fault on failure to write, so we don't propagate
@@ -766,6 +767,9 @@ procresult_t pstshell(s16 *procdetails, const PSTstep_t *pststeps, size_t nsteps
         {
             *procdetails = wdetails;
         }
+#else
+        UNUSED_OK(diag_WriteBufferEx); //for lint
+#endif
 
         //We ran to completion!
         //error_ClearFault(FAULT_TMOUT_PST_TEST);
