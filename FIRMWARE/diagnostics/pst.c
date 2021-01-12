@@ -520,7 +520,7 @@ ErrorCode_t diag_SetPstData(const PSTConf_t *src)
     {
         //Recompute StrokeTmout in ms by stroke speed (with rounding)
         u32 divisor = (u32)(s32)(conf->ramp_speed); //OK because positive
-        u32 tmout = ((u32)(s32)(conf->sp_threshold)*ONE_SECOND + divisor/2U)/divisor;
+        u32 tmout = ((u32)(s32)(conf->travel)*ONE_SECOND + divisor/2U)/divisor;
         if(conf->StrokeTmout == 0)
         {
             tmout = CLAMP(tmout, 1U, UINT16_MAX); //paranoia
