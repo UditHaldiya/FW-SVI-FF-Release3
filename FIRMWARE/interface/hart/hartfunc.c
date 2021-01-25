@@ -892,6 +892,22 @@ s8_least hart_Command_140_ResetContinuousDiagnostics(const u8 *src, u8 *dst)
     return HART_OK;
 }
 
+/** \brief Stops replacement interface
+*/
+s8_least hartcmd_WritePositionStops(const u8 *src, u8 *dst)
+{
+    const Req_WritePositionStops_t *req = (const void *)src;
+    Rsp_WritePositionStops_t *rsp = (void *)dst;
+    UNUSED_OK(rsp->PositionLOWStop); //rely on the framework to fill in
+    UNUSED_OK(rsp->PositionHIGHStop); //rely on the framework to fill in
+    PositionConf_t conf;
+    (void)pos_GetPositionConf(&conf);
+    conf.rangeval[Xlow] = util_GetS16(req->PositionLOWStop[0]);
+    conf.rangeval[Xhi] = util_GetS16(req->PositionHIGHStop[0]);
+    ErrorCode_t err = pos_SetPositionConf(&conf);
+    return err2hart(err);
+}
+
 /**
 \brief Returns the raw position, raw signal, etc.
 

@@ -57,7 +57,6 @@ demand.
 #include "ff_isblockvars.h"
 #include "ff_pid2blockvars.h"
 #include "ff_devicevars.h"
-#include "ff_positionConfVars.h"
 
 // Characterization
 #include "poscharact.h"
@@ -934,8 +933,6 @@ static const IPC_TranslationTable_t IPC_TranslationTable[IPC_TRANSLATION_TABLE_S
 
     //-------------------------------------------------------------------------
     [IPC_RAW_POSITION_SENSOR]       = {IPC_SHORT_VAR,   IPC_ReadRawPosition,        NULL},
-    [IPC_STOP_HI_POS]               = {IPC_SHORT_VAR,   NULL,                       IPC_WriteStopHiPos},
-    [IPC_STOP_LO_POS]               = {IPC_SHORT_VAR,   NULL,                       IPC_WriteStopLoPos},
     [IPC_LUI_SIMULATION]            = {IPC_SHORT_VAR,   IPC_ReadLuiSimulation,      NULL},
 
     //-------------------------------------------------------------------------

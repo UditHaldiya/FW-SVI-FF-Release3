@@ -7,20 +7,27 @@
         <Param>Manual Find Stops Step</Param>
       </RequestParams>
     </Command>
-    <XCommand CmdNum="190" SubCmdOnly="1">
+    <SubCmdOnly CmdNum="171">
       <SubCommands>
-        <Command Name="Step Test" CmdNum="3" CmdType="Process" AllowedModes="HC_ALLOWED_MODE_OOS" CmdFlags="HC_PROCESS_COMMAND">
+        <Command Name="Write Position Stops" CmdNum="141" CmdType="Write" AllowedModes="HC_ALLOWED_MODE_FS" CmdFlags="HC_WRITE_COMMAND" Description="Replace Position Stops (known use case: device replacement)">
           <RequestParams>
-            <Struct>Diagnostic Parameters</Struct>
+            <Param>Position HIGH Stop</Param>
+            <Param>Position LOW Stop</Param>
           </RequestParams>
+          <ResponseParams>
+            <Param>Position HIGH Stop</Param>
+            <Param>Position LOW Stop</Param>
+          </ResponseParams>
         </Command>
       </SubCommands>
-    </XCommand>
+    </SubCmdOnly>
   </Commands>
   <Variables>
     <Variable Name="Manual Find Stops Step" DataType="H_UCHAR" Description="Sequence step in manual find stops">
       <EnumValues v0="HFindStops Cancel | Cancel" v1="HFindStops Start | Start" v3="HFindStops Accept | Accept " v6="HFindStops Commit | Commit" />
     </Variable>
+    <Variable Name="Position HIGH Stop" DataType="H_INT" Description="High Stop Replacement"></Variable>
+    <Variable Name="Position LOW Stop" DataType="H_INT" Description="Low Stop Replacement"></Variable>
   </Variables>
   <Structs></Structs>
 </HART>

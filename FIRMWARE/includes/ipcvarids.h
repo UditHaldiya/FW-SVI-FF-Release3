@@ -251,8 +251,6 @@ typedef enum IPC_Variable_IDs_t
     IPC_RAW_POSITION_SENSOR,                    // RAW readings from Position Sensor
 
     IPC_APP_FWVERSION,
-    IPC_STOP_HI_POS,
-    IPC_STOP_LO_POS,
     IPC_LUI_SIMULATION,
 
     //-------------------------------------------------------------------------
