@@ -45,6 +45,7 @@ export DD_REV:=#mp%sDD_REV
 export manufacturer_ID:=#mp%smanufacturer_ID
 export DEVICE_TYPE:=#mp%04XDEVICE_TYPE
 export COMPATIBILITY_REVISION:=#mp%dCOMPATIBILITY_REVISION
+export SW_FF_MINOR:=#mp%02dSW_FF_MINOR
 
 #MP Else
 #MP Export (0) {uJoin, basename, ".h"}

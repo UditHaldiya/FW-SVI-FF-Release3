@@ -29,7 +29,7 @@ demand.
 #MP ;Setstr FD_DOM_SW_REV="2-42    "
 
 #MP Setstr DEVICE_REV="03"
-#MP Setstr DD_REV="01"
+#MP Setstr DD_REV="02"
 #MP Setstr MIN_DD_REV="01" ;This is the *minimum* DD revision compatible with the firmware
 #MP ;Softing ties the following with the previous by C flags -DRES_VAL_DEV_REV=0x$(DEVICE_REV)
 #MP ;According to Vlad, they can go their separate ways if we wanted to
