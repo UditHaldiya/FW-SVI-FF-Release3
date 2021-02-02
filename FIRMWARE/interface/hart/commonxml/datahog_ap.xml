@@ -79,8 +79,41 @@
         </Command>
       </SubCommands>
     </SubCmdOnly>
+    <SubCmdOnly CmdNum="129">
+      <SubCommands>
+        <Command Name="Read Data Collection State" CmdNum="152" CmdType="Read" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_READ_COMMAND" Description="Debug/instrumentation command to directly inspect Data AcQuisition state">
+          <RequestParams></RequestParams>
+          <ResponseParams>
+            <Param>DAQ Skips Left</Param>
+            <Param>DAQ Num Presamples</Param>
+            <Param>DAQ Presamples Left</Param>
+            <Param>DAQ Number Of Variables</Param>
+            <Param>DAQ Status</Param>
+            <Param>DAQ Process Id</Param>
+            <Param>DAQ Config Id</Param>
+          </ResponseParams>
+        </Command>
+      </SubCommands>
+    </SubCmdOnly>
   </Commands>
   <Variables>
+    <Variable Name="DAQ Skips Left" DataType="H_UINT" Description="Number of samples left to skip"></Variable>
+    <Variable Name="DAQ Num Presamples" DataType="H_UINT" Description="Actual Number of samples kept before trigger event"></Variable>
+    <Variable Name="DAQ Number Of Variables" DataType="H_UINT" Description="Number of variables in the configured bitmap"></Variable>
+    <Variable Name="DAQ Presamples Left" DataType="H_UINT" Description="Number of presamples left to copy"></Variable>
+    <Variable Name="DAQ Status" DataType="H_UCHAR" Description="Enumarated status">
+      <EnumValues>
+        <v0>DAQ Idle</v0>
+        <v1>DAQ Interrupted</v1>
+        <v2>DAQ Collecting</v2>
+        <v3>DAQ Completed</v3>
+        <v4>DAQ (Command) Stop</v4>
+        <v5>DAQ (Command) Start</v5>
+        <v6>DAQ (Command) Forced Start</v6>
+      </EnumValues>
+    </Variable>
+    <Variable Name="DAQ Process Id" DataType="H_UCHAR" Description="Process on behalf of which data is collected"></Variable>
+    <Variable Name="DAQ Config Id" DataType="H_UCHAR" Description="Permanent or temporary"></Variable>
     <Variable Name="Data Collection Conf Selector" DataType="H_UCHAR" Description="Persistent or currently in use">
       <EnumValues v0="DCC Persistent" v1="DCC Current" />
       <Range Model="Standard" />

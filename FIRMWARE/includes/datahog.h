@@ -86,5 +86,7 @@ UNTYPEACC(datahog_SetPerm, datahog_GetPerm);
 extern void datahog_TriggerMon(void);
 extern void datahog_InitDeviationFilters(void);
 
+extern const DatahogState_t *datahog_GetState(DatahogState_t *dst);
+
 #endif //DATAHOG_H_
 /* This line marks the end of the source */

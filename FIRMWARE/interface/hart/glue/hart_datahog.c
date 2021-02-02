@@ -23,6 +23,23 @@ demand.
 #include "hartfunc.h"
 //#include "dimensions.h"
 
+s8_least hartcmd_ReadDataCollectionState(const u8 *src, u8 *dst)
+{
+    const Req_ReadDataCollectionState_t *s = (const void *)src;
+    UNUSED_OK(s);
+    DatahogState_t hog;
+    (void)datahog_GetState(&hog);
+    Rsp_ReadDataCollectionState_t *d = (void *)dst;
+    util_PutU16( d->DAQSkipsLeft[0], hog.skipsleft );
+    util_PutU16( d->DAQNumPresamples[0], hog.num_presamples );
+    util_PutU16( d->DAQPresamplesLeft[0], hog.presamples_left );
+    util_PutU16( d->DAQNumberOfVariables[0], hog.numvars );
+    util_PutU8( d->DAQStatus[0], (u8)hog.status );
+    util_PutU8( d->DAQProcessId[0], hog.procId );
+    util_PutU8( d->DAQConfigId[0], hog.DatahogConfId );
+
+    return HART_NO_COMMAND_SPECIFIC_ERRORS;
+}
 
 s8_least hartcmd_ReadDataCollectionConfiguration(const u8 *src, u8 *dst)
 {

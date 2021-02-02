@@ -128,6 +128,14 @@ static  DatahogFunc_t *const DatahogTable[] =
 static DatahogConf_t DatahogConf[HogConfsCount];
 static DatahogState_t DatahogState;
 
+/** \brief Get Datahog state function
+*/
+const DatahogState_t *datahog_GetState(DatahogState_t *dst)
+{
+    return STRUCT_TESTGET(&DatahogState, dst);
+}
+
+
 static const DatahogConf_t DatahogConf_default =
 {
     .datamask = 1U,
@@ -472,10 +480,10 @@ static void collect(void)
             pbuf[BUFFERPLACE_NUMSAMPLES] = samples_collected;
         }
     }
-    if(!done_with_presamples &&
+    if(done_with_presamples &&
        (bovfl ||
         ((DatahogConf[DatahogState.DatahogConfId].maxsamples != 0)
-                 && (pbuf[BUFFERPLACE_NUMPRESAMPLES] >= DatahogConf[DatahogState.DatahogConfId].maxsamples)))
+                 && (pbuf[BUFFERPLACE_NUMSAMPLES] >= DatahogConf[DatahogState.DatahogConfId].maxsamples)))
            )
     {
         SafeStoreInt(&DatahogState, status, (u8)DatahogCompleted);
