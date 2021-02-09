@@ -186,7 +186,7 @@ u8_least datahog_TestDataMap(u16 datamask)
     return numvars;
 }
 
-static ErrorCode_t datahog_SetX(const DatahogConf_t *src, DatahogConfId_t confid)
+static ErrorCode_t datahog_SetX(const DatahogConf_t *src, DatahogConfId_t confid, DatahogStatus_t status)
 {
     if(src == NULL)
     {
@@ -230,14 +230,19 @@ static ErrorCode_t datahog_SetX(const DatahogConf_t *src, DatahogConfId_t confid
     if(err == ERR_OK)
     {
         Struct_Copy(DatahogConf_t, &DatahogConf[confid], src);
-        u16_least num_presamples = DatahogConf[HogConfPerm].num_presamples * numvars;
+        u16 num_presamples = DatahogConf[confid].num_presamples;
+
+        if(status == DatahogUnchanged)
+        {
+            status = DatahogState.status;
+        }
         const DatahogState_t state =
         {
             .skipsleft = 0,
-            .num_presamples = (u16)num_presamples,
-            .presamples_left = (u16)num_presamples,
+            .num_presamples = num_presamples,
+            .presamples_left = num_presamples, //This will restart presampling for perm. configuration
             .numvars = (u8)numvars, //max 16=CHAR_BIT*sizeof(datamask)
-            .status = DatahogIdle,
+            .status = status,
             .procId = process_GetProcId(), //NOTE: relies on early init of process data
             .DatahogConfId = confid,
             .CheckWord = 0, //don't care
@@ -257,16 +262,28 @@ static ErrorCode_t datahog_SetX(const DatahogConf_t *src, DatahogConfId_t confid
 */
 ErrorCode_t datahog_Set(const DatahogConf_t *src)
 {
-    return datahog_SetX(src, HogConfTemporary);
+    DatahogStatus_t s = DatahogUnchanged;
+    if(DatahogState.DatahogConfId == HogConfTemporary)
+    {
+        //Changing current configuration
+        s = DatahogStop;
+    }
+    return datahog_SetX(src, HogConfTemporary, s);
 }
 
 /** \brief Set function (persistent/permanent)
 
-The act of writing retriggers presampling
+The act of writing restarts presampling
 */
 ErrorCode_t datahog_SetPerm(const DatahogConf_t *src)
 {
-    ErrorCode_t err = datahog_SetX(src, HogConfPerm); //NULL for default is OK
+    DatahogStatus_t s = DatahogUnchanged;
+    if(DatahogState.DatahogConfId == HogConfPerm)
+    {
+        //Changing current configuration
+        s = DatahogStop;
+    }
+    ErrorCode_t err = datahog_SetX(src, HogConfPerm, s); //NULL for default is OK
     if(err == ERR_OK)
     {
         if(!oswrap_IsOSRunning())
@@ -514,6 +531,9 @@ void datahog_Collect(void)
     //Presample
     if(oswrap_IsContext(DatahogConf[HogConfPerm].taskid))
     {
+        /* A possible optimization is to skip presampling if
+        the permanent-config collection is already running
+        */
         (void)datahog_Sample(&DatahogState, &DatahogConf[HogConfPerm], circular_sample);
     }
     if(!oswrap_IsContext(DatahogConf[DatahogState.DatahogConfId].taskid))
@@ -538,7 +558,10 @@ void datahog_Collect(void)
             //We create the header and presamples here
             DatahogStatus_t s = DatahogCollecting;
 
-            (void)FillDiagHeader(&DatahogConf[DatahogState.DatahogConfId], &DatahogState);
+            //NOTE: DatahogState.DatahogConfId is set by datahog_Control()
+            const DatahogConf_t *pconf = &DatahogConf[DatahogState.DatahogConfId];
+
+            (void)FillDiagHeader(pconf, &DatahogState);
 
             /*Pull data from the presample buffer piecemeal - we can't afford copying
             the whole presample buffer.
@@ -567,9 +590,13 @@ void datahog_Collect(void)
                 MN_EXIT_CRITICAL();
             }
 
-            SafeStoreInt(&DatahogState, num_presamples, num_presamples);
-            SafeStoreInt(&DatahogState, presamples_left, num_presamples);
-            SafeStoreInt(&DatahogState, status, (u8)s);
+            ErrorCode_t err = datahog_SetX(pconf, DatahogState.DatahogConfId, DatahogCollecting);
+            if(err != ERR_OK)
+            {
+                //Don't know how to collect
+                SafeStoreInt(&DatahogState, status, (u8)DatahogIdle);
+            }
+
             samples_collected = 0;
             if(s == DatahogCollecting)
             {

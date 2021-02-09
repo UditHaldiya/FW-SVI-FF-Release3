@@ -43,9 +43,10 @@ typedef enum DatahogStatus_t
     DatahogInterrupted,
     DatahogCollecting,
     DatahogCompleted,
-    DatahogStop,
-    DatahogStart,
-    DatahogForceStart //bypass process constraint
+    DatahogStop, //command
+    DatahogStart, //command
+    DatahogForceStart, //command and bypass process constraint
+    DatahogUnchanged //void command
 } DatahogStatus_t;
 
 typedef struct DatahogState_t
