@@ -398,10 +398,16 @@ static bool_t circular_sample(diag_t val)
     return false;
 }
 
-
-static bool_t datahog_Sample(DatahogState_t *state, const DatahogConf_t *conf, bool_t (*sample_func)(diag_t val))
+typedef enum hogresult_t
 {
-    bool_t bovfl = false; //indicator of buffer overflow
+    hog_ok,
+    hog_skipped,
+    hog_overflow
+} hogresult_t;
+
+static hogresult_t datahog_Sample(DatahogState_t *state, const DatahogConf_t *conf, bool_t (*sample_func)(diag_t val))
+{
+    hogresult_t hogresult = hog_skipped; //indicator of buffer overflow
     u16 skipsleft = state->skipsleft;
     if(skipsleft != 0U)
     {
@@ -412,6 +418,7 @@ static bool_t datahog_Sample(DatahogState_t *state, const DatahogConf_t *conf, b
     {
         //Restart counting
         SafeStoreInt(state, skipsleft, conf->skip_count);
+        hogresult = hog_ok;
         u16_least mask = 1U;
         //And collect data
         for(size_t i=0; i<MIN(NELEM(DatahogTable), sizeof(conf->datamask)*CHAR_BIT); i++)
@@ -420,16 +427,17 @@ static bool_t datahog_Sample(DatahogState_t *state, const DatahogConf_t *conf, b
             {
                 //Collection requested
                 s16 val = DatahogTable[i]();
-                bovfl = sample_func(val);
+                bool_t bovfl = sample_func(val);
                 if(bovfl) //buffer full?
                 {
+                    hogresult = hog_overflow;
                     break;
                 }
             }
             mask <<= 1;
         }
     }
-    return bovfl;
+    return hogresult;
 }
 
 /** \brief Check if we can (continue to) collect data in the buffer.
@@ -454,13 +462,13 @@ static diag_t samples_collected;
 static void collect(void)
 {
     diag_t *pbuf = buffer_GetXDiagnosticBuffer(DIAGBUF_DEFAULT);
-    bool_t done_with_presamples = (DatahogState.presamples_left < DatahogState.numvars);
+    bool_t done_with_presamples = (DatahogState.presamples_left == 0U);
     if(!done_with_presamples)
     {
         //Do the copying one sample at a time
         (void)buffer_GetDataFromXDiagnosticBuffer(DIAGBUF_AUX, 1*DatahogState.numvars, &pbuf[samples_collected*DatahogState.numvars + EXTDIAG_HEADERSZ]);
 
-        u16 presamples_left = DatahogState.presamples_left - DatahogState.numvars;
+        u16 presamples_left = DatahogState.presamples_left - 1U;
         SafeStoreInt(&DatahogState, presamples_left, presamples_left);
 
         //Populate the DIAGBUF_DEFAULT buffer's counters (which will enable reading it)
@@ -468,9 +476,9 @@ static void collect(void)
         pbuf[BUFFERPLACE_NUMSAMPLES]++; //that many are ready to read already
     }
 
-    bool_t bovfl = datahog_Sample(&DatahogState, &DatahogConf[DatahogState.DatahogConfId], linear_sample);
+    hogresult_t hogresult = datahog_Sample(&DatahogState, &DatahogConf[DatahogState.DatahogConfId], linear_sample);
 
-    if(!bovfl)
+    if(hogresult == hog_ok)
     {
         samples_collected++;
         //Increment counter in the header
@@ -481,7 +489,7 @@ static void collect(void)
         }
     }
     if(done_with_presamples &&
-       (bovfl ||
+       ((hogresult == hog_overflow) ||
         ((DatahogConf[DatahogState.DatahogConfId].maxsamples != 0)
                  && (pbuf[BUFFERPLACE_NUMSAMPLES] >= DatahogConf[DatahogState.DatahogConfId].maxsamples)))
            )

@@ -51,7 +51,7 @@ typedef enum DatahogStatus_t
 typedef struct DatahogState_t
 {
     u16 skipsleft;
-    u16 num_presamples; //!< In multiples of number of diag_t entries
+    u16 num_presamples; //!< # of presample tuples (1*numvars ~ 1 count)
     u16 presamples_left; //!< # of presamples left to copy to main buffer - In multiples of number of diag_t entries
     u8 numvars; //!< # of vars in a sample
     DatahogStatus_t status;
