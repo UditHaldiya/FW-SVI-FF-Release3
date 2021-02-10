@@ -51,14 +51,13 @@ typedef enum DatahogStatus_t
 
 typedef struct DatahogState_t
 {
-    u16 skipsleft;
-    u16 num_presamples; //!< # of presample tuples (1*numvars ~ 1 count)
+    u16 skipsleft[HogConfsCount];
+    u16 num_presamples; //!< actual number of presample tuples collected (1*numvars ~ 1 count)
     u16 presamples_left; //!< # of presamples left to copy to main buffer - In multiples of number of diag_t entries
-    u8 numvars; //!< # of vars in a sample
-    DatahogStatus_t status;
-    //u8 bufmode; //!< 0 - circular, no header, 1 - linear, 2 - linear with pruning
-    ProcId_t procId;
-    DatahogConfId_t DatahogConfId; //!< which configuration to use
+    u8 numvars[HogConfsCount]; //!< # of vars in a sample
+    DatahogStatus_t status[HogConfsCount]; //!< Status of running data collection
+    ProcId_t procId; //!< Process Id of active data collection
+    DatahogConfId_t DatahogConfId; //!< which configuration to use in active data collection
     u16 CheckWord;
 } DatahogState_t;
 

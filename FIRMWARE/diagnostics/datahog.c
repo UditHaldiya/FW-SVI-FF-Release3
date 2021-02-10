@@ -230,24 +230,22 @@ static ErrorCode_t datahog_SetX(const DatahogConf_t *src, DatahogConfId_t confid
     if(err == ERR_OK)
     {
         Struct_Copy(DatahogConf_t, &DatahogConf[confid], src);
-        u16 num_presamples = DatahogConf[confid].num_presamples;
 
-        if(status == DatahogUnchanged)
-        {
-            status = DatahogState.status;
-        }
-        const DatahogState_t state =
-        {
-            .skipsleft = 0,
-            .num_presamples = num_presamples,
-            .presamples_left = num_presamples, //This will restart presampling for perm. configuration
-            .numvars = (u8)numvars, //max 16=CHAR_BIT*sizeof(datamask)
-            .status = status,
-            .procId = process_GetProcId(), //NOTE: relies on early init of process data
-            .DatahogConfId = confid,
-            .CheckWord = 0, //don't care
-        };
-        Struct_Copy(DatahogState_t, &DatahogState, &state);
+        //Modify the state per new configuration
+        MN_ENTER_CRITICAL();
+            storeMemberInt(&DatahogState, skipsleft[confid], 0U); //ready to sample
+            storeMemberInt(&DatahogState, numvars[confid], numvars); //precomputed # of vars in a tuple
+            if(status != DatahogUnchanged)
+            {
+                storeMemberInt(&DatahogState, status[confid], status); //repair the status as requested
+            }
+            if(confid == HogConfPerm)
+            {
+                //Change in configuration causes restart of presampling
+                storeMemberInt(&DatahogState, num_presamples, 0U);
+                storeMemberInt(&DatahogState, presamples_left, 0U);
+            }
+        MN_EXIT_CRITICAL();
 
         //Now, retrigger presampling
         if(confid == HogConfPerm)
@@ -326,7 +324,7 @@ ErrorCode_t datahog_Control(DatahogStatus_t op, DatahogConfId_t confid)
 {
     ErrorCode_t err = ERR_OK;
     MN_ENTER_CRITICAL();
-        DatahogStatus_t status = DatahogState.status;
+        DatahogStatus_t status = DatahogState.status[confid];
         if(
            ((status != DatahogCollecting) /*&& (status != DatahogCompleted)*/ && (status != DatahogStart))
            || (op == DatahogStop)
@@ -349,7 +347,7 @@ ErrorCode_t datahog_Control(DatahogStatus_t op, DatahogConfId_t confid)
                     {
                         op = DatahogStart;
                     }
-                    storeMemberInt(&DatahogState, status, op);
+                    storeMemberInt(&DatahogState, status[confid], op);
                     storeMemberInt(&DatahogState, DatahogConfId, confid);
                 }
             }
@@ -422,19 +420,24 @@ typedef enum hogresult_t
     hog_overflow
 } hogresult_t;
 
+/** \brief Collect a sample tuple into a diagnostic buffer.
+\param sample_func - a pointer to a sampling function which determines the buffer itself
+\return the result of sampling
+*/
 static hogresult_t datahog_Sample(DatahogState_t *state, const DatahogConf_t *conf, bool_t (*sample_func)(diag_t val))
 {
     hogresult_t hogresult = hog_skipped; //indicator of buffer overflow
-    u16 skipsleft = state->skipsleft;
+    DatahogConfId_t confid = state->DatahogConfId;
+    u16 skipsleft = state->skipsleft[confid];
     if(skipsleft != 0U)
     {
         --skipsleft;
-        SafeStoreInt(state, skipsleft, skipsleft);
+        SafeStoreInt(state, skipsleft[confid], skipsleft);
     }
     else
     {
         //Restart counting
-        SafeStoreInt(state, skipsleft, conf->skip_count);
+        SafeStoreInt(state, skipsleft[confid], conf->skip_count);
         hogresult = hog_ok;
         u16_least mask = 1U;
         //And collect data
@@ -479,11 +482,12 @@ static diag_t samples_collected;
 static void collect(void)
 {
     diag_t *pbuf = buffer_GetXDiagnosticBuffer(DIAGBUF_DEFAULT);
-    bool_t done_with_presamples = (DatahogState.presamples_left == 0U);
+    bool_t done_with_presamples = (DatahogState.presamples_left == 0U) || (DatahogState.DatahogConfId != HogConfPerm);
     if(!done_with_presamples)
     {
-        //Do the copying one sample at a time
-        (void)buffer_GetDataFromXDiagnosticBuffer(DIAGBUF_AUX, 1*DatahogState.numvars, &pbuf[samples_collected*DatahogState.numvars + EXTDIAG_HEADERSZ]);
+        //Do the copying one sample tuple at a time
+        (void)buffer_GetDataFromXDiagnosticBuffer(DIAGBUF_AUX, 1*DatahogState.numvars[HogConfPerm],
+                                                  &pbuf[samples_collected*DatahogState.numvars[HogConfPerm] + EXTDIAG_HEADERSZ]);
 
         u16 presamples_left = DatahogState.presamples_left - 1U;
         SafeStoreInt(&DatahogState, presamples_left, presamples_left);
@@ -499,7 +503,7 @@ static void collect(void)
     {
         samples_collected++;
         //Increment counter in the header
-        if(pbuf[BUFFERPLACE_NUMPRESAMPLES] == DatahogConf[DatahogState.DatahogConfId].num_presamples)
+        if(pbuf[BUFFERPLACE_NUMPRESAMPLES] == DatahogState.num_presamples)
         {
             //Copying presamples complete
             pbuf[BUFFERPLACE_NUMSAMPLES] = samples_collected;
@@ -511,7 +515,7 @@ static void collect(void)
                  && (pbuf[BUFFERPLACE_NUMSAMPLES] >= DatahogConf[DatahogState.DatahogConfId].maxsamples)))
            )
     {
-        SafeStoreInt(&DatahogState, status, (u8)DatahogCompleted);
+        SafeStoreInt(&DatahogState, status[DatahogState.DatahogConfId], (u8)DatahogCompleted);
     }
 }
 
@@ -524,6 +528,7 @@ If used at all:
 */
 void datahog_Collect(void)
 {
+    //Data integrity
     if(oswrap_IsContext(TASKID_CYCLE))
     {
         Struct_Test(DatahogState_t, &DatahogState);
@@ -534,9 +539,28 @@ void datahog_Collect(void)
         /* A possible optimization is to skip presampling if
         the permanent-config collection is already running
         */
-        (void)datahog_Sample(&DatahogState, &DatahogConf[HogConfPerm], circular_sample);
+        hogresult_t hr = datahog_Sample(&DatahogState, &DatahogConf[HogConfPerm], circular_sample);
+        if(hr == hog_ok)
+        {
+            if(DatahogState.status[HogConfPerm] != DatahogCollecting)
+            {
+                //count the number of presamples collected
+                MN_ENTER_CRITICAL();
+                    u16 num_presamples = DatahogState.num_presamples;
+                    if(num_presamples < DatahogConf[HogConfPerm].num_presamples)
+                    {
+                        num_presamples++;
+                        storeMemberInt(&DatahogState, num_presamples, num_presamples);
+                        storeMemberInt(&DatahogState, presamples_left, num_presamples);
+                    }
+                MN_EXIT_CRITICAL();
+            }
+        }
     }
-    if(!oswrap_IsContext(DatahogConf[DatahogState.DatahogConfId].taskid))
+
+    //Now, the active collection
+    DatahogConfId_t confid = DatahogState.DatahogConfId;
+    if(!oswrap_IsContext(DatahogConf[confid].taskid))
     {
         return; //Not the right context
     }
@@ -544,14 +568,14 @@ void datahog_Collect(void)
     bool_t runok = datahog_TestProcess();
     if(!runok)
     {
-        if(DatahogState.status != DatahogIdle)
+        if(DatahogState.status[confid] != DatahogIdle)
         {
-            SafeStoreInt(&DatahogState, status, (u8)DatahogInterrupted);
+            SafeStoreInt(&DatahogState, status[confid], (u8)DatahogInterrupted);
         }
         return;
     }
 
-    switch(DatahogState.status)
+    switch(DatahogState.status[confid])
     {
         case DatahogStart:
         {
@@ -559,43 +583,46 @@ void datahog_Collect(void)
             DatahogStatus_t s = DatahogCollecting;
 
             //NOTE: DatahogState.DatahogConfId is set by datahog_Control()
-            const DatahogConf_t *pconf = &DatahogConf[DatahogState.DatahogConfId];
+            const DatahogConf_t *pconf = &DatahogConf[confid];
 
-            (void)FillDiagHeader(pconf, &DatahogState);
-
+            //u16_least num_presamples = 0U;
             /*Pull data from the presample buffer piecemeal - we can't afford copying
             the whole presample buffer.
 
             We need to pull at least numvars (see below) at a time,
             or we'll have DIAGBUF_AUX buffer overrun
             */
-            bufindex_t num_presamples = 0;
-            if(DatahogState.DatahogConfId == HogConfPerm)
+            if(confid == HogConfPerm)
             {
                 MN_ENTER_CRITICAL();
-                    num_presamples = buffer_KeepAtMost(DIAGBUF_AUX, DatahogState.num_presamples);
-                    size_t prefilled = num_presamples + EXTDIAG_HEADERSZ;
+                    u16 presamples_debt = (u16)(DatahogState.num_presamples * DatahogState.numvars[HogConfPerm]); //Number of diag_t items to retrieve
+                    presamples_debt = buffer_KeepAtMost(DIAGBUF_AUX, presamples_debt);
+                    size_t prefilled = presamples_debt + EXTDIAG_HEADERSZ;
                     if(prefilled >= DIAGNOSTIC_BUFFER_SIZE/2U)
                     {
                         //presamples can't be more than half buffer)
-                        num_presamples = 0;
+                        presamples_debt = 0;
                         s = DatahogInterrupted;
                     }
-                    else
-                    {
-                        bufindex_t startpos=0;
-                        bufindex_t endpos=num_presamples+EXTDIAG_HEADERSZ;
-                        buffer_SelectRange(DIAGBUF_DEFAULT, &startpos, &endpos);
-                    }
+
+                    bufindex_t startpos=0;
+                    bufindex_t endpos=presamples_debt + EXTDIAG_HEADERSZ;
+                    buffer_SelectRange(DIAGBUF_DEFAULT, &startpos, &endpos); //reserve space for copying presamples
+                    //num_presamples = presamples_debt/DatahogState.numvars[HogConfPerm];
                 MN_EXIT_CRITICAL();
             }
+            //SafeStoreInt(&DatahogState, num_presamples, num_presamples); //redundant?
 
-            ErrorCode_t err = datahog_SetX(pconf, DatahogState.DatahogConfId, DatahogCollecting);
+            ErrorCode_t err = datahog_SetX(pconf, confid, DatahogCollecting);
             if(err != ERR_OK)
             {
                 //Don't know how to collect
-                SafeStoreInt(&DatahogState, status, (u8)DatahogIdle);
+                s = DatahogIdle;
             }
+            SafeStoreInt(&DatahogState, status[confid], (u8)s); //Done with status
+
+            //Now, we are all set to write the buffer header
+            (void)FillDiagHeader(pconf, &DatahogState);
 
             samples_collected = 0;
             if(s == DatahogCollecting)
