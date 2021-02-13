@@ -1135,7 +1135,7 @@ static void IPC_Process_DOSwitches(u16 U16BufferValue)
         //Requested - but see if enabled
         if((datahog_GetTriggerConf(NULL)->BinaryOptions & (1U<<DhogBO_TBAlerts)) != 0U)
         {
-            (void)datahog_Control(DatahogStart, HogConfPerm);
+            (void)datahog_ControlAuto(DatahogStart, HogConfPerm); //only in AUTO mode
         }
     }
 }
