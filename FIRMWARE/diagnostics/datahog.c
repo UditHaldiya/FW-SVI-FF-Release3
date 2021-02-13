@@ -247,11 +247,6 @@ static ErrorCode_t datahog_SetX(const DatahogConf_t *src, DatahogConfId_t confid
             }
         MN_EXIT_CRITICAL();
 
-        //Now, retrigger presampling
-        if(confid == HogConfPerm)
-        {
-            buffer_InitializeXDiagnosticBuffer(DIAGBUF_AUX);
-        }
     }
     return err;
 }
@@ -276,10 +271,19 @@ The act of writing restarts presampling
 ErrorCode_t datahog_SetPerm(const DatahogConf_t *src)
 {
     DatahogStatus_t s = DatahogUnchanged;
-    if(DatahogState.DatahogConfId == HogConfPerm)
+    if(!oswrap_IsOSRunning())
     {
-        //Changing current configuration
-        s = DatahogStop;
+        //Initialization
+        STRUCT_CLOSE(DatahogConf_t, &DatahogState); //All zeros are fine: review! datahog_SetX will fix it
+        s = DatahogIdle;
+    }
+    else
+    {
+        if(DatahogState.DatahogConfId == HogConfPerm)
+        {
+            //Changing current configuration
+            s = DatahogStop;
+        }
     }
     ErrorCode_t err = datahog_SetX(src, HogConfPerm, s); //NULL for default is OK
     if(err == ERR_OK)
@@ -287,9 +291,16 @@ ErrorCode_t datahog_SetPerm(const DatahogConf_t *src)
         if(!oswrap_IsOSRunning())
         {
             //Init temporary configuration to something sensible
-            Struct_Copy(DatahogConf_t, &DatahogConf[HogConfTemporary], &DatahogConf[HogConfPerm]);
+            DatahogConf_t c = DatahogConf[HogConfPerm];
+            c.num_presamples = 0U;
+            err = datahog_Set(&c);
+            MN_DBG_ASSERT(err == ERR_OK); //can't fail if perm. is OK and num_presamples cleared
         }
         err = ram2nvramAtomic(NVRAMID_DatahogConf);
+
+        //Now, retrigger presampling
+        buffer_InitializeXDiagnosticBuffer(DIAGBUF_AUX);
+
     }
     return err;
 }
@@ -336,16 +347,22 @@ ErrorCode_t datahog_Control(DatahogStatus_t op, DatahogConfId_t confid)
                 if(op == DatahogStart)
                 {
                     allowed = (process_GetResourceFlags() & PROCINIT_CLAIMDIAGBUFFER) == 0U; //don't step on a running process
-                    if(allowed)
-                    {
-                        datahog_InitDeviationFilters();
-                    }
                 }
                 if(allowed)
                 {
                     if(op == DatahogForceStart)
                     {
                         op = DatahogStart;
+                    }
+                    if(op == DatahogStart)
+                    {
+                        DatahogConfId_t other = HogConfPerm;
+                        if(DatahogState.DatahogConfId == HogConfPerm)
+                        {
+                            other = HogConfTemporary;
+                        }
+                        storeMemberInt(&DatahogState, status[other], DatahogIdle);
+                        datahog_InitDeviationFilters();
                     }
                     storeMemberInt(&DatahogState, status[confid], op);
                     storeMemberInt(&DatahogState, DatahogConfId, confid);
@@ -424,26 +441,25 @@ typedef enum hogresult_t
 \param sample_func - a pointer to a sampling function which determines the buffer itself
 \return the result of sampling
 */
-static hogresult_t datahog_Sample(DatahogState_t *state, const DatahogConf_t *conf, bool_t (*sample_func)(diag_t val))
+static hogresult_t datahog_Sample(DatahogConfId_t confid, bool_t (*sample_func)(diag_t val))
 {
     hogresult_t hogresult = hog_skipped; //indicator of buffer overflow
-    DatahogConfId_t confid = state->DatahogConfId;
-    u16 skipsleft = state->skipsleft[confid];
+    u16 skipsleft = DatahogState.skipsleft[confid];
     if(skipsleft != 0U)
     {
         --skipsleft;
-        SafeStoreInt(state, skipsleft[confid], skipsleft);
+        SafeStoreInt(&DatahogState, skipsleft[confid], skipsleft);
     }
     else
     {
         //Restart counting
-        SafeStoreInt(state, skipsleft[confid], conf->skip_count);
+        SafeStoreInt(&DatahogState, skipsleft[confid], DatahogConf[confid].skip_count);
         hogresult = hog_ok;
         u16_least mask = 1U;
         //And collect data
-        for(size_t i=0; i<MIN(NELEM(DatahogTable), sizeof(conf->datamask)*CHAR_BIT); i++)
+        for(size_t i=0; i<MIN(NELEM(DatahogTable), sizeof(DatahogConf[0].datamask)*CHAR_BIT); i++)
         {
-            if((mask & conf->datamask) != 0U)
+            if((mask & DatahogConf[confid].datamask) != 0U)
             {
                 //Collection requested
                 s16 val = DatahogTable[i]();
@@ -497,7 +513,7 @@ static void collect(void)
         pbuf[BUFFERPLACE_NUMSAMPLES]++; //that many are ready to read already
     }
 
-    hogresult_t hogresult = datahog_Sample(&DatahogState, &DatahogConf[DatahogState.DatahogConfId], linear_sample);
+    hogresult_t hogresult = datahog_Sample(DatahogState.DatahogConfId, linear_sample);
 
     if(hogresult == hog_ok)
     {
@@ -539,7 +555,7 @@ void datahog_Collect(void)
         /* A possible optimization is to skip presampling if
         the permanent-config collection is already running
         */
-        hogresult_t hr = datahog_Sample(&DatahogState, &DatahogConf[HogConfPerm], circular_sample);
+        hogresult_t hr = datahog_Sample(HogConfPerm, circular_sample);
         if(hr == hog_ok)
         {
             if(DatahogState.status[HogConfPerm] != DatahogCollecting)
