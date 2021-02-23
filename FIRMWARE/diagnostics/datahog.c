@@ -348,6 +348,12 @@ ErrorCode_t datahog_Control(DatahogStatus_t op, DatahogConfId_t confid)
                 {
                     allowed = (process_GetResourceFlags() & PROCINIT_CLAIMDIAGBUFFER) == 0U; //don't step on a running process
                 }
+                if(op == DatahogStop)
+                {
+                    //We stop only the running data collection, so we must fix the confid and ignore what's requested
+                    confid = DatahogState.DatahogConfId;
+                    allowed = (DatahogState.status[confid] == DatahogCollecting); //Stop only if running
+                }
                 if(allowed)
                 {
                     if(op == DatahogForceStart)
