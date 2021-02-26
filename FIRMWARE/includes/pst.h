@@ -106,6 +106,11 @@ typedef struct PSTConf_t
     u16 CheckWord;
 } PSTConf_t;
 
+//How many samples we can collect during max PST time.
+//The macro takes a pointer to a PSTConf_t type object
+#define pst_CountMaxSamples(cf) \
+( ( (cf)->maxtime / (CYCLE_TASK_DIVIDER*CTRL_TASK_DIVIDER*TB_MS_PER_TICK) )/((cf)->skip_count + 1) )
+
 //Required project-specific interfaces
 /** \brief A project-specific plugin which freezes signaling interfaces
 so that a running PST doesn't trigger false/unwanted signaling
@@ -219,6 +224,7 @@ extern procresult_t diag_PartialStrokeTest(s16 *procdetails);
 #define PSTDETAILS_INHIBITING_FAULTS 6
 #define PSTDETAILS_NOT_ALLOWED 7
 
+#if 0 //to source file
 typedef struct pst_abort_t //! A type for monitoring PST abort
 {
     s32 setpoint;
@@ -227,10 +233,15 @@ typedef struct pst_abort_t //! A type for monitoring PST abort
     bool_t active;
     u16 CheckWord;
 } pst_abort_t;
-extern void pst_InitAbort(const pst_abort_t *src);
+#endif
+
+//extern void pst_InitAbort(const pst_abort_t *src);
+extern void pst_EnableAbortMon(bool_t enable);
 
 
-#define PST_MAX_PATTERN_STEPS 6  //! Max number of ramp steps in a pattern
+#define PST_MAX_PATTERN_STEPS (6)  //! Max number of ramp steps in a pattern
+#define PST_MAX_STEPS (PST_MAX_PATTERN_STEPS + 3) //Add Stabilize, pre-ramp, stabilize
+
 
 #endif  //PST_H_
 

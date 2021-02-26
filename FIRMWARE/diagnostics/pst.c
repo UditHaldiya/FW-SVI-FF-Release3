@@ -246,29 +246,39 @@ static procresult_t pst_Stabilize(PSTctl_t *PSTctl, s32 current_sp)
     } while((result == PROCRESULT_OK) && !is_stable);
 
         //Immdeiately start from current position (TODO: maybe, filtered?)
-
-    if(result == PROCRESULT_OK)
-    {
         tick_t wait_time = setup_time - elapsed; //guaranteed >= 0 so unsigned subtraction is OK
         tick_t max_wait = MN_MS2TICKS(1000); //AK: fixme
         PSTctl->wait_time = CLAMP(wait_time, 1U, max_wait);
         PSTctl->speed = STD_FROM_PERCENT(50.0); //don't care
-
         //we replace current_sp we were primed with - with actual setpoint
         UNUSED_OK(current_sp); //we replaced current_sp we were primed with - with actual setpoint
         PSTctl->target_sp = stablemon.reference;
+    return result;
+}
 
-        const pres_t *p = pres_GetPressureData()->Pressures;
-        const pst_abort_t psta =
+static procresult_t pst_PreRamp(PSTctl_t *PSTctl, s32 current_sp)
+{
+    procresult_t result = PROCRESULT_OK;
+#if 1 //Only now do we start sampling data (to save on buffer use
+    {
+        ErrorCode_t err = datahog_Control(DatahogForceStart, HogConfTemporary);
+        if(err != ERR_OK)
         {
-            .setpoint = PSTctl->target_sp,
-            .pilot_base = p[PRESSURE_PILOT_INDEX],
-            .act_base = p[PRESSURE_MAIN_INDEX],
-            .active = true,
-            .CheckWord = 0 //Don't care
-        };
-        pst_InitAbort(&psta); //Activate PST abort monitoring
+            //Shouldn't happen
+            result = PROCRESULT_CANCELED;
+        }
     }
+#endif
+    if(result == PROCRESULT_OK)
+    {
+
+        UNUSED_OK(current_sp); //we replaced current_sp we were primed with - with actual setpoint
+
+        //Activate PST abort monitoring
+        pst_EnableAbortMon(true);
+
+    }
+    UNUSED_OK(PSTctl);
     return result;
 }
 
@@ -319,62 +329,68 @@ static procresult_t pst_Ramp1Up(PSTctl_t *PSTctl, s32 current_sp)
 static const PSTstep_t PSTsteps_DUDU[] =
 {
     pst_Stabilize,
+    pst_PreRamp,
     pst_Ramp1Dn,
     pst_Ramp2Up,
     pst_Ramp2Dn,
     pst_Ramp1Up,
     pst_Stabilize,
 };
-CONST_ASSERT(NELEM(PSTsteps_DUDU) <= PST_MAX_PATTERN_STEPS);
+CONST_ASSERT(NELEM(PSTsteps_DUDU) <= PST_MAX_STEPS);
 
 static const PSTstep_t PSTsteps_DUD[] =
 {
     pst_Stabilize,
+    pst_PreRamp,
     pst_Ramp1Dn,
     pst_Ramp2Up,
     pst_Ramp1Dn,
     pst_Stabilize,
 };
-CONST_ASSERT(NELEM(PSTsteps_DUD) <= PST_MAX_PATTERN_STEPS);
+CONST_ASSERT(NELEM(PSTsteps_DUD) <= PST_MAX_STEPS);
 
 static const PSTstep_t PSTsteps_DU[] =
 {
     pst_Stabilize,
+    pst_PreRamp,
     pst_Ramp1Dn,
     pst_Ramp1Up,
     pst_Stabilize,
 };
-CONST_ASSERT(NELEM(PSTsteps_DU) <= PST_MAX_PATTERN_STEPS);
+CONST_ASSERT(NELEM(PSTsteps_DU) <= PST_MAX_STEPS);
 
 static const PSTstep_t PSTsteps_UDUD[] =
 {
     pst_Stabilize,
+    pst_PreRamp,
     pst_Ramp1Up,
     pst_Ramp2Dn,
     pst_Ramp2Up,
     pst_Ramp1Dn,
     pst_Stabilize,
 };
-CONST_ASSERT(NELEM(PSTsteps_UDUD) <= PST_MAX_PATTERN_STEPS);
+CONST_ASSERT(NELEM(PSTsteps_UDUD) <= PST_MAX_STEPS);
 
 static const PSTstep_t PSTsteps_UDU[] =
 {
     pst_Stabilize,
+    pst_PreRamp,
     pst_Ramp1Up,
     pst_Ramp2Dn,
     pst_Ramp1Up,
     pst_Stabilize,
 };
-CONST_ASSERT(NELEM(PSTsteps_UDU) <= PST_MAX_PATTERN_STEPS);
+CONST_ASSERT(NELEM(PSTsteps_UDU) <= PST_MAX_STEPS);
 
 static const PSTstep_t PSTsteps_UD[] =
 {
     pst_Stabilize,
+    pst_PreRamp,
     pst_Ramp1Up,
     pst_Ramp1Dn,
     pst_Stabilize,
 };
-CONST_ASSERT(NELEM(PSTsteps_UD) <= PST_MAX_PATTERN_STEPS);
+CONST_ASSERT(NELEM(PSTsteps_UD) <= PST_MAX_STEPS);
 
 
 
@@ -506,8 +522,8 @@ ErrorCode_t diag_SetPstData(const PSTConf_t *src)
         else
         {
             //Test that we have enough room to store PST data
-            u32 numsaples = ( conf->maxtime / (CYCLE_TASK_DIVIDER*CTRL_TASK_DIVIDER*TB_MS_PER_TICK) )/(conf->skip_count + 1);
-            u32 numdata = numsaples*numchannels;
+            u32 numsamples = pst_CountMaxSamples(conf);
+            u32 numdata = numsamples*numchannels;
             //numdata must be small enough to fit in the logfile
             if(numdata > PST_NUMSAMPLES_MAX)
             {

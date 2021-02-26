@@ -393,6 +393,14 @@ static void pst_AIDImon_Run(void)
         pstmon_Init();
     }
 }
+typedef struct pst_abort_t //! A type for monitoring PST abort
+{
+    s32 setpoint;
+    pres_t pilot_base;
+    pres_t act_base;
+    bool_t active;
+    u16 CheckWord;
+} pst_abort_t;
 
 static pst_abort_t pst_abort; //PST abort monitoring object
 static const pst_abort_t pst_abort_default =
@@ -403,7 +411,7 @@ static const pst_abort_t pst_abort_default =
     .active = false,
     .CheckWord = 0, //don't care
 };
-void pst_InitAbort(const pst_abort_t *src)
+static void pst_InitAbort(const pst_abort_t *src)
 {
     if(src == NULL)
     {
@@ -411,7 +419,12 @@ void pst_InitAbort(const pst_abort_t *src)
     }
     Struct_Copy(pst_abort_t, &pst_abort, src);
 }
-
+void pst_EnableAbortMon(bool_t enable)
+{
+    MN_ENTER_CRITICAL();
+        storeMemberBool(&pst_abort, active, enable);
+    MN_EXIT_CRITICAL();
+}
 
 #define PST_INTERVAL DAYS_TO_TICKS(PSTrigger.interval)
 #define GUARD_INTERVAL (s64)((PST_INTERVAL * 11) / 10)  // 110 percent.
@@ -586,7 +599,7 @@ static procresult_t pst_Iterator(s16 *procdetails, const PSTstep_t *pststeps, si
         .datamask = pstconf->datamap,
         .taskid = TASKID_CYCLE,
         .skip_count = pstconf->skip_count,
-        .maxsamples = MN_MS2TICKS(pstconf->maxtime*ONE_SECOND/(CYCLE_TASK_DIVIDER*CTRL_TASK_DIVIDER)),
+        .maxsamples = (u16)pst_CountMaxSamples(pstconf),
         .num_presamples = 0,
         .CheckWord = 0, //don't care
     };
@@ -594,11 +607,12 @@ static procresult_t pst_Iterator(s16 *procdetails, const PSTstep_t *pststeps, si
     (void)datahog_Get(&dhog_saved);
     //Write temprorary configuration
     ErrorCode_t err = datahog_Set(&dhog);
-    //Start data collection
+#if 0 //Start data collection here is a waste of buffer entries. See where it's done
     if(err == ERR_OK)
     {
         err = datahog_Control(DatahogForceStart, HogConfTemporary);
     }
+#endif
     if(err == ERR_OK)
     {
         s32 current_sp = vpos_GetScaledPosition();
@@ -649,6 +663,9 @@ static procresult_t pst_Iterator(s16 *procdetails, const PSTstep_t *pststeps, si
 #else
         if(result == PROCRESULT_OK)
         {
+            //A crutch to see if data collection completes
+            //(void)process_WaitForTimeExt(MN_MS2TICKS(2000), ~0U); //don't interrupt
+
             //Stop data collection; can't do much on error which should never happen
             err = datahog_Control(DatahogStop, HogConfTemporary);
             UNUSED_OK(err);
@@ -710,14 +727,19 @@ procresult_t pstshell(s16 *procdetails, const PSTstep_t *pststeps, size_t nsteps
     //ui_setNext(UINODEID_PST_RUNNING);
     diag_t *buf = buffer_GetXDiagnosticBuffer(bufnum);
 
-    u16 PSTdata[PST_MAX_PATTERN_STEPS];
+    u16 PSTdata[PST_MAX_STEPS];
 
-
-    //Deposit the currently requested setpoint to monitor cancellation
-    s32 pst_sp = ctllim_GetRangeBoundedSetpoint();
-    MN_ENTER_CRITICAL();
-        storeMemberInt(&pst_abort, setpoint, pst_sp);
-    MN_EXIT_CRITICAL();
+    //Initialize PST abort monitor
+    const pres_t *pres = pres_GetPressureData()->Pressures;
+    const pst_abort_t pst_abt =
+    {
+        .setpoint = ctllim_GetRangeBoundedSetpoint(),
+        .pilot_base = pres[PRESSURE_PILOT_INDEX],
+        .act_base = pres[PRESSURE_MAIN_INDEX],
+        .active = false, //Do not enable yet
+        .CheckWord = 0, //don't care
+    };
+    pst_InitAbort(&pst_abt);
 
     pos_t startpos = vpos_GetScaledPosition();
 
@@ -751,15 +773,29 @@ procresult_t pstshell(s16 *procdetails, const PSTstep_t *pststeps, size_t nsteps
     {
         //Write to log file
         ErrorCode_t err = diag_PrepareSignatureWrite(DIAGRW_PST, DIAGRW_CURRENT);
+#if 0
+        /* The original assert below is too cavalier because it has wider implications
+        than just PST failure. There are many interactions that may become unaccounted for
+        and it is better to limit the damage. Example: we may fail to collect any data on PST
+        behalf.
+        */
         MN_ASSERT(err == ERR_OK); //An error is a purely coding error
-
+#else
+        if(err != ERR_OK)
+        {
+            result = PROCRESULT_CANCELED;
+        }
+#endif
+    }
+    if(result != PROCRESULT_CANCELED)
+    {
 #if 0
         //Add actual step times
         memcpy(&buf[PST_HEADER_TIMES_INDEX], PSTdata, sizeof(PSTdata[0])*nsteps);
         //TODO: Populate second page of the header here with pst computed results
 #endif
 
-#if 0
+#if 0 //We don't save to a file (yet?)
         s16 wdetails = 0;
         procresult_t wresult = diag_WriteBufferEx(&wdetails, PST_LOGFILE_MAXSIZE);
         UNUSED_OK(wresult); //we set a fault on failure to write, so we don't propagate

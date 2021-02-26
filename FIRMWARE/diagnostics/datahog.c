@@ -362,6 +362,9 @@ ErrorCode_t datahog_Control(DatahogStatus_t op, DatahogConfId_t confid)
                     }
                     if(op == DatahogStart)
                     {
+                        ProcId_t id = process_GetProcId(); //On whose behalf to collect data
+                        storeMemberInt(&DatahogState, procId, id);
+
                         DatahogConfId_t other = HogConfPerm;
                         if(DatahogState.DatahogConfId == HogConfPerm)
                         {
