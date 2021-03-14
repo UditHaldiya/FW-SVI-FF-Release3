@@ -444,7 +444,7 @@ const proctable_t proctable[] =
     { //by design: restores control mode only if fails
         .id = PROC_STEP_TEST,
         .procf = diag_Run_StepTest_SHIM,
-        .flags = {.throughflags=0U,  .initflags = PROCINIT_CLAIMCTLMODE},
+        .flags = {.throughflags=0U,  .initflags = PROCINIT_CLAIMDIAGBUFFER|PROCINIT_CLAIMCTLMODE},
         .action =
         { //rather stealth
             [PROCRESULT_OK] =
@@ -831,7 +831,7 @@ const proctable_t proctable[] =
     {
         .id = PROC_READ_BUFFER,
         .procf = diag_ReadBuffer,
-        .flags = {.throughflags=0U, .initflags = 0},
+        .flags = {.throughflags=0U, .initflags = PROCINIT_CLAIMDIAGBUFFER},
         .action =
         {
             [PROCRESULT_OK] =
@@ -857,7 +857,7 @@ const proctable_t proctable[] =
     {
         .id = PROC_WRITE_BUFFER,
         .procf = diag_WriteBuffer,
-        .flags = {.throughflags=0U, .initflags = 0},
+        .flags = {.throughflags=0U, .initflags = PROCINIT_CLAIMDIAGBUFFER},
         .action =
         {
             [PROCRESULT_OK] =

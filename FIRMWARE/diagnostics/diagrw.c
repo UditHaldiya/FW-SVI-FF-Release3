@@ -118,10 +118,24 @@ ErrorCode_t diag_PrepareSignatureWrite(u8 SignatureType, u8 SignatureAssignment)
 */
 ErrorCode_t diag_LaunchSignatureWrite(u8 SignatureType, u8 SignatureAssignment)
 {
-    ErrorCode_t err = diag_PrepareSignatureWrite(SignatureType, SignatureAssignment);
+    ErrorCode_t err = ERR_OK;
+
+    /* Before we do anything, check that there *is* something to write.
+       Then, write unconditionally.
+    */
+    if(!process_IsGuardingDiagBuffer()) //Do we have the buffer intact?
+    {
+        err = ERR_INVALID_PARAMETER;
+    }
     if(err == ERR_OK)
     {
-        err = process_SetProcessCommand(PROC_WRITE_BUFFER);
+        //Does the buffer header say it is a signature? And other checks
+        err = diag_PrepareSignatureWrite(SignatureType, SignatureAssignment);
+    }
+
+    if(err == ERR_OK)
+    {
+        process_ForceProcessCommand(PROC_WRITE_BUFFER);
     }
     return err;
 }

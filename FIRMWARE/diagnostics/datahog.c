@@ -593,9 +593,22 @@ void datahog_Collect(void)
     bool_t runok = datahog_TestProcess();
     if(!runok)
     {
-        if(DatahogState.status[confid] != DatahogIdle)
+        //Cancel all data collection
+        for(confid=0; confid<HogConfsCount; confid++)
         {
-            SafeStoreInt(&DatahogState, status[confid], (u8)DatahogInterrupted);
+            DatahogStatus_t status = DatahogState.status[confid];
+            if(status != DatahogIdle)
+            {
+                if(status == DatahogCollecting)
+                {
+                    status = DatahogInterrupted;
+                }
+                else
+                {
+                    status = DatahogIdle;
+                }
+                SafeStoreInt(&DatahogState, status[confid], (u8)status);
+            }
         }
         return;
     }

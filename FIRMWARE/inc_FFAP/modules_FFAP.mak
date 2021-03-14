@@ -44,7 +44,7 @@ SUBMODULES+=lint_3-0.mak,72784 \
 
 MOD_OVERRIDE+=nvram.c #Bug 64096
 SUBMODULES+= MNEnvir_5-0.mak,72775 \
-    process_3-1.mak,86558 \
+    process_3-1.mak,87533 \
     faultman_2-0.mak,77195 \
     mnassert_2-1.mak,66864 \
     bufutils_1-1.mak,70043 \
