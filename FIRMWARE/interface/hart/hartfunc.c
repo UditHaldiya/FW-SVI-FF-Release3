@@ -905,6 +905,12 @@ s8_least hartcmd_WritePositionStops(const u8 *src, u8 *dst)
     conf.rangeval[Xlow] = util_GetS16(req->PositionLOWStop[0]);
     conf.rangeval[Xhi] = util_GetS16(req->PositionHIGHStop[0]);
     ErrorCode_t err = pos_SetPositionConf(&conf);
+    if(err == ERR_OK)
+    {
+        error_ClearFault(FAULT_FIND_STOPS_FAILED);
+        //this call cleans up a bad bias - mostly needed for 1st time units
+        control_ResetBiasChangeFlag();
+    }
     return err2hart(err);
 }
 
