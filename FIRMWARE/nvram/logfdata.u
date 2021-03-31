@@ -53,8 +53,19 @@ the number of segments of type i+1.
 #MP Include "logfiledef.inc"
 
 //Ensures we are within FRAM limits (assert area are on volume 0 only, and accounting for log files area)
-CONST_ASSERT((NVMEMSTART+NVMEM_REGULAR_SIZE_Vol0+EXTENTS_TOTAL_MEMORY_PROJ + NVRAM_PARTITION_REMAP_SIZE)<=ASSERT_DATA);
+//CONST_ASSERT((NVMEMSTART+NVMEM_REGULAR_SIZE_Vol0+EXTENTS_TOTAL_MEMORY_PROJ + NVRAM_PARTITION_REMAP_SIZE)<=ASSERT_DATA);
+CONST_ASSERT((NVMEMSTART+EXTENTS_TOTAL_MEMORY_PROJ + 2*NVRAM_PARTITION_REMAP_SIZE)<=ASSERT_DATA);
 
 // project-dependent log file data area base address
 const u16 logf_AreaBase = (NVMEMSTART + NVM_PREWRITE_ADDR) - EXTENTS_TOTAL_MEMORY_PROJ;
+
+//Debug visualiazation
+#ifndef NDEBUG
+#ifndef _lint
+const u16 regsize = NVMEM_REGULAR_SIZE_Vol0;
+const u16 extents = EXTENTS_TOTAL_MEMORY_PROJ;
+const u16 remap = NVRAM_PARTITION_REMAP_SIZE;
+#endif //_lint
+#endif //NDEBUG
+
 
