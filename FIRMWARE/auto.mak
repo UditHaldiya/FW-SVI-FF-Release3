@@ -11,7 +11,8 @@ appserverc = $(firstword $(shell cmd /C sort /R appserverc.txt))
 #out_dir := C:\FF_Auto_Builds\FromDevelBranch
 out_dir := C:\Ddrive\Auto_Builds\SVIFF\FromReleasesBranch\FromRelease3
 buildname = C$(appserverc)
-uniqroot = C:\Ddrive\tfsbuildR\SVIFF\Release3
+#uniqroot = C:\Ddrive\tfsbuildR\SVIFF\Release3
+uniqroot = C:\Users\Public\tfsbuildR\SVIFFReleases\Release3
 OFFroot = $(uniqroot)\FIRMWARE
 OFFmodroot = $(uniqroot)\Core\FIRMWARE
 
@@ -36,8 +37,8 @@ all : appserverc.txt
     $(synccmd)
 	$(modcmd)
     if not exist $(out_dir)\$(buildname) cmd /C mkdir $(out_dir)\$(buildname) && $(MAKE) OFFDir=Rel proj=FFAP plugin=ffplug.mak OFFICIAL notask=1 buildname=$(buildname) OFFver=$(buildname) \
-	ver=EWARM_FS_8_40_3_23190 Hide= \
-	NO_MNS=1 OFFroot=$(OFFroot) OFFmodroot=$(OFFmodroot) MNS_OFFICIAL_DIR=$(out_dir)\$(buildname) avplugin=avplugin.mak silent=1 >$(out_dir)\$(buildname)\build.log 2>&1
+	ver=FS8.40_3_30356 Hide= \
+	NO_MNS=1 OFFroot=$(OFFroot) OFFmodroot=$(OFFmodroot) MNS_OFFICIAL_DIR=$(out_dir)\$(buildname) avplugin=avplugin.mak silent=1 
 
 appserverc.txt : force
     $(OFFVCS) history . /noprompt /sort:descending /recursive /stopafter:1 | sed --text -e "$$!d" >$@
