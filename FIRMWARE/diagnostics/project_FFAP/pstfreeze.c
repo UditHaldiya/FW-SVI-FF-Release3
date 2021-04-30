@@ -42,7 +42,7 @@ ErrorCode_t pst_Freeze(PstFreeze_t freeze_options)
             }
             else
             {
-                if(speed > SP_RATE_LIMIT_HIGH)
+                if(speed > INT_PERCENT_OF_RANGE(SP_RATE_LIMIT_HIGH))
                 {
                     lims.EnableSetpointRateLimit[x] = 0;
                 }
