@@ -857,7 +857,7 @@ const proctable_t proctable[] =
     {
         .id = PROC_WRITE_BUFFER,
         .procf = diag_WriteBuffer,
-        .flags = {.throughflags=0U, .initflags = PROCINIT_CLAIMDIAGBUFFER},
+        .flags = {.throughflags=0U, .initflags = PROCINIT_CLAIMDIAGBUFFER|PROCINIT_INHERITDIAGBUFFER|PROCINIT_IGNOREBUFFERGUARD},
         .action =
         {
             [PROCRESULT_OK] =
