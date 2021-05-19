@@ -38,7 +38,7 @@ extern procresult_t diag_ReadBuffer(s16 *procdetails);
 #define DIAGRW_BASELINE 1
 #define DIAGRW_USER 2
 
-#define DEVID_SIZE (1+2) //in halfwords; 1 entry for number, 2 for HART device id)
+#define DEVID_SIZE (1+1+2) //in halfwords; 1 entry for sampling interval high halfword, 1 entry for number, 2 for HART device id)
 
 #define DIAGRW_HEADERSZ 24 //in diag_t entries; a dogmatic number to please FF params
 #define DIAGRW_HEADER_FILLER ((diag_t)0x8081) //Filler of unused stuff

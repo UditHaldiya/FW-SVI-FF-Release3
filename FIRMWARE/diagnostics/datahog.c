@@ -391,7 +391,7 @@ ErrorCode_t datahog_Control(DatahogStatus_t op, DatahogConfId_t confid)
 }
 
 
-#define DIAG_DATAHOG_VERSION 0
+#define DIAG_DATAHOG_VERSION 1
 
 #define BUFFERPLACE_HEADERSIZE 2
 #define BUFFERPLACE_NUMSAMPLES 3
@@ -413,10 +413,10 @@ static diag_t *FillDiagHeader(const DatahogConf_t *conf, const DatahogState_t *s
     {
         [0] = DIAG_DATAHOG, //test type
         [1] = DIAG_DATAHOG_VERSION, //version
-        [BUFFERPLACE_HEADERSIZE] = EXTDIAG_HEADERSZ, //header size in diag_t entries
+        [BUFFERPLACE_HEADERSIZE] = (diag_t)(interval>>16), //Sampling interval in 5 ms ticks, high halfword - no longer header size in diag_t entries
         [BUFFERPLACE_NUMSAMPLES] = 0, // #of samples collected
         [4] = (diag_t)conf->datamask,
-        [5] = (diag_t)MIN(INT16_MAX, interval), //Sampling interval in 5 ms ticks
+        [5] = (diag_t)MIN(INT16_MAX, interval), //Sampling interval in 5 ms ticks, low halfword
         [BUFFERPLACE_NUMPRESAMPLES] = (diag_t)state->num_presamples,
         [BUFFERPLACE_PROCESSID] = (diag_t)state->procId,
     };

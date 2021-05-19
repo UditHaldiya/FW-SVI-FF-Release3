@@ -70,11 +70,11 @@ demand.
 #define STEPTEST_HEADERSZ DIAGRW_HEADERSZ //in diag_t entries; a dogmatic number to please FF params
 
 #define EXTDIAG_HEADER_FILLER ((diag_t)0x8081)
-#define DIAG_EXTDIAG_VERSION 0
+#define DIAG_EXTDIAG_VERSION 1 //from 0 for sampling interval
 CONST_ASSERT((EXTDIAG_HEADERSZ%2U)==0); //must be even
 
 //----------- step test -------------------
-#define DIAG_STEP_VERSION 0
+#define DIAG_STEP_VERSION 1
 #define MILISEC_PER_SEC 1000u
 
 
@@ -743,17 +743,19 @@ static procresult_t diag_Perform_ExtActuatorSignatureClosed(void)
 */
 void FillExtDiagHeader(void)
 {
+    u32 sampling_interval = m_FinalPruneScale * CYCLE_TASK_DIVIDER * CTRL_TASK_DIVIDER;
     //Populate the buffer header
     const diag_t ExtDiag_Header[] =
     {
         [0] = DIAG_EXT_ACT, //test type
         [1] = DIAG_EXTDIAG_VERSION, //version
-        [2] = EXTDIAG_HEADERSZ, //header size in diag_t entries
+        [2] = (diag_t)(sampling_interval>>16), //Sampling interval in 5 ms ticks, high halfword
+                       //[2] Replaced EXTDIAG_HEADERSZ, //header size in diag_t entries is fixed across all projects
         [3] = (diag_t)m_NumberOfPoints, // #of samples
         [4] = (diag_t)m_nStartPosition,
         [5] = (diag_t)m_nEndPosition,
         [6] = (diag_t)m_SetpointRampSpeed, // setpoint rate in %/sec (STANDARD_100 means 100%/s)
-        [7] = (diag_t)MIN(INT16_MAX, m_FinalPruneScale * CYCLE_TASK_DIVIDER * CTRL_TASK_DIVIDER), //Sampling interval in 5 ms ticks
+        [7] = (diag_t)MIN(INT16_MAX, sampling_interval), //Sampling interval in 5 ms ticks, low halfword
         [8] = (diag_t)m_DiagDirection,
         [9] = (diag_t)m_DiagControlOption,
         [10] = (diag_t)m_SamplesFirstDirection,
@@ -787,18 +789,19 @@ static void ClearExtDiagHeader(void)
 static size_t fill_func_steptest(void)
 {
     const SamplerInfo_t *SamplerInfo = buffer_GetSamplerInfo(DIAGBUF_DEFAULT);
+    u32 interval = SamplerInfo->prune_scale * CTRL_TASK_DIVIDER; //Sampling interval in 5 ms ticks
 
     //Populate the buffer header
     const diag_t StepTest_Header[] =
     {
         [0] = DIAG_STEP, //test type
         [1] = DIAG_STEP_VERSION, //version
-        [2] = STEPTEST_HEADERSZ, //header size in diag_t entries
+        [2] = (diag_t)(interval>>16), //Sampling interval in 5 ms ticks, low halfword - no longer STEPTEST_HEADERSZ, header size in diag_t entries
         [3] = (diag_t)SamplerInfo->num_points, // #of samples
         [4] = (diag_t)m_nStartPosition,
         [5] = (diag_t)m_nEndPosition,
         [6] = (diag_t)m_SamplingTime,
-        [7] = (diag_t)MIN(INT16_MAX, SamplerInfo->prune_scale * CTRL_TASK_DIVIDER), //Sampling interval in 5 ms ticks
+        [7] = (diag_t)MIN(INT16_MAX, interval), //Sampling interval in 5 ms ticks, low halfword
     };
     DIAGRW_WriteBufferHEADER(StepTest_Header);
     return STEPTEST_HEADERSZ;
@@ -903,7 +906,7 @@ bool_t CheckIPLimits(s32 IP)
 /* REQ 25-14 keep setpoint between -5% and 105% */
 //#define RANGE_OUTSIDE INT_PERCENT_OF_RANGE(10)
 
-#define DIAG_RAMP_VERSION 0
+#define DIAG_RAMP_VERSION 1
 #define RAMPTEST_HEADERSZ 24 //in diag_t entries; a dogmatic number to please FF params
 
 
@@ -1086,18 +1089,19 @@ void SetSamplesLastDirection(void)
 procresult_t diag_Run_RampTest(s16 *procdetails)
 {
     procresult_t procresult = control_ProcWithNoLimits(diag_Run_RampTest_InternalSP, procdetails);
+    u32 sampling_interval = m_FinalPruneScale * CTRL_TASK_DIVIDER;
 
     //Populate the buffer header
     const diag_t RampTest_Header[] =
     {
         [0] = DIAG_RAMP, //test type
         [1] = DIAG_RAMP_VERSION, //version
-        [2] = RAMPTEST_HEADERSZ, //header size in diag_t entries
+        [2] = (diag_t)(sampling_interval>>16), //Sampling interval in 5 ms ticks, high halfword - no longer RAMPTEST_HEADERSZ, header size in diag_t entries
         [3] = (diag_t)m_NumberOfPoints, // #of samples
         [4] = (diag_t)m_nStartPosition,
         [5] = (diag_t)m_nEndPosition,
         [6] = (diag_t)m_SetpointRampSpeed, // setpoint rate in %/sec (STANDARD_100 means 100%/s)
-        [7] = (diag_t)MIN(INT16_MAX, m_FinalPruneScale * CTRL_TASK_DIVIDER), //Sampling interval in 5 ms ticks
+        [7] = (diag_t)MIN(INT16_MAX, sampling_interval), //Sampling interval in 5 ms ticks, low halfword
         [8] = (diag_t)m_DiagDirection,
         [9] = (diag_t)m_SamplesFirstDirection
     };

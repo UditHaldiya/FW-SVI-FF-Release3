@@ -336,16 +336,21 @@ void diag_WriteBufferHeader(const diag_t header[], size_t numentries)
     CONST_ASSERT(DEVID_SIZE < DIAGRW_HEADERSZ);
     diag_t *devid = p + (DIAGRW_HEADERSZ - DEVID_SIZE);
     mn_memset(devid, 0, DEVID_SIZE*sizeof(*devid));
-    devid[0] = buf_use_count++;
+    
+    //An afterthought to stick the high halword of sampling interval
+    devid[0] = p[2]; 
+    p[2] = EXTDIAG_HEADERSZ;
+    
+    devid[1] = buf_use_count++;
     MN_ENTER_CRITICAL();
-        mn_memcpy(&devid[1], hart_GetHartData()->device_id, HART_ID_LENGTH);
+        mn_memcpy(&devid[2], hart_GetHartData()->device_id, HART_ID_LENGTH);
     MN_EXIT_CRITICAL();
 
     for(i=0; i < numentries; i++)
     {
         p[i] = header[i];
     }
-    for(; i < ((DIAGRW_HEADERSZ - DEVID_SIZE) - 1); i++)
+    for(; i < (DIAGRW_HEADERSZ - DEVID_SIZE); i++)
     {
         p[i] = DIAGRW_HEADER_FILLER; //just fill the space with a pleasing filler
     }

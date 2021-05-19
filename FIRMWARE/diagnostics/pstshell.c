@@ -579,7 +579,7 @@ void pst_ResetGuard(void)
 }
 
 //------------ process part -----------------------------
-#define DIAG_PST_VERSION 0
+#define DIAG_PST_VERSION 1
 
 static procresult_t pst_Iterator(s16 *procdetails, const PSTstep_t *pststeps, size_t nsteps, u16 *StepTime)
 {
@@ -696,24 +696,25 @@ static void pst_FillHeader(pos_t StartPosition, pos_t EndPosition)
 {
     const SamplerInfo_t *SamplerInfo = buffer_GetSamplerInfo(DIAGBUF_DEFAULT);
     const PSTConf_t *p = diag_GetPstData(NULL);
+    u32 interval = SamplerInfo->prune_scale * CYCLE_TASK_DIVIDER * CTRL_TASK_DIVIDER; //Sampling interval in 5 ms ticks
     //Populate the buffer header
     diag_t PST_Header[PST_HEADER_TIMES_INDEX] =
     {
         [0] = DIAG_PST, //test type
         [1] = DIAG_PST_VERSION, //version
-        [2] = PST_HEADERSZ, //header size in diag_t entries
+        [2] = (diag_t)(interval>>16); //no longer PST_HEADERSZ, //header size in diag_t entries
         [3] = (diag_t)SamplerInfo->num_points, // #of samples
         [4] = (diag_t)StartPosition,
         [5] = (diag_t)EndPosition,
         [6] = (diag_t)p->ramp_speed, // setpoint rate in %/sec (STANDARD_100 means 100%/s)
-        [7] = (diag_t)MIN(INT16_MAX, SamplerInfo->prune_scale * CYCLE_TASK_DIVIDER * CTRL_TASK_DIVIDER), //Sampling interval in 5 ms ticks
+        [7] = (diag_t)MIN(interval), //Sampling interval in 5 ms ticks, low halfword
         [8] = (diag_t)p->travel,
         [9] = (diag_t)p->DwellTime,
         [10] = (diag_t)p->StrokeTmout,
         [11] = (diag_t)p->pattern,
         [12] = 0xaaa,
         [13] = 0x55aa,
-        //From [14] to [21] is free, and we'll use it for times
+        //From [14] to [20] is free, and we'll use it for times
     };
     DIAGRW_WriteBufferHEADER(PST_Header);
 }
