@@ -416,7 +416,7 @@ static diag_t *FillDiagHeader(const DatahogConf_t *conf, const DatahogState_t *s
         [BUFFERPLACE_HEADERSIZE] = (diag_t)(interval>>16), //Sampling interval in 5 ms ticks, high halfword - no longer header size in diag_t entries
         [BUFFERPLACE_NUMSAMPLES] = 0, // #of samples collected
         [4] = (diag_t)conf->datamask,
-        [5] = (diag_t)MIN(INT16_MAX, interval), //Sampling interval in 5 ms ticks, low halfword
+        [5] = (diag_t)interval, //Sampling interval in 5 ms ticks, low halfword
         [BUFFERPLACE_NUMPRESAMPLES] = (diag_t)state->num_presamples,
         [BUFFERPLACE_PROCESSID] = (diag_t)state->procId,
     };

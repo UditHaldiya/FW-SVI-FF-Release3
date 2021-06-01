@@ -707,7 +707,7 @@ static void pst_FillHeader(pos_t StartPosition, pos_t EndPosition)
         [4] = (diag_t)StartPosition,
         [5] = (diag_t)EndPosition,
         [6] = (diag_t)p->ramp_speed, // setpoint rate in %/sec (STANDARD_100 means 100%/s)
-        [7] = (diag_t)MIN(interval), //Sampling interval in 5 ms ticks, low halfword
+        [7] = (diag_t)(interval), //Sampling interval in 5 ms ticks, low halfword
         [8] = (diag_t)p->travel,
         [9] = (diag_t)p->DwellTime,
         [10] = (diag_t)p->StrokeTmout,

@@ -755,7 +755,7 @@ void FillExtDiagHeader(void)
         [4] = (diag_t)m_nStartPosition,
         [5] = (diag_t)m_nEndPosition,
         [6] = (diag_t)m_SetpointRampSpeed, // setpoint rate in %/sec (STANDARD_100 means 100%/s)
-        [7] = (diag_t)MIN(INT16_MAX, sampling_interval), //Sampling interval in 5 ms ticks, low halfword
+        [7] = (diag_t)sampling_interval, //Sampling interval in 5 ms ticks, low halfword
         [8] = (diag_t)m_DiagDirection,
         [9] = (diag_t)m_DiagControlOption,
         [10] = (diag_t)m_SamplesFirstDirection,
@@ -801,7 +801,7 @@ static size_t fill_func_steptest(void)
         [4] = (diag_t)m_nStartPosition,
         [5] = (diag_t)m_nEndPosition,
         [6] = (diag_t)m_SamplingTime,
-        [7] = (diag_t)MIN(INT16_MAX, interval), //Sampling interval in 5 ms ticks, low halfword
+        [7] = (diag_t)interval, //Sampling interval in 5 ms ticks, low halfword
     };
     DIAGRW_WriteBufferHEADER(StepTest_Header);
     return STEPTEST_HEADERSZ;
@@ -1101,7 +1101,7 @@ procresult_t diag_Run_RampTest(s16 *procdetails)
         [4] = (diag_t)m_nStartPosition,
         [5] = (diag_t)m_nEndPosition,
         [6] = (diag_t)m_SetpointRampSpeed, // setpoint rate in %/sec (STANDARD_100 means 100%/s)
-        [7] = (diag_t)MIN(INT16_MAX, sampling_interval), //Sampling interval in 5 ms ticks, low halfword
+        [7] = (diag_t)sampling_interval, //Sampling interval in 5 ms ticks, low halfword
         [8] = (diag_t)m_DiagDirection,
         [9] = (diag_t)m_SamplesFirstDirection
     };
