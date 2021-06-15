@@ -157,7 +157,7 @@ SS : force
     $(OFFVCS) workfold /map $(VCSmodroot) $(OFFmodroot) /workspace:$(OFFworkspace) $(OFFlogin)
 # 4. Sync with the build sandbox
     echo %TIME% Sync >> $(PROJDIR)\buildtime.log
-    $(OFFVCS) get $(OFFroot);$(OFFver) /recursive /force $(OFFlogin)
+    $(OFFVCS) get $(OFFroot);$(OFFver) /recursive /force $(OFFlogin) || $(OFFVCS) get $(OFFroot);$(OFFver) /recursive $(OFFlogin)
 # 5. Get modules
     echo %TIME% Get modules >> $(PROJDIR)\buildtime.log
     gnumake -C $(OFFroot) proj=$(PROJ) MODULES VCS_MODULES_ROOT=$(OFFmodroot) MODARG="/force" LOGIN=$(OFFlogin)

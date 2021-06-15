@@ -66,8 +66,9 @@ modmidst :
 	$(Hide)echo get $(MODARG) $(LOGIN) $(SLASH)>filelist.txt
 	$(Hide)echo @Rem Files to copy > filecpy.butt
 
+#added a retry
 modend :
-	$(Hide)$(OFFVCS) @filelist.txt
+	$(Hide)$(OFFVCS) @filelist.txt || $(OFFVCS) @filelist.txt
     $(pawz)
     @echo Copying modules' files
 	$(Hide)cp.exe filecpy.butt filecpy.bat

@@ -37,6 +37,7 @@ FFP_MNS_OFFICIAL_BNAME1=FFFP_$(OFFDir)_$(OFFver)_$(FFP_FW_VERID1)_$(FFP_FW_CRCID
 ReleaseDir?=.
 
 #What to do after FFAP modules are sync'ed: Get FFP and tokenizer
+#(Added retry on get - for network errors)
 define VC_PLUGIN
     -$(MN_RM) -f -r $(SISTER_OFFroot)
     @echo Now getting FFP
@@ -44,8 +45,8 @@ define VC_PLUGIN
     $(OFFVCS) workfold /map "$$/$(TFSProject)/$(ReleaseDir)/FD-SW/$(TokenizerDir)" $(SISTER_OFFroot)/$(TokenizerDir) /workspace:$(OFFworkspace) $(OFFlogin)
     $(PAUSE)
     echo %TIME% Sync FF >> $(PROJDIR)\buildtime.log
-    $(OFFVCS) get $(SISTER_OFFroot);$(OFFver) /recursive /force $(OFFlogin)
-    $(OFFVCS) get $(SISTER_OFFroot)/$(TokenizerDir);$(OFFver) /recursive /force $(OFFlogin)
+    $(OFFVCS) get $(SISTER_OFFroot);$(OFFver) /recursive /force $(OFFlogin) || $(OFFVCS) get $(SISTER_OFFroot);$(OFFver) /recursive $(OFFlogin)
+    $(OFFVCS) get $(SISTER_OFFroot)/$(TokenizerDir);$(OFFver) /recursive /force $(OFFlogin) || $(OFFVCS) get $(SISTER_OFFroot)/$(TokenizerDir);$(OFFver) /recursive $(OFFlogin)
 endef
 
 ifeq ($(NO_MNS),1)
