@@ -545,6 +545,7 @@ static void collect(void)
 }
 
 
+#define DATAHOG_RUNFLAG 0x8000U
 /** \brief Simple high-speed collector of various data per bitmask
 
 If used at all:
@@ -557,6 +558,18 @@ void datahog_Collect(void)
     if(oswrap_IsContext(TASKID_CYCLE))
     {
         Struct_Test(DatahogState_t, &DatahogState);
+        //Indicate "Running" state in the buffer header
+        u16 runmask = 0U;
+        if(DatahogState.status[DatahogState.DatahogConfId] == DatahogCollecting)
+        {
+            runmask = DATAHOG_RUNFLAG;
+        }
+        //We steal MSB of high halfword of sampling interval to indicate
+        diag_t *devid = buffer_GetXDiagnosticBuffer(DIAGBUF_DEFAULT)+ (DIAGRW_HEADERSZ - DEVID_SIZE);
+        u16 upper = (u16)*devid;
+        upper &= ~DATAHOG_RUNFLAG;
+        upper |= runmask;
+        *devid = (diag_t)upper;
     }
     //Presample
     if(oswrap_IsContext(DatahogConf[HogConfPerm].taskid))
@@ -610,76 +623,77 @@ void datahog_Collect(void)
                 SafeStoreInt(&DatahogState, status[confid], (u8)status);
             }
         }
-        return;
     }
-
-    switch(DatahogState.status[confid])
+    else
     {
-        case DatahogStart:
+        switch(DatahogState.status[confid])
         {
-            //We create the header and presamples here
-            DatahogStatus_t s = DatahogCollecting;
-
-            //NOTE: DatahogState.DatahogConfId is set by datahog_Control()
-            const DatahogConf_t *pconf = &DatahogConf[confid];
-
-            //u16_least num_presamples = 0U;
-            /*Pull data from the presample buffer piecemeal - we can't afford copying
-            the whole presample buffer.
-
-            We need to pull at least numvars (see below) at a time,
-            or we'll have DIAGBUF_AUX buffer overrun
-            */
-            if(confid == HogConfPerm)
+            case DatahogStart:
             {
-                MN_ENTER_CRITICAL();
-                    u16 presamples_debt = (u16)(DatahogState.num_presamples * DatahogState.numvars[HogConfPerm]); //Number of diag_t items to retrieve
-                    presamples_debt = buffer_KeepAtMost(DIAGBUF_AUX, presamples_debt);
-                    size_t prefilled = presamples_debt + EXTDIAG_HEADERSZ;
-                    if(prefilled >= DIAGNOSTIC_BUFFER_SIZE/2U)
-                    {
-                        //presamples can't be more than half buffer)
-                        presamples_debt = 0;
-                        s = DatahogInterrupted;
-                    }
+                //We create the header and presamples here
+                DatahogStatus_t s = DatahogCollecting;
 
-                    bufindex_t startpos=0;
-                    bufindex_t endpos=presamples_debt + EXTDIAG_HEADERSZ;
-                    buffer_SelectRange(DIAGBUF_DEFAULT, &startpos, &endpos); //reserve space for copying presamples
-                    //num_presamples = presamples_debt/DatahogState.numvars[HogConfPerm];
-                MN_EXIT_CRITICAL();
+                //NOTE: DatahogState.DatahogConfId is set by datahog_Control()
+                const DatahogConf_t *pconf = &DatahogConf[confid];
+
+                //u16_least num_presamples = 0U;
+                /*Pull data from the presample buffer piecemeal - we can't afford copying
+                the whole presample buffer.
+
+                We need to pull at least numvars (see below) at a time,
+                or we'll have DIAGBUF_AUX buffer overrun
+                */
+                if(confid == HogConfPerm)
+                {
+                    MN_ENTER_CRITICAL();
+                        u16 presamples_debt = (u16)(DatahogState.num_presamples * DatahogState.numvars[HogConfPerm]); //Number of diag_t items to retrieve
+                        presamples_debt = buffer_KeepAtMost(DIAGBUF_AUX, presamples_debt);
+                        size_t prefilled = presamples_debt + EXTDIAG_HEADERSZ;
+                        if(prefilled >= DIAGNOSTIC_BUFFER_SIZE/2U)
+                        {
+                            //presamples can't be more than half buffer)
+                            presamples_debt = 0;
+                            s = DatahogInterrupted;
+                        }
+
+                        bufindex_t startpos=0;
+                        bufindex_t endpos=presamples_debt + EXTDIAG_HEADERSZ;
+                        buffer_SelectRange(DIAGBUF_DEFAULT, &startpos, &endpos); //reserve space for copying presamples
+                        //num_presamples = presamples_debt/DatahogState.numvars[HogConfPerm];
+                    MN_EXIT_CRITICAL();
+                }
+                //SafeStoreInt(&DatahogState, num_presamples, num_presamples); //redundant?
+
+                ErrorCode_t err = datahog_SetX(pconf, confid, DatahogCollecting);
+                if(err != ERR_OK)
+                {
+                    //Don't know how to collect
+                    s = DatahogIdle;
+                }
+                SafeStoreInt(&DatahogState, status[confid], (u8)s); //Done with status
+
+                //Now, we are all set to write the buffer header
+                (void)FillDiagHeader(pconf, &DatahogState);
+
+                samples_collected = 0;
+                if(s == DatahogCollecting)
+                {
+                    collect();
+                }
+                break;
             }
-            //SafeStoreInt(&DatahogState, num_presamples, num_presamples); //redundant?
-
-            ErrorCode_t err = datahog_SetX(pconf, confid, DatahogCollecting);
-            if(err != ERR_OK)
-            {
-                //Don't know how to collect
-                s = DatahogIdle;
-            }
-            SafeStoreInt(&DatahogState, status[confid], (u8)s); //Done with status
-
-            //Now, we are all set to write the buffer header
-            (void)FillDiagHeader(pconf, &DatahogState);
-
-            samples_collected = 0;
-            if(s == DatahogCollecting)
+            case DatahogCollecting:
             {
                 collect();
+                break;
             }
-            break;
-        }
-        case DatahogCollecting:
-        {
-            collect();
-            break;
-        }
-        case DatahogCompleted:
-        case DatahogStop:
-        case DatahogIdle:
-        default:
-        {
-            break; //nothing to do
+            case DatahogCompleted:
+            case DatahogStop:
+            case DatahogIdle:
+            default:
+            {
+                break; //nothing to do
+            }
         }
     }
 }
