@@ -270,7 +270,13 @@ static procresult_t diag_ExtSignatureScanNew(const bias_change_t* bc, EndConditi
             }
 
             BiasScaled = CLAMP(BiasScaled, 0, UINT16_MAX*BIAS_SCALE_FACTOR); //limit bias
-            (void)sysio_SetForcedCtlOutput((u16)(BiasScaled/BIAS_SCALE_FACTOR), PWMEXACT);
+            ErrorCode_t err = sysio_SetForcedCtlOutput((u16)(BiasScaled/BIAS_SCALE_FACTOR), PWMEXACT);
+            if(err != ERR_OK)
+            {
+                procresult = PROCRESULT_FAILED;
+                break;
+            }
+
             LastTime += timediff;
 
             //check to see if we have finished

@@ -133,6 +133,8 @@ u16 util_GetStableBias(pos_t nStdPos, u16 nTime, HardPos_t nPosDB, pres_t nPresD
     u16 Bias;
 
     //put the device in manual mode at the desired position
+    s32 sp;
+    ctlmode_t ctlmode = mode_GetIntendedControlMode(&sp);
     mode_SetControlMode(CONTROL_MANUAL_POS, nStdPos);
 
     //todo ERP should we allow cancel here?
@@ -151,6 +153,9 @@ u16 util_GetStableBias(pos_t nStdPos, u16 nTime, HardPos_t nPosDB, pres_t nPresD
     }
 
     Bias = pwm_GetValue();
+
+    //Restore saved control mode
+    mode_SetControlMode(ctlmode, sp);
 
     return Bias;
 }
