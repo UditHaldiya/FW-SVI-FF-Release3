@@ -62,18 +62,22 @@ typedef struct EndConditions_t              //parameters setup by setstartpositi
     pres_t StartPressure;                   //when position is outside of 0-100, pressure to start ramping at
     bias_t BiasAtStartPressureScaled;       //bias to go to starting pressure (scaled)
     pres_t EndPressure;                     //ending pressure if position is outside of 0-100
+#if 0
     pres_t LastPressure;                    //used to watch for pressure not changing
     u16    StableCount;                     //used to watch for pressure not changing
+#else
+    bool_t cancelreq;
+#endif
 } EndConditions_t;
 
 
 //local function prototypes
-static procresult_t diag_ExtSignatureScanNew(const bias_change_t* bc, EndConditions_t* ec);
+static procresult_t diag_ExtSignatureScanNew(const bias_change_t* bc, EndConditions_t* ec, s16 *procdetails);
 static procresult_t diag_ExtSignaturePrepare(bias_change_t* bc, u16_least Speed);
 static procresult_t diag_ExtSignatureSetToStartPosition(bias_change_t* bc, EndConditions_t* ec);
 static bool_t diag_WaitStableBiasChange(bias_t NewBias, u16 nTime, HardPos_t NoiseBandPosition,
                         pres_t NoiseBandPressure);
-static bool_t diag_EndOfScan(const bias_change_t* bc, EndConditions_t* ec);
+static bool_t diag_EndOfScan(const bias_change_t* bc, EndConditions_t* ec, s16 *procdetails);
 static bool_t  CheckAcceleratedBias(bool_t bIPIncreasing, bias_t* pBias, const EndConditions_t* ec);
 static s32 LimitWithSign(s32 Number, u32 LowLimit, u32 HighLimit);
 
@@ -111,7 +115,7 @@ static s32 LimitWithSign(s32 Number, u32 LowLimit, u32 HighLimit);
   \return a competion code
 */
 procresult_t diag_Run_ExtActuatorSignatureOpen_Internal(void (*sample_func)(diag_t data[2]), taskid_t TaskContext,
-                     pos_t StartPosition, pos_t EndPosition, u16 Speed, u8_least DiagDirection)
+                     pos_t StartPosition, pos_t EndPosition, u16 Speed, u8_least DiagDirection, s16 *procdetails)
 {
     procresult_t procresult;
     bias_change_t BiasFirst;
@@ -171,7 +175,7 @@ procresult_t diag_Run_ExtActuatorSignatureOpen_Internal(void (*sample_func)(diag
     if(procresult == PROCRESULT_OK)
     {
         //start ramping the pressure
-        procresult = diag_ExtSignatureScanNew(&BiasFirst, &EndConditions);
+        procresult = diag_ExtSignatureScanNew(&BiasFirst, &EndConditions, procdetails);
 
         //pause sampling
         buffer_SuspendSampling(DIAGBUF_DEFAULT);
@@ -190,7 +194,7 @@ procresult_t diag_Run_ExtActuatorSignatureOpen_Internal(void (*sample_func)(diag
                 buffer_ResumeSampling(DIAGBUF_DEFAULT);
 
                 //start the scan
-                procresult = diag_ExtSignatureScanNew(&BiasSecond, &EndConditions);
+                procresult = diag_ExtSignatureScanNew(&BiasSecond, &EndConditions, procdetails);
             }
         }
     }
@@ -205,7 +209,7 @@ procresult_t diag_Run_ExtActuatorSignatureOpen_Internal(void (*sample_func)(diag
     if(procresult == PROCRESULT_OK)
     {
         //fill in the data in the header record
-        FillExtDiagHeader();
+        FillExtDiagHeader(procdetails);
     }
 
 
@@ -216,11 +220,11 @@ procresult_t diag_Run_ExtActuatorSignatureOpen_Internal(void (*sample_func)(diag
 
 moves the valve at a constant rate for an ext actuator test
 \param[in] bias_change_t* - data set up in prepare to control this scan
-\param[in] EndConditions_t* - data set up at start position to control this scan
+\param ec - data set up at start position to control this scan
 \return false if there is an error, true if completed
 
 */
-static procresult_t diag_ExtSignatureScanNew(const bias_change_t* bc, EndConditions_t* ec)
+static procresult_t diag_ExtSignatureScanNew(const bias_change_t* bc, EndConditions_t* ec, s16 *procdetails)
 {
     s32 BiasScaled;
     bool_t EndOfScan=false;
@@ -280,7 +284,7 @@ static procresult_t diag_ExtSignatureScanNew(const bias_change_t* bc, EndConditi
             LastTime += timediff;
 
             //check to see if we have finished
-            EndOfScan = diag_EndOfScan(bc, ec);
+            EndOfScan = diag_EndOfScan(bc, ec, procdetails);
 
             //move quickly past 'tail' if end is out of range
             if(EndOfScan && bc->bEndPositionOutsideRange && !bEndAccelerate)
@@ -301,10 +305,17 @@ static procresult_t diag_ExtSignatureScanNew(const bias_change_t* bc, EndConditi
 
     }while(!EndOfScan);
 
-    //make sure last point is put in buffer
-    if(process_WaitForTime(TICKS_PER_INCREMENT)) //let periodic services (mopup and WD) run
+    if(ec->cancelreq)
     {
         procresult = PROCRESULT_CANCELED;
+    }
+    else
+    {
+        //make sure last point is put in buffer
+        if(process_WaitForTime(TICKS_PER_INCREMENT)) //let periodic services (mopup and WD) run
+        {
+            procresult = PROCRESULT_CANCELED;
+        }
     }
 
     return procresult;
@@ -516,9 +527,10 @@ static procresult_t diag_ExtSignatureSetToStartPosition(bias_change_t* bc, EndCo
 
     PressureTemp = intscale32(bc->Slope, (s32)bc->SpecifiedEndPosition, bc->Offset, SLOPE_SCALE_SHIFT);
     ec->EndPressure = (pres_t)CLAMP(PressureTemp, PRESSURE_LOW_CUTOFF, PRESSURE_MAX_STD);
+#if 0
     ec->LastPressure = 0;
     ec->StableCount = 0;
-
+#endif
     if(bc->bIPIncreasing)
     {
         ec->PressureAtLimit = PressureSupply - PSI_01;
@@ -657,7 +669,7 @@ static procresult_t diag_ExtSignatureSetToStartPosition(bias_change_t* bc, EndCo
     return result;
 }
 
-
+#define PRES_TIMEOUT (MN_MS2TICKS(180000u))
 /** \brief checks to see if we have reached the end of the open loop signature scan
 
   checks to see if we have reached the end of the open loop signature scan
@@ -665,7 +677,7 @@ static procresult_t diag_ExtSignatureSetToStartPosition(bias_change_t* bc, EndCo
   \param[in] EndConditions_t* ec - end conditions measured in set to position
   \return bool_t - true if end of scan is reached
 */
-static bool_t diag_EndOfScan(const bias_change_t* bc, EndConditions_t* ec)
+static bool_t diag_EndOfScan(const bias_change_t* bc, EndConditions_t* ec, s16 *procdetails)
 {
     //end conditions
     //  IP increasing
@@ -682,10 +694,11 @@ static bool_t diag_EndOfScan(const bias_change_t* bc, EndConditions_t* ec)
     //
     //just for now
     pos_t Position = control_GetPosition();
-    pres_t Pressure = pres_GetPressureData()->Pressures[PRESSURE_ACT1_INDEX];
+    pres_t Pressure = pres_GetMainPressure();
     pres_t SupplyPressure = pres_GetPressureData()->Pressures[PRESSURE_SUPPLY_INDEX];
     bool_t EndOfScan = false;
     bool_t bCheckForStablePressure=false;
+    ec->cancelreq = false;
 
     //check for postion reaching the end
     if(bc->bDirectionIncreasing)
@@ -738,6 +751,58 @@ static bool_t diag_EndOfScan(const bias_change_t* bc, EndConditions_t* ec)
         }
     }
 
+    //AK: Now we'll wait for stable pressure inline
+#if 1
+    if(EndOfScan && bCheckForStablePressure)
+    {
+        tick_t presstime = timer_GetTicks(); //to keep track of pressure stability test time
+        pres_t LastPressure = Pressure;
+        u16_least StableCount = 0;
+        pres_t thresh = NOISE_BAND_PRES_STABLE;
+
+        do
+        {
+            bool_t brk = process_WaitForTime(MN_MS2TICKS(60)); //pressures update rate - fixme
+            ec->cancelreq = brk;
+            if(!brk)
+            {
+                Pressure = pres_GetMainPressure();
+                if(mn_abs(Pressure - LastPressure) < thresh)
+                {
+                    StableCount++;
+                }
+                else
+                {
+                    LastPressure = Pressure;
+                    StableCount = 0;
+                }
+                //We split the timeout in half; after the first half, change the threshold once
+                tick_t tdiff = timer_GetTicksSince(presstime);
+                if(tdiff > PRES_TIMEOUT)
+                {
+                    //Indicate pressure instability
+                    if(bc->bSecondDirection)
+                    {
+                        *procdetails = (s16)(2U | (u16)*procdetails);
+                    }
+                    else
+                    {
+                        *procdetails = 1;
+                    }
+                    brk = true;
+                }
+                if(tdiff > PRES_TIMEOUT/2U)
+                {
+                    thresh = STD_FROM_PSI(0.2);
+                }
+            }
+            if(brk)
+            {
+                break;
+            }
+        } while(StableCount < STABLE_COUNT);
+    }
+#else
     //check for pressure not changing
     if(bCheckForStablePressure && (mn_abs(Pressure - ec->LastPressure) < NOISE_BAND_PRES_STABLE))
     {
@@ -752,6 +817,7 @@ static bool_t diag_EndOfScan(const bias_change_t* bc, EndConditions_t* ec)
         ec->LastPressure = Pressure;
         ec->StableCount = 0;
     }
+#endif //pressure stability test inline
 
     return EndOfScan;
 }

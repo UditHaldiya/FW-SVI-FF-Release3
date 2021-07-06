@@ -68,7 +68,7 @@ demand.
 
 //move to diagnosticsUniversal.h after development
 extern procresult_t diag_Run_ExtActuatorSignatureOpen_Internal(void (*sample_func)(diag_t data[2]), taskid_t TaskContext,
-                     pos_t StartPosition, pos_t EndPosition, u16 Speed, u8_least DiagDirection);
+                     pos_t StartPosition, pos_t EndPosition, u16 Speed, u8_least DiagDirection, s16 *procdetails);
 
 
 #endif //DIAGNOSTICSUNIVERSAL_SYS_H_

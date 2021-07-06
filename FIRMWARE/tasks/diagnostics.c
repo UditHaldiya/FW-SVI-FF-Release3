@@ -70,7 +70,7 @@ demand.
 #define STEPTEST_HEADERSZ DIAGRW_HEADERSZ //in diag_t entries; a dogmatic number to please FF params
 
 #define EXTDIAG_HEADER_FILLER ((diag_t)0x8081)
-#define DIAG_EXTDIAG_VERSION 1 //from 0 for sampling interval
+#define DIAG_EXTDIAG_VERSION 2 //from 1->2 for completion status, 0->1 for sampling interval
 CONST_ASSERT((EXTDIAG_HEADERSZ%2U)==0); //must be even
 
 //----------- step test -------------------
@@ -109,7 +109,7 @@ static procresult_t diag_Perform_StepTest_Internal(size_t fill_func(void),
                                    u16 SamplingTime);
 
 static procresult_t diag_Perform_ExtActuatorSignature(s16 *procdetails);
-static procresult_t diag_Perform_ExtActuatorSignatureClosed(void);
+static procresult_t diag_Perform_ExtActuatorSignatureClosed(s16 *procdetails);
 
 static procresult_t diag_Run_RampTest_InternalSP(s16* procdetails);
 static procresult_t diag_Run_RampTest_Internal(void (*sample_func)(diag_t data[2]), taskid_t TaskContext);
@@ -692,7 +692,6 @@ void dsampler_SamplePosPres(diag_t data[2])
 */
 static procresult_t diag_Perform_ExtActuatorSignature(s16 *procdetails)
 {
-    UNUSED_OK(procdetails);
     procresult_t procresult;
 
     ClearExtDiagHeader();  //clear out heading before we start putting things in
@@ -701,12 +700,12 @@ static procresult_t diag_Perform_ExtActuatorSignature(s16 *procdetails)
     {
         //new open loot signature routine
         procresult = diag_Run_ExtActuatorSignatureOpen_Internal(dsampler_SamplePosPres, TASKID_CYCLE,
-                     m_nStartPosition, m_nEndPosition, (u16)m_SetpointRampSpeed, m_DiagDirection);
+                     m_nStartPosition, m_nEndPosition, (u16)m_SetpointRampSpeed, m_DiagDirection, procdetails);
     }
     else if(m_DiagControlOption == DIAGOPT_CLOSEDLOOP)
     {
         //new closed loop signature
-        procresult = diag_Perform_ExtActuatorSignatureClosed();
+        procresult = diag_Perform_ExtActuatorSignatureClosed(procdetails);
     }
     else
     {
@@ -722,18 +721,17 @@ static procresult_t diag_Perform_ExtActuatorSignature(s16 *procdetails)
   \param[in] none
   \return a competion code
 */
-static procresult_t diag_Perform_ExtActuatorSignatureClosed(void)
+static procresult_t diag_Perform_ExtActuatorSignatureClosed(s16 *procdetails)
 {
     procresult_t procresult = diag_Run_RampTest_Internal(dsampler_SamplePosPres, TASKID_CYCLE);
-    //dsampler_SamplePosPres
 
     if(procresult == PROCRESULT_OK)
     {
-        FillExtDiagHeader();
+        FillExtDiagHeader(procdetails);
     }
 
     return procresult;
-}
+} //lint !e818 common prototype
 
 /** \brief put extended signature header data into buffer
 
@@ -741,7 +739,7 @@ static procresult_t diag_Perform_ExtActuatorSignatureClosed(void)
   \param[in] none
   \return none
 */
-void FillExtDiagHeader(void)
+void FillExtDiagHeader(const s16 *procdetails)
 {
     u32 sampling_interval = m_FinalPruneScale * CYCLE_TASK_DIVIDER * CTRL_TASK_DIVIDER;
     //Populate the buffer header
@@ -759,6 +757,7 @@ void FillExtDiagHeader(void)
         [8] = (diag_t)m_DiagDirection,
         [9] = (diag_t)m_DiagControlOption,
         [10] = (diag_t)m_SamplesFirstDirection,
+        [11] = (diag_t)*procdetails,
     };
     DIAGRW_WriteBufferHEADER(ExtDiag_Header);
 }

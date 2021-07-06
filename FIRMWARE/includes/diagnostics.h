@@ -46,7 +46,7 @@ extern procresult_t diag_Run_RampTest(s16 *procdetails);
 extern ErrorCode_t diag_LaunchStepTest(pos_t StartPosition, pos_t EndPosition, u16 SamplingTime);
 extern ErrorCode_t diag_LaunchRampTest(pos_t StartPosition, pos_t EndPosition, pos_t SetpointRampSpeed, u8 DiagDirection);
 extern ErrorCode_t diag_LaunchExtDiagnostics(pos_t StartPosition, pos_t EndPosition, pos_t SetpointRampSpeed, u8 DiagDirection, u8 DiagControlOption);
-extern void FillExtDiagHeader(void);
+extern void FillExtDiagHeader(const s16 *procdetails);
 extern bool_t CheckIPLimits(s32 IP);
 extern void SetSamplesFirstDirection(void);
 extern void SetSamplesLastDirection(void);
