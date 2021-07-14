@@ -193,7 +193,7 @@ u8_least util_WaitForPosExt(u16 nTime,  HardPos_t nNoiseDB , bool_t cFlag, u8_le
     lastPos = vpos_GetScaledPosition();
 
     pos_least_t deadBand = tune_GetCurrentPIDData(NULL)->DeadZone + STANDARD_TENTH_PERCENT;      /* 0.1% in case nDeadZone  = 0.0% */
-    pos_t stable_pos_test = pos_ConvertHardposDiffToStd(NOISE_BAND_STABLE); //AK: changed for the correct type
+    pos_t stable_pos_test = pos_ConvertHardposDiffToStd(nNoiseDB); //AK: changed for the correct type
     stable_pos_test = ABS(stable_pos_test);
 
     u8_least good     = 0u;
@@ -220,7 +220,7 @@ u8_least util_WaitForPosExt(u16 nTime,  HardPos_t nNoiseDB , bool_t cFlag, u8_le
             error = curPos - lastPos;
         }
 
-        if( mn_abs(error) < (nNoiseDB + deadBand))
+        if( mn_abs(error) < (stable_pos_test + deadBand))
         {
              good++;
         }
