@@ -31,6 +31,10 @@ SUBMODULES+=uicommonapi_2-0.mak,37113
 SUBMODULES+=uiengine_4-0.mak,82880 uiif_2-0.mak,77266
 #LCD driver
 SUBMODULES+=lcd_2-0.mak,66988
+#ASCII utility
+SUBMODULES+=asciiutils_1-0.mak,55618
+
+#makebasicprimer_1-0.mak,2
 
 #Build environment
 MOD_OVERRIDE+=ewarm8.x.mak #new version support out of modules for now
@@ -89,6 +93,9 @@ SUBMODULES+=temprmncb_1-0.mak,55618 \
     smoothing_1-0.mak,55618 \
     signaldef_1-1.mak,55650 \
     lcduiio_4-0.mak,77268
+
+#Tempcomp engine
+SUBMODULES+=tempcomp_2-0.mak,54722
 
 #Floating point
 SUBMODULES+=engunits_1-0.mak,72968
