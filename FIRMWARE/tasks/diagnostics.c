@@ -488,7 +488,6 @@ static procresult_t diag_Perform_StepTest_Internal(size_t fill_func(void),
     if(!endreq)
     {
       //start sampling
-      buffer_SuspendSampling(DIAGBUF_DEFAULT);   //just in case (and to set skip=0)
       err = buffer_StartSampling(DIAGBUF_DEFAULT,
                                TASKID_CONTROL,
                                sample_pos_sp,
@@ -977,7 +976,6 @@ static procresult_t diag_Run_RampTest_Internal(void (*sample_func)(diag_t data[2
         //start the sampling process
         m_SamplesFirstDirection = 0u;
         m_FirstDirectionPruneScale = 0;
-        buffer_SuspendSampling(DIAGBUF_DEFAULT);   //just in case (and to set skip=0)
         err = buffer_StartSampling(DIAGBUF_DEFAULT,
                                      TaskContext,
                                      sample_func,
@@ -1002,7 +1000,7 @@ static procresult_t diag_Run_RampTest_Internal(void (*sample_func)(diag_t data[2
               if(m_DiagDirection == DIAGDIR_UPDOWN)
               {
                   //dont' sample while we wait for valve to get to position and stable
-                  buffer_SuspendSampling(DIAGBUF_DEFAULT);
+                  u16 skip = buffer_SuspendSampling(DIAGBUF_DEFAULT);
 
                   //move the valve to starting position and stabalize
                   procresult = diag_Prepare_VRampTest(false, (pos_t)m_nEndPosition, (pos_t)m_nStartPosition); //use false until we implement both directions
@@ -1010,7 +1008,7 @@ static procresult_t diag_Run_RampTest_Internal(void (*sample_func)(diag_t data[2
                   if(procresult == PROCRESULT_OK)
                   {
                       //now start sampling
-                      buffer_ResumeSampling(DIAGBUF_DEFAULT);
+                      buffer_ResumeSampling(DIAGBUF_DEFAULT, skip);
 
                       procresult = diag_Perform_VRampTest(     m_SetpointRampSpeed,
                                                                (pos_t)m_nEndPosition,

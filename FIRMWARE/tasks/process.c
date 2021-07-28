@@ -370,20 +370,23 @@ void process_ForceProcessCommandEx(ProcId_t ProcessCommand, ProcSource_t source)
     if(ok)
 #endif
     {
-        ErrorCode_t err = process_SetProcessCommandEx(ProcessCommand, source);
-        /* If it failed because ProcessCommand is invalid (=cancel request),
-        we need to force the cancel. It doesn't matter whether we are
-        cancelling an existing process or the one that was set asynchronously.
-        If it failed because a process was already running, only a preempting
-        call to this function may have changed it, in which case it's OK
-        to proceed: the last request wins.
-        Therefore, the code snippet here **does not** require a critical
-        section around, TFS:4385 is marked fixed without doing anything.
-        */
-        if(err != ERR_OK)  //failed to set a process legit or not; queue it
-        {
-            process_UpdateProcessIds(id, procdata.reqflag[PROC_CURRENT], ProcessCommand, source);
-        }
+        MN_ENTER_CRITICAL();
+            ErrorCode_t err = process_SetProcessCommandEx(ProcessCommand, source);
+            /* If it failed because ProcessCommand is invalid (=cancel request),
+            we need to force the cancel. It doesn't matter whether we are
+            cancelling an existing process or the one that was set asynchronously.
+            If it failed because a process was already running, only a preempting
+            call to this function may have changed it, in which case it's OK
+            to proceed: the last request wins.
+            Therefore, the code snippet here **does not** require a critical
+            section around, TFS:4385 is marked fixed without doing anything.
+            */
+            if(err != ERR_OK)  //failed to set a process legit or not; queue it
+            {
+                process_UpdateProcessIds(id, procdata.reqflag[PROC_CURRENT], ProcessCommand, source);
+            }
+            process_SetProcessProgress(0);
+        MN_EXIT_CRITICAL();
     }
 }
 
@@ -408,6 +411,7 @@ ErrorCode_t process_SetProcessCommandEx(ProcId_t proc, ProcSource_t source)
             if (process_GetProcId() == PROC_NONE)
             {
                 process_UpdateProcessIds(proc, source, PROC_NONE, ProcSourceDefault);
+                process_SetProcessProgress(0);
                 retval = ERR_OK;
             }
             else

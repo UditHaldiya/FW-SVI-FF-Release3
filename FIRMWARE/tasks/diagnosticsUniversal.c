@@ -24,7 +24,7 @@ demand.
 #include "pwm.h"
 #include "bufferhandler.h"
 #include "errcodes.h"
-//#include "mnassert.h"
+#include "mnassert.h"
 //#include "param.h"
 //#include "pressmon.h" //for pressure monitoring to know when we have pushed as hard as possible
 #include "process.h"
@@ -35,6 +35,20 @@ demand.
 
 #include "diagnostics.h"
 #include "diagnosticsUniversal_sys.h"
+
+//These are progression steps (mostly for debugging) posing as % complete
+#define EXTDIAG_STABLEBIAS 2
+#define EXTDIAG_STABLEBIASCHANGE1 1
+#define EXTDIAG_STABLEBIASCHANGE2 1
+#define EXTDIAG_STABLEBIASCHANGE3 1
+#define EXTDIAG_STABLEBIAS_ENDPOS 1
+#define EXTDIAG_STABLEBIAS_2ND_DIR 1
+#define EXTDIAG_2ND_SCAN_START 60
+#define EXTDIAG_STABLEBIASCHANGE_STARTPOS1 1
+#define EXTDIAG_STABLEBIASCHANGE_STARTPOS2 1
+#define EXTDIAG_STABLEPRES_EOSCAN1 1
+#define EXTDIAG_STABLEPRES_EOSCAN2 1
+
 
 
 //structures used internally
@@ -48,6 +62,7 @@ typedef struct bias_change_t                //prameters setup by prepare routine
     s32    Slope;                           //pressure = position * Slope + Offset
     s32    Offset;
     bias_t BiasRate;                        //estimated bias change pressure count change (scaled)
+    u8 complete;    // % complete (very rough)
     bool_t bIPIncreasing;                   //ip increasing when going from start to end
     bool_t bDirectionIncreasing;            //flag for increasing or decreasing position
     bool_t bStartPositionOutsideRange;      //flag when start is outside of 0-100
@@ -72,12 +87,12 @@ typedef struct EndConditions_t              //parameters setup by setstartpositi
 
 
 //local function prototypes
-static procresult_t diag_ExtSignatureScanNew(const bias_change_t* bc, EndConditions_t* ec, s16 *procdetails);
+static procresult_t diag_ExtSignatureScanNew(bias_change_t* bc, EndConditions_t* ec, s16 *procdetails);
 static procresult_t diag_ExtSignaturePrepare(bias_change_t* bc, u16_least Speed);
 static procresult_t diag_ExtSignatureSetToStartPosition(bias_change_t* bc, EndConditions_t* ec);
-static bool_t diag_WaitStableBiasChange(bias_t NewBias, u16 nTime, HardPos_t NoiseBandPosition,
+static procresult_t diag_WaitStableBiasChange(bias_t NewBias, u16 nTime, HardPos_t NoiseBandPosition,
                         pres_t NoiseBandPressure);
-static bool_t diag_EndOfScan(const bias_change_t* bc, EndConditions_t* ec, s16 *procdetails);
+static bool_t diag_EndOfScan(bias_change_t* bc, EndConditions_t* ec, s16 *procdetails);
 static bool_t  CheckAcceleratedBias(bool_t bIPIncreasing, bias_t* pBias, const EndConditions_t* ec);
 static s32 LimitWithSign(s32 Number, u32 LowLimit, u32 HighLimit);
 
@@ -86,7 +101,6 @@ static s32 LimitWithSign(s32 Number, u32 LowLimit, u32 HighLimit);
 #define SLOPE_SCALE_FACTOR ((s32)(1u<<SLOPE_SCALE_SHIFT))  //1024
 #define MIN_BIAS_SMALL_STEP 50
 #define TEN_TICKS (LCL_TICKS_PER_SEC/10)
-#define MAX_SMALL_STEP 500
 #define PSI_03 ( STD_FROM_PSI(3.0))
 #define PSI_01 ( STD_FROM_PSI(1.0))
 #define STABLE_COUNT 200u  //10 second - changed from 60 - 3 seconds
@@ -129,6 +143,7 @@ procresult_t diag_Run_ExtActuatorSignatureOpen_Internal(void (*sample_func)(diag
     BiasFirst.SpecifiedStartPosition = StartPosition;
     BiasFirst.SpecifiedEndPosition = EndPosition;
     BiasFirst.bSecondDirection = false;
+    BiasFirst.complete = 0;
     procresult = diag_ExtSignaturePrepare(&BiasFirst, (u16_least)Speed);
 
     if(procresult == PROCRESULT_OK)
@@ -140,7 +155,10 @@ procresult_t diag_Run_ExtActuatorSignatureOpen_Internal(void (*sample_func)(diag
             BiasSecond.SpecifiedStartPosition = EndPosition;
             BiasSecond.SpecifiedEndPosition = StartPosition;
             BiasSecond.bSecondDirection = true;
+            BiasSecond.complete = BiasFirst.complete; //=5
+            process_SetProcessProgress(BiasSecond.complete);
             procresult = diag_ExtSignaturePrepare(&BiasSecond, (u16_least)Speed);
+            BiasFirst.complete = BiasSecond.complete; //=10
         }
     }
 
@@ -154,7 +172,6 @@ procresult_t diag_Run_ExtActuatorSignatureOpen_Internal(void (*sample_func)(diag
     if(procresult == PROCRESULT_OK)
     {
         //start sampling first direction
-        buffer_SuspendSampling(DIAGBUF_DEFAULT);   //just in case (and to set skip=0)
         ErrorCode_t err = buffer_StartSampling(
                          DIAGBUF_DEFAULT,
                          TaskContext, //That's where we are sampling now
@@ -178,12 +195,15 @@ procresult_t diag_Run_ExtActuatorSignatureOpen_Internal(void (*sample_func)(diag
         procresult = diag_ExtSignatureScanNew(&BiasFirst, &EndConditions, procdetails);
 
         //pause sampling
-        buffer_SuspendSampling(DIAGBUF_DEFAULT);
+        u16 skip = buffer_SuspendSampling(DIAGBUF_DEFAULT);
         SetSamplesFirstDirection();  //save the number of points sampled
 
         //if we need to do the second direction
         if( (procresult == PROCRESULT_OK) && (DiagDirection == DIAGDIR_UPDOWN) )
         {
+            BiasSecond.complete = EXTDIAG_2ND_SCAN_START;
+            process_SetProcessProgress(BiasSecond.complete);
+    
             //get to starting position (but stay in range if start position < 0 or > 100)
             //  but since this is the 2nd direction, just stay where we are
             procresult = diag_ExtSignatureSetToStartPosition(&BiasSecond, &EndConditions);
@@ -191,7 +211,7 @@ procresult_t diag_Run_ExtActuatorSignatureOpen_Internal(void (*sample_func)(diag
             if(procresult == PROCRESULT_OK)
             {
                 //resume sampling
-                buffer_ResumeSampling(DIAGBUF_DEFAULT);
+                buffer_ResumeSampling(DIAGBUF_DEFAULT, skip);
 
                 //start the scan
                 procresult = diag_ExtSignatureScanNew(&BiasSecond, &EndConditions, procdetails);
@@ -224,7 +244,7 @@ moves the valve at a constant rate for an ext actuator test
 \return false if there is an error, true if completed
 
 */
-static procresult_t diag_ExtSignatureScanNew(const bias_change_t* bc, EndConditions_t* ec, s16 *procdetails)
+static procresult_t diag_ExtSignatureScanNew(bias_change_t* bc, EndConditions_t* ec, s16 *procdetails)
 {
     s32 BiasScaled;
     bool_t EndOfScan=false;
@@ -356,7 +376,10 @@ static bool_t  CheckAcceleratedBias(bool_t bIPIncreasing, bias_t* pBias, const E
     return End;
 }
 
-
+#define VALVE_NUDGE 1 //0 or 1. 1 has problems there (see comment, papered over), not sure about 0 yet
+#if VALVE_NUDGE
+#define MAX_SMALL_STEP 500
+#endif
 /** \brief prepares for an extended signature test by gathering bias/pressure rate
 
   prepares for an extended signature test by gathering bias/pressure rate
@@ -366,15 +389,15 @@ static bool_t  CheckAcceleratedBias(bool_t bIPIncreasing, bias_t* pBias, const E
 */
 static procresult_t diag_ExtSignaturePrepare(bias_change_t* bc, u16_least Speed)
 {
-    bool_t bContinue = true;
-    bias_t Bias1, Bias2 = 0;
-    pres_t Pressure1 = 0, Pressure2 = 1;
+    bias_t Bias1; //, Bias2 = 0;
+    pres_t Pressure1 = 0; //, Pressure2 = 1;
     pos_t  Position1 = 0;
     bias_t SmallBiasStep = 0;
     bias_t BiasEnd;
     pres_t PressureEnd=0;
+    procresult_t procresult = PROCRESULT_OK;
 
-    pos_t Position2=0;
+    //pos_t Position2=0;
     pos_t Ends[Xends];
 
     //set up flags that indicate whether this scan increases position and increases IP
@@ -391,34 +414,42 @@ static procresult_t diag_ExtSignaturePrepare(bias_change_t* bc, u16_least Speed)
     pos_t HighestInRange = (pos_t)CLAMP((STANDARD_100*STANDARD_100)/(s32)Ends[Xhi],  MIN_ALLOWED_POSITION, MAX_ALLOWED_POSITION);
     HighestInRange -= POSITION_05;
 
-    bc->PreparationStartPosition = (bc->SpecifiedStartPosition<LowestInRange)?LowestInRange:bc->SpecifiedStartPosition;
-    bc->PreparationStartPosition = (bc->PreparationStartPosition>HighestInRange)?HighestInRange:bc->PreparationStartPosition;
-    bc->PreparationEndPosition = (bc->SpecifiedEndPosition<LowestInRange)?LowestInRange:bc->SpecifiedEndPosition;
-    bc->PreparationEndPosition = (bc->PreparationEndPosition>HighestInRange)?HighestInRange:bc->PreparationEndPosition;
+    bc->PreparationStartPosition = CLAMP(bc->SpecifiedStartPosition, LowestInRange, HighestInRange);
+    bc->PreparationEndPosition = CLAMP(bc->SpecifiedEndPosition, LowestInRange, HighestInRange);
+    MN_ASSERT(equiv(bc->PreparationEndPosition>bc->PreparationStartPosition, bc->bDirectionIncreasing));
 
 
     //move to start position
-    Bias1 = util_GetStableBias((s16)bc->PreparationStartPosition, T1_000, NOISE_BAND_STABLE,
+    Bias1 = util_GetStableBias(bc->PreparationStartPosition, T1_000, NOISE_BAND_STABLE,
                     NOISE_BAND_PRES_STABLE);
     if(Bias1 == (s16)BIAS_ERR) //error case
     {
-        bContinue = false;
+        procresult = PROCRESULT_FAILED;
     }
 
-    if(bContinue)
+    bc->complete += EXTDIAG_STABLEBIAS;
+    process_SetProcessProgress(bc->complete);
+    
+    if(procresult == PROCRESULT_OK)
     {
-        bContinue = CheckIPLimits(Bias1);
+        if(!CheckIPLimits(Bias1))
+        {
+            procresult = PROCRESULT_FAILED;
+        }
     }
 
-    if(bContinue)
+    if(procresult == PROCRESULT_OK)
     {
         mode_SetControlMode(CONTROL_OFF, SmallBiasStep);  //note - 2nd argument is not relevant
-        bContinue = diag_WaitStableBiasChange(Bias1, T1_000, NOISE_BAND_STABLE,
+        procresult = diag_WaitStableBiasChange(Bias1, T1_000, NOISE_BAND_STABLE,
                 NOISE_BAND_PRES_STABLE);
     }
 
+    bc->complete += EXTDIAG_STABLEBIASCHANGE1;
+    process_SetProcessProgress(bc->complete);
+    
     //this moves us in the right direction to get on the right hysteresis curve
-    if(bContinue)
+    if(procresult == PROCRESULT_OK)
     {
         //save the bias change to use in testing valve movement
         if(bc->bIPIncreasing)
@@ -431,66 +462,110 @@ static procresult_t diag_ExtSignaturePrepare(bias_change_t* bc, u16_least Speed)
         }
 
         Bias1 += SmallBiasStep;
-        bContinue = diag_WaitStableBiasChange(Bias1, T1_000, NOISE_BAND_STABLE,
+        procresult = diag_WaitStableBiasChange(Bias1, T1_000, NOISE_BAND_STABLE,
                         NOISE_BAND_PRES_STABLE);
-        Pressure1 = pres_GetPressureData()->Pressures[PRESSURE_ACT1_INDEX];
+        Pressure1 = pres_GetMainPressure();
         Position1 = control_GetPosition();
+        
+        bc->complete += EXTDIAG_STABLEBIASCHANGE2;
+        process_SetProcessProgress(bc->complete);
+        
     }
 
+#if VALVE_NUDGE //For some reason, need to nudge the valve.
     //continue moving slowly to get info to calc biasrate
-    if(bContinue)
+    if(procresult == PROCRESULT_OK)
     {
+        pos_least_t moved;
+        //pres_t Pressure2;
         do //increment bias until we get at least 3% movement
         {
-            Bias2 = Bias1 + SmallBiasStep;
-            bContinue = diag_WaitStableBiasChange((bias_t)Bias2, T1_000, NOISE_BAND_STABLE,
+            bias_t Bias2 = Bias1 + SmallBiasStep;
+            procresult = diag_WaitStableBiasChange((bias_t)Bias2, T1_000, NOISE_BAND_STABLE,
                             NOISE_BAND_PRES_STABLE);
-            Pressure2 = pres_GetPressureData()->Pressures[PRESSURE_ACT1_INDEX];
-            Position2 = control_GetPosition();
+            
+            //Pressure2 = pres_GetMainPressure();
+            pos_t Position2 = control_GetPosition();
             SmallBiasStep += SmallBiasStep;  //double it
-        }while( (mn_abs(Position2-Position1)<REQUIRED_MOVEMENT) && mn_abs(SmallBiasStep)<MAX_SMALL_STEP );
+            moved = mn_abs(Position2-Position1);
+        } while((procresult == PROCRESULT_OK) && (moved<REQUIRED_MOVEMENT) && mn_abs(SmallBiasStep)<MAX_SMALL_STEP );
+        
+        if((moved<REQUIRED_MOVEMENT) && (procresult == PROCRESULT_OK))
+        {
+            /* Not canceled and not moved. This indeed has been observed
+               in the vent direction away from 105%.
+               For now, we just ignore this new test which reveals the flaw
+               in the original calculation.
+            */
+            //procresult = PROCRESULT_FAILED;
+        }
+        
+        bc->complete += EXTDIAG_STABLEBIASCHANGE3;
+        process_SetProcessProgress(bc->complete);
+        
     }
-
+#else
+#endif //0 or 1
+    
     // move to endposition
-    if(bContinue)
+    if(procresult == PROCRESULT_OK)
     {
-        BiasEnd = util_GetStableBias((s16)bc->PreparationEndPosition, T1_000, NOISE_BAND_STABLE,
+        BiasEnd = util_GetStableBias(bc->PreparationEndPosition, T1_000, NOISE_BAND_STABLE,
                         NOISE_BAND_PRES_STABLE);
+        
+        bc->complete += EXTDIAG_STABLEBIAS_ENDPOS;
+        process_SetProcessProgress(bc->complete);
+        
         if(BiasEnd == (s16)BIAS_ERR) //error case
         {
-            bContinue = false;
+            procresult = PROCRESULT_FAILED;
         }
-        if(bContinue)
+        if(procresult == PROCRESULT_OK)
         {
-            bContinue = CheckIPLimits(BiasEnd);
+            if(!CheckIPLimits(BiasEnd))
+            {
+                procresult = PROCRESULT_FAILED;
+            }
         }
-        PressureEnd = pres_GetPressureData()->Pressures[PRESSURE_ACT1_INDEX];
+        PressureEnd = pres_GetMainPressure();
     }
 
     //calculations
-    if(bContinue)
+    if(procresult == PROCRESULT_OK)
     {
-        //calculate open loop bias change per pressure count change (scaled)
-        bc->BiasRate = (BIAS_SCALE_FACTOR*(Bias2-Bias1))/(Pressure2-Pressure1);
-
-        //calculate spring range (actually slope and offset for converting position to pressure)
-        bc->Slope = (SLOPE_SCALE_FACTOR*(s32)(PressureEnd -  Pressure1))/(s32)(bc->PreparationEndPosition - Position1);
-        bc->Offset = Pressure1 - (bc->Slope*(s32)(Position1)/SLOPE_SCALE_FACTOR);
-
-        //calculate bias rate per 10 ticks
-        //bc->BiasPer10Ticks = ComputeBiasPer10Ticks((s32)bc->PreparationStartPosition, (s32)bc->PreparationEndPosition,
-        //                                               (u32)bc->BiasStart, (u32)bc->BiasEnd, (u32)Speed);
-        //lint -e{414} positions not equal tested above - no divide by 0
-        bc->BiasPer10Ticks = (s32)(((s32)Speed * (s32)BIAS_SCALE_FACTOR*(Bias2-Bias1))/((s32)TEN_TICKS*(Position2 - Position1)));
-        bc->BiasPer10Ticks = LimitWithSign(bc->BiasPer10Ticks, BIAS_PER_MIN, BIAS_PER_MAX);
-        if(!bc->bDirectionIncreasing)
+        pres_t diff = PressureEnd-Pressure1;
+        pos_t PositionEnd = control_GetPosition();
+        if((ABS(diff) < 3) || (ABS(PositionEnd-Position1) < 3))  //kludge for zerodivide; for pressures, also accounts for sensor failure (PRESSURE_INVALID)
         {
-            bc->BiasPer10Ticks = - bc->BiasPer10Ticks;
+            procresult = PROCRESULT_FAILED;
+        }
+        else
+        {
+            //lint -e{414} bias, positions not equal tested above - no divide by 0
+
+            //calculate open loop bias change per pressure count change (scaled)
+            //bc->BiasRate = (BIAS_SCALE_FACTOR*(Bias2-Bias1))/(Pressure2-Pressure1);
+            bc->BiasRate = (BIAS_SCALE_FACTOR*(BiasEnd-Bias1))/diff; //lint !e644 BiasEnd initialized when PROCRESLT_OK
+
+            //calculate spring range (actually slope and offset for converting position to pressure)
+            bc->Slope = (SLOPE_SCALE_FACTOR*(s32)diff)/(s32)(bc->PreparationEndPosition - Position1);
+            bc->Offset = Pressure1 - (bc->Slope*(s32)(Position1)/SLOPE_SCALE_FACTOR);
+
+            //calculate bias rate per 10 ticks
+            //bc->BiasPer10Ticks = ComputeBiasPer10Ticks((s32)bc->PreparationStartPosition, (s32)bc->PreparationEndPosition,
+            //                                               (u32)bc->BiasStart, (u32)bc->BiasEnd, (u32)Speed);
+           // bc->BiasPer10Ticks = (s32)(((s32)Speed * (s32)BIAS_SCALE_FACTOR*(Bias2-Bias1))/((s32)TEN_TICKS*(Position2 - Position1)));
+            bc->BiasPer10Ticks = (s32)(((s32)Speed * (s32)BIAS_SCALE_FACTOR*(BiasEnd-Bias1))/((s32)TEN_TICKS*(PositionEnd - Position1)));
+
+            bc->BiasPer10Ticks = LimitWithSign(bc->BiasPer10Ticks, BIAS_PER_MIN, BIAS_PER_MAX);
+            if(!bc->bDirectionIncreasing)
+            {
+                bc->BiasPer10Ticks = - bc->BiasPer10Ticks;
+            }
         }
     }
 
-
-    return bContinue?PROCRESULT_OK:PROCRESULT_CANCELED;
+    return procresult;
 }
 
 /** \brief move the valve to starting position and get on proper hysteresis curve
@@ -557,10 +632,12 @@ static procresult_t diag_ExtSignatureSetToStartPosition(bias_change_t* bc, EndCo
                 }
             }
         }
+        bc->complete += EXTDIAG_STABLEBIAS_2ND_DIR;
+        process_SetProcessProgress(bc->complete);
 
         //for second direction we are already at the starting position but need to do some calcs
         Bias1 = pwm_GetValue();
-        PressureCurrent = pres_GetPressureData()->Pressures[PRESSURE_ACT1_INDEX];
+        PressureCurrent = pres_GetMainPressure();
 
         //calculate bias at starting point (not the limit)
         ec->BiasAtStartPressureScaled
@@ -616,8 +693,10 @@ static procresult_t diag_ExtSignatureSetToStartPosition(bias_change_t* bc, EndCo
                 result = PROCRESULT_CANCELED;
             }
         }
+        bc->complete += EXTDIAG_STABLEBIASCHANGE3;
+        process_SetProcessProgress(bc->complete);
 
-        PressureCurrent = pres_GetPressureData()->Pressures[PRESSURE_ACT1_INDEX];
+        PressureCurrent = pres_GetMainPressure();
 
         //calculate bias at start
         if(bc->bStartPositionOutsideRange)
@@ -637,23 +716,21 @@ static procresult_t diag_ExtSignatureSetToStartPosition(bias_change_t* bc, EndCo
         //go to open loop moving to 0 pressure if necessary
         if(result == PROCRESULT_OK)
         {
-            bool_t bContinue;
             if(bc->bStartPositionOutsideRange)
             {
                 //outside of range - start at the limit (0 or supply pressure)
-                bContinue = diag_WaitStableBiasChange(ec->BiasStartAtLimit,  T1_000, NOISE_BAND_STABLE,
+                result = diag_WaitStableBiasChange(ec->BiasStartAtLimit,  T1_000, NOISE_BAND_STABLE,
                                         NOISE_BAND_PRES_STABLE);
             }
             else
             {
                 //inside range - start where we are
-                bContinue = diag_WaitStableBiasChange(ec->BiasAtStartPressureScaled/BIAS_SCALE_FACTOR,  T1_000, NOISE_BAND_STABLE,
+                result = diag_WaitStableBiasChange(ec->BiasAtStartPressureScaled/BIAS_SCALE_FACTOR,  T1_000, NOISE_BAND_STABLE,
                                         NOISE_BAND_PRES_STABLE);
             }
-            if(!bContinue)
-            {
-                result = PROCRESULT_CANCELED;
-            }
+
+            bc->complete += EXTDIAG_STABLEBIASCHANGE_STARTPOS1;
+            process_SetProcessProgress(bc->complete);
         }
     }
 
@@ -665,6 +742,8 @@ static procresult_t diag_ExtSignatureSetToStartPosition(bias_change_t* bc, EndCo
             result = PROCRESULT_CANCELED;        // early return - user cancel
         }
     }
+    bc->complete += EXTDIAG_STABLEBIASCHANGE_STARTPOS2;
+    process_SetProcessProgress(bc->complete);
 
     return result;
 }
@@ -677,7 +756,7 @@ static procresult_t diag_ExtSignatureSetToStartPosition(bias_change_t* bc, EndCo
   \param[in] EndConditions_t* ec - end conditions measured in set to position
   \return bool_t - true if end of scan is reached
 */
-static bool_t diag_EndOfScan(const bias_change_t* bc, EndConditions_t* ec, s16 *procdetails)
+static bool_t diag_EndOfScan(bias_change_t* bc, EndConditions_t* ec, s16 *procdetails)
 {
     //end conditions
     //  IP increasing
@@ -793,7 +872,12 @@ static bool_t diag_EndOfScan(const bias_change_t* bc, EndConditions_t* ec, s16 *
                 }
                 if(tdiff > PRES_TIMEOUT/2U)
                 {
-                    thresh = STD_FROM_PSI(0.2);
+                    if(thresh < STD_FROM_PSI(0.2))
+                    {
+                        thresh = STD_FROM_PSI(0.2);
+                        bc->complete += EXTDIAG_STABLEPRES_EOSCAN1;
+                        process_SetProcessProgress(bc->complete);
+                    }
                 }
             }
             if(brk)
@@ -801,6 +885,8 @@ static bool_t diag_EndOfScan(const bias_change_t* bc, EndConditions_t* ec, s16 *
                 break;
             }
         } while(StableCount < STABLE_COUNT);
+        bc->complete += EXTDIAG_STABLEPRES_EOSCAN2;
+        process_SetProcessProgress(bc->complete);
     }
 #else
     //check for pressure not changing
@@ -829,32 +915,32 @@ static bool_t diag_EndOfScan(const bias_change_t* bc, EndConditions_t* ec, s16 *
   \param[in] nTime - util_WaitStablePosPres
   \param[in] NoiseBandPosition - util_WaitStablePosPres
   \param[in] NoiseBandPressure - util_WaitStablePosPres
-  \return  true if stable, false if canceled or failed
+  \return  PROCRESULT_OK if stable, or error if canceled or failed
 */
-static bool_t diag_WaitStableBiasChange(bias_t NewBias, u16 nTime, HardPos_t NoiseBandPosition,
+static procresult_t diag_WaitStableBiasChange(bias_t NewBias, u16 nTime, HardPos_t NoiseBandPosition,
                         pres_t NoiseBandPressure)
 {
-    bool_t bReturn;
+    procresult_t ret;
 
-    ErrorCode_t err = sysio_SetForcedCtlOutput((s32)NewBias, PWMEXACT);
+    ErrorCode_t err = sysio_SetForcedCtlOutput(NewBias, PWMEXACT);
 
     if(err != ERR_OK)
     {
-        bReturn = false;
+        ret = PROCRESULT_FAILED;
     }
     else if(process_WaitForTime(nTime))
     {
-        bReturn=false;
+        ret=PROCRESULT_CANCELED;
     }
     else if(!util_WaitStablePosPres(nTime, NoiseBandPosition,  NoiseBandPressure))
     {
-        bReturn=false;        // early return - user cancel
+        ret=PROCRESULT_CANCELED;
     }
     else
     {
-        bReturn = true;
+        ret = PROCRESULT_OK;
     }
-    return bReturn;
+    return ret;
 
 }
 

@@ -651,35 +651,45 @@ void buffer_SampleAllData(void)
 /** \brief suspend/resume sampling
 \param bufnum - buffer id
 \param new_skip - number skips to next sample
+\return old skip count
 */
-static void buffer_HackSampling(u8_least bufnum, u16 new_skip)
+static u16 buffer_HackSampling(u8_least bufnum, u16 new_skip)
 {
-    if(bufnum >= NUM_DIAG_BUFFERS)
+    u16 old_skip;
+    if(bufnum < NUM_DIAG_BUFFERS)
     {
-        return; //OK to suspend non-existent sampling
+        SamplerInfo_t *SamplerInfo = &db.buf[bufnum].SamplerInfo;
+        MN_ENTER_CRITICAL();
+            old_skip = SamplerInfo->skip; //OK to suspend non-existent sampling
+            storeMemberInt(SamplerInfo, skip, new_skip);
+        MN_EXIT_CRITICAL();
     }
-    SamplerInfo_t *SamplerInfo = &db.buf[bufnum].SamplerInfo;
-    MN_ENTER_CRITICAL();
-        storeMemberInt(SamplerInfo, skip, new_skip);
-    MN_EXIT_CRITICAL();
+    else
+    {
+        old_skip = 0; //OK to suspend non-existent sampling
+    }
+    return old_skip;
 }
 
 /** \brief suspend linear sampling
 \param bufnum - buffer id
+\return old skip count (to know where to resume)
 */
-void buffer_SuspendSampling(u8_least bufnum)
+u16 buffer_SuspendSampling(u8_least bufnum)
 {
     //This may be broken by reading the buffer as circular
-    buffer_HackSampling(bufnum, 0);
+    return buffer_HackSampling(bufnum, 0);
 }
 
 /** \brief resume linear sampling
 \param bufnum - buffer id
+\param skip - number skips to next sample
 */
-void buffer_ResumeSampling(u8_least bufnum)
+void buffer_ResumeSampling(u8_least bufnum, u16 skip)
 {
     //Make the next samle go in the buffer
-    buffer_HackSampling(bufnum, 1);
+    u16 old_skip = buffer_HackSampling(bufnum, skip);
+    UNUSED_OK(old_skip);
 }
 
 

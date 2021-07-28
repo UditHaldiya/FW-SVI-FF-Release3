@@ -106,8 +106,8 @@ extern void buffer_SampleData(u8_least bufnum);
 extern void buffer_SampleAllData(void);
 
 MN_DECLARE_API_FUNC(buffer_SuspendSampling, buffer_ResumeSampling)
-extern void buffer_SuspendSampling(u8_least bufnum);
-extern void buffer_ResumeSampling(u8_least bufnum);
+extern u16 buffer_SuspendSampling(u8_least bufnum);
+extern void buffer_ResumeSampling(u8_least bufnum, u16 skip);
 
 MN_DECLARE_API_FUNC(buffer_AddXDiagnosticDataCircular, buffer_KeepAtMost)
 extern void buffer_AddXDiagnosticDataCircular(u8_least bufnum, diag_t data);

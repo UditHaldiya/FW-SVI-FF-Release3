@@ -61,16 +61,13 @@ bool_t util_WaitStablePosPres(u16 nTime, HardPos_t nPosDB, pres_t nPresDB)
 
     MN_ASSERT(nTime > 0);
 
-    const BoardPressure_t  *BoardPressure    =     pres_GetPressureData();
-    const pres_t *pres = &(BoardPressure->Pressures[PRESSURE_ACT1_INDEX]);
-    bool_t havePress = (*pres != PRESSURE_INVALID);
+    pres_t prev = pres_GetMainPressure();
     HardPos_t pos = vpos_GetRawPosition();
 
     // Loop forever
     do
     {
         pos = vpos_GetRawPosition();
-        pres_t press = *pres;
 
         //If time since last test > nTime then
         rslt = process_WaitForTime(nTime);
@@ -87,13 +84,15 @@ bool_t util_WaitStablePosPres(u16 nTime, HardPos_t nPosDB, pres_t nPresDB)
         NewPos = vpos_GetRawPosition();
 
         bool_t DirectionPlus = NewPos > pos;
+        pres_t press = pres_GetMainPressure();
 
             //lint -e{960}  the [mn_]abs function does not have side effects
         if ((mn_abs(pos - NewPos) < nPosDB)
             //If actuator pressure sensor available then
-            && ((!havePress)
+            
+            && ((press == PRESSURE_INVALID)
                 //If Pressure change since last test < | nPresDB | then
-                || ((u16)mn_abs(press - *pres) < nPresDB)) )
+                || ((u16)mn_abs(press - prev) < nPresDB)) )
         {
             //Increment stable count
             good++;
@@ -109,11 +108,12 @@ bool_t util_WaitStablePosPres(u16 nTime, HardPos_t nPosDB, pres_t nPresDB)
             nPosDB += nPosDB/DEADBAND_DIVISOR;     //increase the deadbands so that we never get stuck
             nPresDB += nPresDB/DEADBAND_DIVISOR;
             good = 0;
+            prev = press;
+            pos = NewPos;
 
             DirectionChanged = false;
         }
         LastDirectionPlus = DirectionPlus;
-        pos = NewPos;
 
     //If ((stable count >= 3) & (direction changed) or timeout return TRUE
     }  while (((good < WAIT_STABLE_POS_PRES_COUNT) || (!DirectionChanged)) && (exitTime < T120_000));
@@ -130,7 +130,7 @@ bool_t util_WaitStablePosPres(u16 nTime, HardPos_t nPosDB, pres_t nPresDB)
 */
 u16 util_GetStableBias(pos_t nStdPos, u16 nTime, HardPos_t nPosDB, pres_t nPresDB)
 {
-    u16 Bias;
+    u16 Bias = BIAS_ERR;
 
     //put the device in manual mode at the desired position
     s32 sp;
@@ -141,19 +141,27 @@ u16 util_GetStableBias(pos_t nStdPos, u16 nTime, HardPos_t nPosDB, pres_t nPresD
     // check for cancel
     if(process_WaitForTime(T4_000))
     {
-        return BIAS_ERR;        // early return - user or error cancel
+        //keep error - user or error cancel
     }
-    if(!util_WaitStablePosPres(nTime, nPosDB, nPresDB))
+#if 0
+    else if(!util_WaitForPos(nTime, nPosDB, true)) //make sure we arrived at setpoint
     {
-        return BIAS_ERR;        // early return - user cancel
+        //keep error - user or error cancel
     }
-    if(process_WaitForTime(T2_000))
+#endif
+    else if(!util_WaitStablePosPres(nTime, nPosDB, nPresDB))
     {
-        return BIAS_ERR;        // early return - user cancel
+        //keep error - user or error cancel
     }
-
-    Bias = pwm_GetValue();
-
+    else if(process_WaitForTime(T2_000))
+    {
+        //keep error - user or error cancel
+    }
+    else
+    {
+        Bias = pwm_GetValue();
+    }
+    
     //Restore saved control mode
     mode_SetControlMode(ctlmode, sp);
 

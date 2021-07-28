@@ -229,6 +229,11 @@ procresult_t diag_WriteBufferEx(s16 *procdetails, s16_least maxlen)
             {
                 break;
             }
+            if(iend > 0)
+            {
+                s8_least complete = (100*(i+1))/iend;
+                process_SetProcessProgress((u8)complete);
+            }
         }
     }
 
@@ -269,6 +274,7 @@ procresult_t diag_ReadBuffer(s16 *procdetails)
     buffer_InitializeXDiagnosticBuffer(diagrw.BufferId);
 
     u16 rlen = 0;
+    u16 bytes_read = 0;
     do
     {
         if(err == ERR_OK)
@@ -300,6 +306,8 @@ procresult_t diag_ReadBuffer(s16 *procdetails)
         {
             break;
         }
+        bytes_read += rlen;
+        process_SetProcessProgress((u8)((100*bytes_read)/len));
     } while(rlen != 0);
 
     //close the file
