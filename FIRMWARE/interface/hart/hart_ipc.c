@@ -85,8 +85,8 @@ demand.
 //--------------------------------------------------------------
 
 
-#define IPC_LOST_TIMER_SEC_REL  180
-#define IPC_LOST_TIMER_SEC_DBG  7200
+#define IPC_LOST_TIMER_SEC_REL  120
+#define IPC_LOST_TIMER_SEC_DBG  180
 
 // local variable for IPC time stamp, refreshed by IPC communication
 static tick_t ipc_TimeStamp = 0;
@@ -1443,36 +1443,34 @@ s8_least hartcmd_IPCWriteArray(const u8 *src, u8 *dst)
 */
 void  IPC_IpcMonitor(void)
 {
-    tick_t  span;
-    IPC_FFDeviceParams_t* pFFdevParam;
-
-    // How long time elasped
-    span = timer_GetTicksSince(ipc_TimeStamp);
-
-    pFFdevParam = GetDeviceVar();
-    MN_ENTER_CRITICAL();
-        storeMemberU8(pFFdevParam, IPC_TimeStampStatus, (span >= T20_000) ? IPC_TIMESTAMPINVALID : IPC_TIMESTAMPVALID);
-    MN_EXIT_CRITICAL();
-
     CONST_ASSERT(T1_000 * IPC_LOST_TIMER_SEC_REL > T20_000);
     CONST_ASSERT(T1_000 * IPC_LOST_TIMER_SEC_DBG > T20_000);
 
+    tick_t  thresh; //limit threshold to set a fault
     if (VerString[0].date_str[0] != (u8)MNCB_DEFAULT_DATE_STRING[0]) // command line build
     {
-        if (span >= T1_000 * IPC_LOST_TIMER_SEC_REL) // 180 seconds
-        {
-            ipc_TimeStamp = timer_GetTicks() - IPC_LOST_TIMER_SEC_REL; //aviod overlap
-            error_SetFault(FAULT_IPC_LOST);
-        }
+        thresh = IPC_LOST_TIMER_SEC_REL; // 120 seconds
     }
-    else // IDE build
+    else
     {
-        if (span >= T1_000 * IPC_LOST_TIMER_SEC_DBG) // 7200 seconds
+        thresh = IPC_LOST_TIMER_SEC_DBG; // 180 seconds
+    }
+    thresh *= T1_000; //to ticks
+        
+    MN_ENTER_CRITICAL();
+        // How long time elasped
+        tick_t span = timer_GetTicksSince(ipc_TimeStamp);
+        if (span >= thresh)
         {
-            ipc_TimeStamp = timer_GetTicks() - IPC_LOST_TIMER_SEC_DBG; //aviod overlap
+            //ipc_TimeStamp = timer_GetTicks() - thresh; //aviod overlap
+            tick_t now = span + ipc_TimeStamp; //wraparound OK here
+            ipc_TimeStamp = now - thresh; //so we come back here if no comm. regardless of wraparound 
             error_SetFault(FAULT_IPC_LOST);
         }
-    }
+                              
+        IPC_FFDeviceParams_t* pFFdevParam = GetDeviceVar();
+        storeMemberU8(pFFdevParam, IPC_TimeStampStatus, (span >= T20_000) ? IPC_TIMESTAMPINVALID : IPC_TIMESTAMPVALID);
+    MN_EXIT_CRITICAL();
 }
 
 /* This line marks the end of the source */
