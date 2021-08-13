@@ -83,7 +83,7 @@ s8_least hartcmd_ExternalWriteToDiagnosticBuffer(const u8 *src, u8 *dst)
     else
     {
         u16 DataOffset = util_GetU16(s->DataOffset[0]);
-        u16_least DataSampleCount = util_GetU16(s->DataSampleCount[0]);
+        u16_least DataSampleCount = util_GetU8(s->DataSampleCount[0]);
         if((DataOffset + DataSampleCount) >= (NVCLONE_MAX_IMAGE_LENGTH*sizeof(diag_t)) ) //account for byte to diag_t resize
         {
             err = ERR_UPPERLIM;
