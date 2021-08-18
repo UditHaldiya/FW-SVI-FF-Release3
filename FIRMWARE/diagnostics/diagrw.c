@@ -65,7 +65,7 @@ static const u8 fileids[] =
     [DIAGRW_USER] = DIAGSIGN_USER_LOGFILE_ID,
     [DIAGRW_CURRENT] = DIAGSIGN_CURRENT_LOGFILE_ID,
     [DIAGRW_BASELINE] = DIAGSIGN_BASELINE_LOGFILE_ID,
-    [DIAGRW_PST] = PST_LOGFILE_ID,
+    [DIAGRW_PST_DATA] = PST_LOGFILE_ID,
 };
 
 static const diag_t diagids[] =
@@ -73,7 +73,7 @@ static const diag_t diagids[] =
     [DIAGRW_USER] = DIAG_EXT_ACT,
     [DIAGRW_CURRENT] = DIAG_EXT_ACT,
     [DIAGRW_BASELINE] = DIAG_EXT_ACT,
-    [DIAGRW_PST] = DIAG_PST,
+    [DIAGRW_PST_DATA] = DIAG_PST,
 };
 /** \brief Prepares data for writing default buffer to a log file in a process context
 \param SignatureType - curently, only DIAGRW_EXT_SIGNATURE or PST

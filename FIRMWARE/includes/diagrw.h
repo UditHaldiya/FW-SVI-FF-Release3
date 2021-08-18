@@ -34,9 +34,19 @@ extern procresult_t diag_ReadBuffer(s16 *procdetails);
 #define DIAGRW_PST 1
 
 //Signature destinations
+#if 0
 #define DIAGRW_CURRENT 0
 #define DIAGRW_BASELINE 1
 #define DIAGRW_USER 2
+#else
+enum
+{
+    DIAGRW_CURRENT,
+    DIAGRW_BASELINE,
+    DIAGRW_USER,
+    DIAGRW_PST_DATA
+};
+#endif
 
 #define DEVID_SIZE (1+1+2) //in halfwords; 1 entry for sampling interval high halfword, 1 entry for number, 2 for HART device id)
 

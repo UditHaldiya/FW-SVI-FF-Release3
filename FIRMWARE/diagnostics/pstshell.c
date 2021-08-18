@@ -772,6 +772,7 @@ procresult_t pstshell(s16 *procdetails, const PSTstep_t *pststeps, size_t nsteps
 
     if(result != PROCRESULT_CANCELED)
     {
+#if 0 //We don't save to a file (yet?)
         //Write to log file
         ErrorCode_t err = diag_PrepareSignatureWrite(DIAGRW_PST, DIAGRW_CURRENT);
 #if 0
@@ -796,7 +797,6 @@ procresult_t pstshell(s16 *procdetails, const PSTstep_t *pststeps, size_t nsteps
         //TODO: Populate second page of the header here with pst computed results
 #endif
 
-#if 0 //We don't save to a file (yet?)
         s16 wdetails = 0;
         procresult_t wresult = diag_WriteBufferEx(&wdetails, PST_LOGFILE_MAXSIZE);
         UNUSED_OK(wresult); //we set a fault on failure to write, so we don't propagate
@@ -806,6 +806,8 @@ procresult_t pstshell(s16 *procdetails, const PSTstep_t *pststeps, size_t nsteps
         }
 #else
         UNUSED_OK(diag_WriteBufferEx); //for lint
+        UNUSED_OK(diag_PrepareSignatureWrite); //for lint
+        UNUSED_OK(FillExtDiagHeader); //for lint
 #endif
 
         //We ran to completion!
