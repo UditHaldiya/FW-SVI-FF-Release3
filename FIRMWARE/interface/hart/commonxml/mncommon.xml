@@ -234,7 +234,7 @@
         <Param>Percent Complete</Param>
       </ResponseParams>
     </Command>
-    <Command Name="Change Device Mode" CmdNum="135" CmdType="Command" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_COMMAND_COMMAND | HC_WRITE_PROTECT" Description="Change device mode">
+    <Command Name="Change Device Mode" CmdNum="135" CmdType="Command" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_COMMAND_COMMAND" Description="Change device mode">
       <RequestParams>
         <Param>Device Mode</Param>
         <XParam>Device InvMode</XParam>

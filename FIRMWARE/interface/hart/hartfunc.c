@@ -740,7 +740,7 @@ s8_least hartcmd_ChangeDeviceMode(const u8 *src, u8 *dst)
 {
     //"135:Set Mode,>Mode;"
     u8 Mode;
-    s8_least Error=HART_NO_COMMAND_SPECIFIC_ERRORS;
+    ErrorCode_t err;
 
     const Req_ChangeDeviceMode_t *s = (const void *)src;
     Rsp_ChangeDeviceMode_t *d = (void *)dst;
@@ -748,69 +748,32 @@ s8_least hartcmd_ChangeDeviceMode(const u8 *src, u8 *dst)
 
     UNUSED_OK(dst);
     Mode = util_GetU8(s->DeviceMode[0]);
-#ifdef OLD_DEVMODE
-    const ModeData_t* pMode;
-    pMode = mode_GetMode();
-
-    if( (pMode->mode == MODE_OOS) && (pMode->submode == SUBMODE_OOS_FAILSAFE) )
-    {
-        //try clearing failsafe before changing to other mode
-        if(!mode_ClearFailsafeMode())
-        {
-            //could not exit failsafe
-            Error = HART_CANT_CHANGE_MODE;
-        }
-    }
-    if(Error == HART_NO_COMMAND_SPECIFIC_ERRORS)
-#else
     Mode = hart_FormatDevModeToInternal(Mode);
-#endif
     {
         switch(Mode)
         {
-#ifdef OLD_DEVMODE
-            case MODE_OOS:
-                if(mode_SetOOSMode(SUBMODE_OOS_NORMAL) != ERR_OK)
-#else
             case MODE_SETUP:
-                if(mode_SetMode(MODE_SETUP) != ERR_OK)
-#endif
-                {
-                    Error = HART_CANT_CHANGE_MODE;
-                }
+                err = mode_SetModeInterface(MODE_SETUP);
                 break;
             case MODE_MANUAL:
-#ifdef OLD_DEVMODE
-                if(mode_SetManualMode() != ERR_OK)
-#else
-                if(mode_SetMode(MODE_MANUAL) != ERR_OK)
-#endif
-                {
-                    Error = HART_CANT_CHANGE_MODE;
-                }
+                err = ERR_INVALID_PARAMETER; //we hide Manual mode in APP
                 break;
             case MODE_OPERATE:
 #if FEATURE_BUMPLESS_XFER == FEATURE_BUMPLESS_XFER_ENABLED
-                if(mode_SetNormalModeEx() != ERR_OK)
+#error "Broken"
+                err = mode_SetNormalModeEx();
 #endif
 #if FEATURE_BUMPLESS_XFER == FEATURE_BUMPLESS_XFER_DISABLED
-#ifdef OLD_DEVMODE
-                if(mode_SetOperateMode() != ERR_OK)
-#else
-                if(mode_SetNormalMode() != ERR_OK)
-#endif //OLD_DEVMODE
-#endif //FEATURE_BUMPLESS_XFER
-                {
-                    Error = HART_CANT_CHANGE_MODE;
-                }
+                err = mode_SetModeInterface(MODE_OPERATE);
+#endif 
                 break;
             default:
-                Error = HART_INVALID_DATA;
+                err = ERR_INVALID_PARAMETER;
                 break;
         }
     }
 
-    return Error;
+    return err2hart(err);
 }
 
 

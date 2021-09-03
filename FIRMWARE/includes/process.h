@@ -89,6 +89,7 @@ typedef struct procflags_t
 #define PROCINIT_CLAIMCTLMODE 0x02U //!an initflag to restore control mode on exit
 #define PROCINIT_INHERITDIAGBUFFER 0x04U //!an initflag to suppress init of claimed diag buffer
 #define PROCINIT_IGNOREBUFFERGUARD 0x08U //!an initflag to allow forced process if the same process id guards the buffer
+#define PROCINIT_HONORWRITELOCK 0x10U //!an initflag to prohibit process when write lock is activated
 
 //-----------------------------------------------------------------------
 MN_DECLARE_API_FUNC(process_Exec) //A process might want to call another process; this is the way which may or may not be used

@@ -94,15 +94,7 @@ bool_t ui_setOperMode(const uistate_t *state)
 bool_t ui_setManMode(const uistate_t *state)
 {
     UNUSED_OK(state);
-#ifdef OLD_DEVMODE
-    (void)mode_SetManualMode(); //whatever the outcome!
-#else
-    (void)mode_SetMode(MODE_MANUAL); //whatever the outcome!
-#endif
-    /* NOTE: mode_SetManualMode() forces UI to the initial node if the
-       mode is actually changed.
-       The usage of this function must therefore account for it
-    */
+    (void)mode_SetModeInterface(MODE_MANUAL); //whatever the outcome!
     return true; //keep the failure display node disabled
 }
 
@@ -115,11 +107,7 @@ bool_t ui_setManModeNaked(const uistate_t *state)
     UNUSED_OK(state);
     bool_t ret = false; //enable the failure display node
     MN_ENTER_CRITICAL();
-#ifdef OLD_DEVMODE
-        if(mode_SetManualMode() == ERR_OK)
-#else
-        if(mode_SetMode(MODE_MANUAL) == ERR_OK)
-#endif
+        if(mode_SetModeInterface(MODE_MANUAL) == ERR_OK)
         {
             /* NOTE: mode_SetManualMode() forces UI to the initial node if the
                mode is actually changed.
@@ -139,14 +127,8 @@ bool_t ui_setManModeNaked(const uistate_t *state)
 bool_t ui_setOOSMode(const uistate_t *state)
 {
     UNUSED_OK(state);
-#ifdef OLD_DEVMODE
-    (void)mode_SetOOSMode(SUBMODE_OOS_NORMAL);
-    return mode_ClearFailsafeMode();
-#else
-    ErrorCode_t err =
-        mode_SetMode(MODE_SETUP);
+    ErrorCode_t err = mode_SetModeInterface(MODE_SETUP);
     return err == ERR_OK;
-#endif
 }
 
 /** A node function
@@ -156,11 +138,7 @@ bool_t ui_setOOSMode(const uistate_t *state)
 bool_t ui_setFailSafeMode(const uistate_t *state)
 {
     UNUSED_OK(state);
-#ifdef OLD_DEVMODE
-    (void)mode_SetOOSMode(SUBMODE_OOS_FAILSAFE);
-#else
-    (void)mode_SetMode(MODE_FAILSAFE);
-#endif
+    (void)mode_SetMode(MODE_FAILSAFE); //ignore write lock here
     return true;
 }
 

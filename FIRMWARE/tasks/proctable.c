@@ -191,7 +191,7 @@ const proctable_t proctable[] =
     {
         .id = PROC_FIND_STOPS,
         .procf = poscal_RunFindStops,
-        .flags = {.throughflags=0, .initflags = PROCINIT_CLAIMCTLMODE},
+        .flags = {.throughflags=0, .initflags = PROCINIT_CLAIMCTLMODE | PROCINIT_HONORWRITELOCK},
         .action =
         {
             [PROCRESULT_OK] =
@@ -275,7 +275,7 @@ const proctable_t proctable[] =
     {
         .id = PROC_AUTOTUNE,
         .procf =  tune_Run_Selftune_SHIM,
-        .flags = {.throughflags=0, .initflags = PROCINIT_CLAIMDIAGBUFFER|PROCINIT_CLAIMCTLMODE},
+        .flags = {.throughflags=0, .initflags = PROCINIT_CLAIMDIAGBUFFER|PROCINIT_CLAIMCTLMODE|PROCINIT_HONORWRITELOCK},
         .action =
         {
             [PROCRESULT_OK] =

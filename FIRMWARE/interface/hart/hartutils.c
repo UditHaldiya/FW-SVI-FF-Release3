@@ -321,6 +321,10 @@ s8_least err2hart(ErrorCode_t err)
         ret = HART_PASSED_PARAMETER_TOO_SMALL;
         break;
 
+    case ERR_WRITE_PROTECT:
+        ret = HART_WRITE_PROTECT_MODE;
+        break;
+        
     case ERR_CAL_PROCESS_CANCELED: //in projects where used, it must be (and is) purely internal
     default:
         ret = TRANSMITTER_SPECIFIC_COMMAND_ERROR;

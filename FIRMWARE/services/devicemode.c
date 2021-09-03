@@ -58,176 +58,8 @@ The behavior of bumpless transfer is as follows.
     CPU: Any
 
     OWNER: AK
-    $Archive: /MNCB/Dev/FIRMWARE/services/devicemode.c $
-    $Date: 12/14/09 7:29p $
-    $Revision: 132 $
-    $Author: Arkkhasin $
 
     \ingroup Modeman
-*/
-/* (Optional) $History: devicemode.c $
- *
- * *****************  Version 132  *****************
- * User: Arkkhasin    Date: 12/14/09   Time: 7:29p
- * Updated in $/MNCB/Dev/FIRMWARE/services
- * Removed duplicate code from mode_GetEffectiveControlMode()
- *
- * *****************  Version 131  *****************
- * User: Arkkhasin    Date: 6/24/09    Time: 1:33a
- * Updated in $/MNCB/Dev/FIRMWARE/services
- * Repaired mode initialization for correct trap processing (bug 1240)
- *
- * *****************  Version 130  *****************
- * User: Arkkhasin    Date: 5/01/09    Time: 12:49a
- * Updated in $/MNCB/Dev/FIRMWARE/services
- * Implemented functional requirements 2.0, 2.1 of
- * http://mymasoneilan/en/Engineering/innovations/Team%20Documents1/Projec
- * ts/HDLT12400/Common%20Links/Feature%20Descriptions/Fail%20Safe%20Behavi
- * or/FailSafe.doc:
- * "Out of failsafe" means "follow the sensor"
- * Fixed bugs 782, 830
- *
- * *****************  Version 129  *****************
- * User: Arkkhasin    Date: 4/17/09    Time: 1:38p
- * Updated in $/MNCB/Dev/FIRMWARE/services
- * Startup mode resolution separated between positioners and transmitters
- *
- * *****************  Version 128  *****************
- * User: Arkkhasin    Date: 3/31/09    Time: 6:41p
- * Updated in $/MNCB/Dev/FIRMWARE/services
- * 1. Low power submode set by fault attributes (not by a fault)
- * 2. Wicked kludge to deal with the disappearing FAULT_ESD_TRIP.
- * Needs improvement.
- *
- * *****************  Version 127  *****************
- * User: Arkkhasin    Date: 3/29/09    Time: 4:12p
- * Updated in $/MNCB/Dev/FIRMWARE/services
- * A few items moved from configure.h to pressures.h and errlimits.h
- *
- * *****************  Version 126  *****************
- * User: Arkkhasin    Date: 3/29/09    Time: 1:01a
- * Updated in $/MNCB/Dev/FIRMWARE/services
- * Removed unused control.h
- * Removed other unused headers.
- *
- * *****************  Version 125  *****************
- * User: Arkkhasin    Date: 3/28/09    Time: 4:10p
- * Updated in $/MNCB/Dev/FIRMWARE/services
- * Removed wrapper header utility.h
- *
- * *****************  Version 124  *****************
- * User: Arkkhasin    Date: 3/04/09    Time: 3:46p
- * Updated in $/MNCB/Dev/FIRMWARE/services
- * Allowed mode_GuardSetpoint() to change control mode
- *
- * *****************  Version 123  *****************
- * User: Arkkhasin    Date: 2/25/09    Time: 7:09p
- * Updated in $/MNCB/Dev/FIRMWARE/services
- * Wicked kludge to deal with the disappearing FAULT_MARGINAL_POWER. Needs
- * improvement.
- *
- * *****************  Version 122  *****************
- * User: Arkkhasin    Date: 2/13/09    Time: 1:54p
- * Updated in $/MNCB/Dev/FIRMWARE/services
- * Replaced #error with a much milder comment
- *
- * *****************  Version 121  *****************
- * User: Arkkhasin    Date: 1/11/09    Time: 8:07p
- * Updated in $/MNCB/Dev/FIRMWARE/services
- * Removed mode_Correct()
- * Added mode_Mopup
- * Improved internal representation of device modes
- * Device mode is now formatted for HART independently from internal
- * representation
- * Removed mode_Correct()
- * Added NVMEM interface for mode
- *
- * *****************  Version 120  *****************
- * User: Arkkhasin    Date: 7/28/08    Time: 2:02p
- * Updated in $/MNCB/Dev/FIRMWARE/services
- * Light linting
- *
- * *****************  Version 119  *****************
- * User: Arkkhasin    Date: 7/05/08    Time: 12:33a
- * Updated in $/MNCB/Dev/FIRMWARE/services
- * Removed unused obsolete "valvepos.h"
- *
- * *****************  Version 118  *****************
- * User: Arkkhasin    Date: 5/23/08    Time: 10:04a
- * Updated in $/MNCB/Dev/FIRMWARE/services
- * TRAPID_BAD_NVMEM removed - now handled by setting a fault only
- *
- * *****************  Version 117  *****************
- * User: Arkkhasin    Date: 4/24/08    Time: 12:18p
- * Updated in $/MNCB/Dev/FIRMWARE/services
- * mode_TransitionHook() moved from devicemode.c to okctlmodes.c (too
- * project-dependent)
- *
- * *****************  Version 116  *****************
- * User: Arkkhasin    Date: 4/18/08    Time: 12:45a
- * Updated in $/MNCB/Dev/FIRMWARE/services
- * The API to clear low power condition is now simply
- * error_ClearFault(FAULT_LOW_POWER)
- *
- * *****************  Version 115  *****************
- * User: Arkkhasin    Date: 4/12/08    Time: 1:44a
- * Updated in $/MNCB/Dev/FIRMWARE/services
- * Limited refactoring required by Lint: some types changed, errors either
- * propagate up or explicitly ignored; a new HART error code 43 added to
- * indicate failed NVMEM write
- *
- * *****************  Version 114  *****************
- * User: Arkkhasin    Date: 4/07/08    Time: 5:55p
- * Updated in $/MNCB/Dev/FIRMWARE/services
- * Adapted to new API
- *
- * *****************  Version 113  *****************
- * User: Arkkhasin    Date: 3/05/08    Time: 6:03p
- * Updated in $/MNCB/Dev/FIRMWARE/services
- * Device mode is now a consistent set of handy wrappers around fault bit
- * representation of modes.
- * Removed mode_Mopup() - last version did nothing at all
- * Implemented simplified mode_{Set,Get}Mode() API
- * Moved all bumpless stuff to bumpless.c
- * Removed mode_SetOOSMode() - rely on fault bits in the inew
- * mode_GetSubmode()
- *
- *
- *
- * *****************  Version 112  *****************
- * User: Arkkhasin    Date: 2/26/08    Time: 4:20p
- * Updated in $/MNCB/Dev/FIRMWARE/services
- * mode_ClearLowPower does not fix the UI to init node anymore (new bug
- * fix)
- *
- * *****************  Version 111  *****************
- * User: Arkkhasin    Date: 2/25/08    Time: 3:15p
- * Updated in $/MNCB/Dev/FIRMWARE/services
- * Went back from error_ClearLowPower() to mode_ClearLowPower() because of
- * UI notification
- *
- * *****************  Version 110  *****************
- * User: Arkkhasin    Date: 2/01/08    Time: 10:09p
- * Updated in $/MNCB/Dev/FIRMWARE/services
- * Adapted to new sysio interfaces
- *
- * *****************  Version 109  *****************
- * User: Arkkhasin    Date: 1/25/08    Time: 9:23a
- * Updated in $/MNCB/Dev/FIRMWARE/services
- * Lint
- *
- * *****************  Version 108  *****************
- * User: Arkkhasin    Date: 1/23/08    Time: 6:55p
- * Updated in $/MNCB/Dev/FIRMWARE/services
- * 1. Added definitions for TIGHT_SHUTOFF (still need the corresponding
- * fix in control.c) and for mode-related and DO-related and
- * posmon-related things
- * 2. Fault properties generator is no longer in the business of
- * discovering fault categories; a category must be supplied explicitly
- * 3. Fault properties are now clearly separated into storage attributes
- * (FSATTRIB_xxx) and behavior attributes (FATTRIB_yyy).
- * 4. Device mode is no longer stored explicitly: it is derived from the
- * fault bit indicators set.
 */
 
 #ifdef _MSC_VER
@@ -246,6 +78,7 @@ The behavior of bumpless transfer is as follows.
 
 #include "oswrap.h"
 #include "ctllimits.h" //for SETPOINT_INVALID; move it to a better place
+#include "wprotect.h"
 
 static ModeData_t m_Mode_;
 
@@ -413,6 +246,26 @@ void mode_PreInit(void)
     m_Mode_.mode = MODE_SETUP;
     m_Mode_.tmode = MODE_SETUP;
     STRUCT_CLOSE(ModeData_t, &m_Mode_);
+}
+
+/** \brief This is for external interfaces and honors write lock.
+Currently, allows pass through in the direction of higher mode
+*/
+ErrorCode_t mode_SetModeInterface(devmode_t dmode)
+{
+    ErrorCode_t err = ERR_OK;
+    if(dmode < m_Mode_.mode)
+    {
+        if(sysio_ReadWriteProtectInput())
+        {
+            err = ERR_WRITE_PROTECT;
+        }
+    }
+    if(err == ERR_OK)
+    {
+        err = mode_SetModeEx(dmode, true);
+    }
+    return err;
 }
 
 ErrorCode_t mode_SetMode(devmode_t dmode)

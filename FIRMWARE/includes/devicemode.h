@@ -13,105 +13,8 @@ demand.
      CPU: Any
 
     OWNER: AK
-    OWNER: AK
-    $Archive: /MNCB/Dev/FIRMWARE/includes/devicemode.h $
-    $Date: 12/14/09 7:08p $
-    $Revision: 44 $
-    $Author: Arkkhasin $
 
     \ingroup Modeman
-*/
-/* (Optional) $History: devicemode.h $
- *
- * *****************  Version 44  *****************
- * User: Arkkhasin    Date: 12/14/09   Time: 7:08p
- * Updated in $/MNCB/Dev/FIRMWARE/includes
- * Reordered typedefs and #include so that it would compile
- *
- * *****************  Version 43  *****************
- * User: Arkkhasin    Date: 5/05/09    Time: 4:38p
- * Updated in $/MNCB/Dev/FIRMWARE/includes
- * Eliminated devemodewrap.h
- * mode_Get... declared pure
- *
- * *****************  Version 42  *****************
- * User: Arkkhasin    Date: 3/07/09    Time: 12:32p
- * Updated in $/MNCB/Dev/FIRMWARE/includes
- * Defined MODE_NONE and MODE_ALL for convenience
- *
- * *****************  Version 41  *****************
- * User: Arkkhasin    Date: 1/13/09    Time: 3:37p
- * Updated in $/MNCB/Dev/FIRMWARE/includes
- * Lint (type annoyance)
- *
- * *****************  Version 40  *****************
- * User: Arkkhasin    Date: 1/11/09    Time: 8:05p
- * Updated in $/MNCB/Dev/FIRMWARE/includes
- * Improved internal representation of device modes
- * Device mode is now formatted for HART independently from internal
- * representation
- * Removed mode_Correct()
- * Added NVMEM interface for mode
- *
- * *****************  Version 39  *****************
- * User: Arkkhasin    Date: 4/24/08    Time: 12:14p
- * Updated in $/MNCB/Dev/FIRMWARE/includes
- * mode_TransitionHook() moved from devicemode.c to okctlmodes.c (too
- * project-dependent)
- * SUBMODE_LOWPOWER value corrected
- * posctlmode.h extracted from devicemode.h - this may or may not stick
- *
- * *****************  Version 38  *****************
- * User: Arkkhasin    Date: 3/05/08    Time: 6:23p
- * Updated in $/MNCB/Dev/FIRMWARE/includes
- * mode_{Set,Get}Mode() API and new mode_GetSubmode() API replace old
- * mode-centered API
- * Removed mode_Mopup() - last version did nothing at all
- * modes and submodes renamed to more appropriate names
- * Removed ancient fluff
- *
- * *****************  Version 37  *****************
- * User: Arkkhasin    Date: 2/25/08    Time: 3:01p
- * Updated in $/MNCB/Dev/FIRMWARE/includes
- * Went back from error_ClearLowPower() to mode_ClearLowPower() because of
- * UI notification
- *
- * *****************  Version 36  *****************
- * User: Arkkhasin    Date: 2/15/08    Time: 4:49p
- * Updated in $/MNCB/Dev/FIRMWARE/includes
- * Added tentative (?) aliases mode_Is...
- *
- * *****************  Version 35  *****************
- * User: Arkkhasin    Date: 1/25/08    Time: 9:23a
- * Updated in $/MNCB/Dev/FIRMWARE/includes
- * Lint (Init removed)
- *
- * *****************  Version 34  *****************
- * User: Arkkhasin    Date: 11/16/07   Time: 1:45p
- * Updated in $/MNCB/Dev/FIRMWARE/includes
- * AP part of table-based process configuration
- *
- * *****************  Version 33  *****************
- * User: Arkkhasin    Date: 8/07/07    Time: 4:06p
- * Updated in $/MNCB/Dev/FIRMWARE/includes
- * Removed deprecated control_SetPositionSP (and mode_SetSetpoint along
- * the way)
- *
- * *****************  Version 32  *****************
- * User: Arkkhasin    Date: 8/07/07    Time: 2:31p
- * Updated in $/MNCB/Dev/FIRMWARE/includes
- * 1. Removed dangerous control_SetControlMode API
- * 2. Removed shaky control_GetEffectiveControlMode in favor of new
- * mode_GetEffectiveControlMode
- * 3. control now asks for effective control mode; there is no way to
- * force-feed it to control.
- * 4. A bug in ramp_SetSP (using raw instead of effective control mode) is
- * fixed.
- *
- * *****************  Version 31  *****************
- * User: Arkkhasin    Date: 5/18/07    Time: 5:39p
- * Updated in $/MNCB/Dev/FIRMWARE/includes
- * New tombstone header
 */
 #ifndef DEVICEMODE_H_
 #define DEVICEMODE_H_
@@ -157,6 +60,7 @@ extern devmode_t mode_GetMode(void);
 //lint -sem(mode_GetSubmode, pure)
 extern devsubmode_t mode_GetSubmode(void);
 
+extern ErrorCode_t mode_SetModeInterface(devmode_t dmode); //For external interfaces
 extern ErrorCode_t mode_SetMode(devmode_t dmode); //discouraged for setting normal mode
 
 MN_DECLARE_API_FUNC(mode_SetModeEx) //Not all projects requre temporary mode change

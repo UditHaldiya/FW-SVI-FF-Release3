@@ -36,6 +36,7 @@ demand.
 #include "activate.h"
 
 #include "syswd.h"
+#include "wprotect.h"
 
 static void process_RunProcedure(void);
 
@@ -298,12 +299,6 @@ void process_CancelProcess(void)
     process_CancelProcessEx(PROC_NONE, ProcSourceDefault);
 }
 
-/** \brief  A helper function to update the procdata record with the required process ids.
-        It doesn't check whether they are legitimate!
-    on the next run. If successful, it kills any previous process cancellation request.
-  \param[in] thisproc - the command number of the process
-  \param[in] nextproc - the command number of the next process
-*/
 static void process_UpdateProcessIds(ProcId_t thisproc, ProcSource_t thissrc, ProcId_t nextproc, ProcSource_t nextsrc)
 {
     MN_ENTER_CRITICAL();
@@ -312,6 +307,33 @@ static void process_UpdateProcessIds(ProcId_t thisproc, ProcSource_t thissrc, Pr
         storeMemberInt(&procdata, ProcessCommand[PROC_PENDING], nextproc);
         storeMemberInt(&procdata, reqflag[PROC_PENDING], nextsrc);
     MN_EXIT_CRITICAL();
+}
+/** \brief  A helper function to update the procdata record with the required process ids.
+        It doesn't check whether they are legitimate!
+    on the next run. If successful, it kills any previous process cancellation request.
+  \param[in] thisproc - the command number of the process
+  \param[in] nextproc - the command number of the next process
+*/
+static ErrorCode_t process_UpdateProcessIds1(s8_least id, ProcSource_t thissrc, ProcId_t nextproc, ProcSource_t nextsrc)
+{
+    u8 flags = proctable[id].flags.initflags;
+    
+    ErrorCode_t err;
+    if(id < 0)
+    {
+        err = ERR_INVALID_PARAMETER;
+    }
+    else if(sysio_ReadWriteProtectInput() && ((flags & PROCINIT_HONORWRITELOCK) != 0U))
+    {
+        err = ERR_WRITE_PROTECT;
+    }
+    else
+    {
+        ProcId_t thisproc = proctable[id].id;
+        process_UpdateProcessIds(thisproc, thissrc, nextproc, nextsrc);
+        err = ERR_OK;
+    }
+    return err;
 }
 
 /** \brief A helper function to test if the supplied process id is valid
@@ -342,51 +364,47 @@ static s8_least process_FindProcEntry(ProcId_t procId)
 MN_DECLARE_API_FUNC(process_ForceProcessCommand)
 void process_ForceProcessCommandEx(ProcId_t ProcessCommand, ProcSource_t source)
 {
-    ProcId_t id = procdata.ProcessCommand[PROC_CURRENT];
-#if 0
-    if((id != ProcessCommand) || //Don't force the same process
-       ( //unless ...
-        (//guard passthrough is allowed AND...
-         (proctable[id].flags.initflags & PROCINIT_IGNOREBUFFERGUARD) != 0U
-        )  
-         //... Guard is actually in effect
-          && (m_ui1PercentComplete == PERCENT_COMPLETE_KEEPON)
-       )
-      )
-#else
-    /* NOTE: This is exactly the same as above but easier on Lint
-       Maybe, on a reader, too.
-    */
-    bool_t ok = (id != ProcessCommand); //Normally, we don't force the same process
-    if(!ok)
+    ProcId_t procid = procdata.ProcessCommand[PROC_CURRENT];
+    s8_least id = process_FindProcEntry(ProcessCommand);
+    bool_t ok = false;
+    if(id<0)
     {
-        //unless buffer guard passthrough is allowed AND...
-        if((proctable[id].flags.initflags & PROCINIT_IGNOREBUFFERGUARD) != 0U)
-        {
-            //... Guard is actually in effect
-            ok = (m_ui1PercentComplete == PERCENT_COMPLETE_KEEPON);
-        }
+        //Process not found: Nothing to do;
     }
-    if(ok)
-#endif
+    else
     {
-        MN_ENTER_CRITICAL();
-            ErrorCode_t err = process_SetProcessCommandEx(ProcessCommand, source);
-            /* If it failed because ProcessCommand is invalid (=cancel request),
-            we need to force the cancel. It doesn't matter whether we are
-            cancelling an existing process or the one that was set asynchronously.
-            If it failed because a process was already running, only a preempting
-            call to this function may have changed it, in which case it's OK
-            to proceed: the last request wins.
-            Therefore, the code snippet here **does not** require a critical
-            section around, TFS:4385 is marked fixed without doing anything.
-            */
-            if(err != ERR_OK)  //failed to set a process legit or not; queue it
+        ok = (procid != ProcessCommand); //Normally, we don't force the same process
+        if(!ok)
+        {
+            //unless buffer guard passthrough is allowed AND...
+            if((proctable[id].flags.initflags & PROCINIT_IGNOREBUFFERGUARD) != 0U)
             {
-                process_UpdateProcessIds(id, procdata.reqflag[PROC_CURRENT], ProcessCommand, source);
+                //... Guard is actually in effect
+                ok = (m_ui1PercentComplete == PERCENT_COMPLETE_KEEPON);
             }
-            process_SetProcessProgress(0);
-        MN_EXIT_CRITICAL();
+        }
+        if(ok)
+        {
+            
+            MN_ENTER_CRITICAL();
+                ErrorCode_t err = process_SetProcessCommandEx(ProcessCommand, source);
+                /* If it failed because ProcessCommand is invalid (=cancel request),
+                we need to force the cancel. It doesn't matter whether we are
+                cancelling an existing process or the one that was set asynchronously.
+                If it failed because a process was already running, only a preempting
+                call to this function may have changed it, in which case it's OK
+                to proceed: the last request wins.
+                Therefore, the code snippet here **does not** require a critical
+                section around, TFS:4385 is marked fixed without doing anything.
+                */
+                if(err != ERR_OK)  //failed to set a process legit or not; queue it
+                {
+                    err = process_UpdateProcessIds1(id, procdata.reqflag[PROC_CURRENT], ProcessCommand, source);
+                }
+                UNUSED_OK(err);
+                process_SetProcessProgress(0);
+            MN_EXIT_CRITICAL();
+        }
     }
 }
 
@@ -410,9 +428,11 @@ ErrorCode_t process_SetProcessCommandEx(ProcId_t proc, ProcSource_t source)
         MN_ENTER_CRITICAL();
             if (process_GetProcId() == PROC_NONE)
             {
-                process_UpdateProcessIds(proc, source, PROC_NONE, ProcSourceDefault);
-                process_SetProcessProgress(0);
-                retval = ERR_OK;
+                retval = process_UpdateProcessIds1(id, source, PROC_NONE, ProcSourceDefault);
+                if(retval == ERR_OK)
+                {
+                    process_SetProcessProgress(0);
+                }
             }
             else
             {
