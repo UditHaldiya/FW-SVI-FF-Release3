@@ -73,7 +73,7 @@ FEATURE_LOGFILES = USED
 # --------------- Write-protect hardware -------------
 FEATURE_WRITEPROTECT = HWJUMPER
 # --------------- Write-protect jumper behavior -------------
-FEATURE_WPROTECT_MODE = FALSE
+FEATURE_WPROTECT_MODE = ENABLE_UPMODE
 FEATURE_WPROTECT_CLRERR = FALSE
 #Note: Similar stuff for HART is configured in message flags in xml definitions
 

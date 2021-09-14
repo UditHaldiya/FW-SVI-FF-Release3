@@ -13,6 +13,7 @@ of all modules.
 endif
 
 #MUST go first
+MOD_OVERRIDE+=allfeatures.mak
 PREMODULES:=projconf_1-2.mak,72964
 
 #HART

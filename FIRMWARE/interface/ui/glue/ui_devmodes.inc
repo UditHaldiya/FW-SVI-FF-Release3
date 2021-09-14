@@ -244,7 +244,12 @@ demand.
     },
     #MP Expand EndNode()
     #MP ;==============================================================================================
-#MP If (FEATURE_HARDWARE_PLATFORM == FEATURE_HARDWARE_PLATFORM_DLT) || (FEATURE_CPU == FEATURE_CPU_STM32F10xxE) || (FEATURE_CPU == FEATURE_CPU_pm2kSTM32F10xxE)
+#MP Setstr Setup_toOper_autoname = "Setup_toOper"
+#MP If (FEATURE_WPROTECT_MODE == FEATURE_WPROTECT_MODE_FALSE) || (FEATURE_WPROTECT_MODE == FEATURE_WPROTECT_MODE_ENABLE_UPMODE)
+    #MP ProtectedEntry[%sSetup_toOper_autoname, 0, LOCK_MANUAL]
+#MP Else
+    #MP ProtectedEntry[%sSetup_toOper_autoname, CHECK_WRITE_PROTECTED, LOCK_MANUAL]
+#MP Endif
         #MP ;Transition action from Setup to Normal
         #MP Expand StartNode(nodetype_xsel, #@Setup_toOper#)
     {
@@ -254,15 +259,14 @@ demand.
                 #MP TEXTLABEL(UP2OPER)
                 ENOFFS(OPMODE_SETUP),
                 .advance = NODE_LINK(#mp%sUIGraphNodeNext),
-            .select = NODE_LINK(Setup_to_Normal),
+            .select = NODE_LINK(Setup_toOper_Do),
             XLATE_INDEX(xlate_StdMenu),
             .uid = UNITSID_NONE,
         },
         NULL, NULL
     },
     #MP Expand EndNode()
-#MP Endif ;FEATURE_HARDWARE_PLATFORM_DLT
-        #MP ;==============================================================================================
+    #MP ;==============================================================================================
 
     #MP;// --------- Navigation to the ->OPER or ->MAN (Oper mode) ------------------
     #MP Expand StartNode(nodetype_xsel, #@toOper#)
@@ -317,6 +321,13 @@ demand.
         NULL, ui_setFailSafeMode
     },
     #MP Expand EndNode()
+    #MP ;=================================================================================
+#MP If (FEATURE_WPROTECT_MODE == FEATURE_WPROTECT_MODE_FALSE)
+    #MP ProtectedEntry[%sManual2Setup_autoname, 0, LOCK_MANUAL]
+#MP Else
+    #MP ProtectedEntry[%sManual2Setup_autoname, CHECK_WRITE_PROTECTED, LOCK_MANUAL]
+#MP Endif
+    #MP ;Transition action from Normal to Setup
     #MP Expand StartNode(nodetype_nav, Manual2Setup_autoname)
     {
         #MP Expand NodetType()
@@ -325,25 +336,33 @@ demand.
         ENOFFS(OPMODE_MAN),
         .advance = NODE_LINK(#mp%sUIGraphNodeNext),
         #MP Setstr uinode_autoname = Manual2Setup_autoname LockCheckSuffix ;
-        .select = NODE_LINK(#mp%suinode_autoname),
+        .select = NODE_LINK(#mp%sManual2Setup_autoname),
         XLATE_INDEX(xlate_StdMenu),
         .uid = UNITSID_NONE,
     },
     #MP Expand EndNode()
     #MP ;=================================================================================
-    #MP Expand StartNode(nodetype_nav, Normal2Setup_autoname)
+#MP If 0
+#MP If (FEATURE_WPROTECT_MODE == FEATURE_WPROTECT_MODE_FALSE)
+    #MP ProtectedEntry[%sNormal2Setup_autoname, 0, LOCK_MANUAL]
+#MP Else
+    #MP ProtectedEntry[%sNormal2Setup_autoname, CHECK_WRITE_PROTECTED, LOCK_MANUAL]
+#MP Endif
+    #MP ;Transition action from Normal to Setup
+    
+	#MP Expand StartNode(nodetype_nav, Normal2Setup_autoname)
     {
         #MP Expand NodetType()
         0, //no timeout
         #MP TEXTLABEL(SETUP)
         ENOFFS(OPMODE_OPER),
         .advance = NODE_LINK(#mp%sUIGraphNodeNext),
-        #MP Setstr uinode_autoname = Normal2Setup_autoname LockCheckSuffix ;
-        .select = NODE_LINK(#mp%suinode_autoname),
+        .select = NODE_LINK(#mp%sNormal2Setup_autoname),
         XLATE_INDEX(xlate_StdMenu),
         .uid = UNITSID_NONE,
     },
     #MP Expand EndNode()
+#MP Endif
     #MP ;=================================================================================
     #MP Expand StartNode(nodetype_xsel, #@man_toOper#)
     {
@@ -536,7 +555,7 @@ demand.
 #MP Else
     #MP ProtectedEntry[%sNormal2Setup_autoname, CHECK_WRITE_PROTECTED, LOCK_SETUP]
 #MP Endif
-#MP Setstr uinode_autoname = Normal2Setup_autoname TargetNodeSuffix
+#MP ;Setstr uinode_autoname = Normal2Setup_autoname TargetNodeSuffix
     #MP Expand StartNode(nodetype_xsel, uinode_autoname)
     {   //In case ui_setOOSMode fails to set normal (setup) OOS mode
         {
@@ -567,7 +586,7 @@ demand.
 #MP ;==============================================================================================
 
 #MP If Defined(Failsafe2Manual_autoname {STR})
-#MP If FEATURE_WPROTECT_MODE == FEATURE_WPROTECT_MODE_FALSE
+#MP If (FEATURE_WPROTECT_MODE == FEATURE_WPROTECT_MODE_FALSE) || (FEATURE_WPROTECT_MODE == FEATURE_WPROTECT_MODE_ENABLE_UPMODE)
     #MP ProtectedEntry[%sFailsafe2Manual_autoname, 0, LOCK_MANUAL]
 #MP Else
     #MP ProtectedEntry[%sFailsafe2Manual_autoname, CHECK_WRITE_PROTECTED, LOCK_MANUAL]
@@ -591,7 +610,7 @@ demand.
 #MP Endif ;Defined(Failsafe2Manual_autoname {STR})
 
 #MP If Defined(Failsafe2Setup_autoname {STR})
-#MP If FEATURE_WPROTECT_MODE == FEATURE_WPROTECT_MODE_FALSE
+#MP If (FEATURE_WPROTECT_MODE == FEATURE_WPROTECT_MODE_FALSE) || (FEATURE_WPROTECT_MODE == FEATURE_WPROTECT_MODE_ENABLE_UPMODE)
     #MP ProtectedEntry[%sFailsafe2Setup_autoname, 0, LOCK_SETUP]
 #MP Else
     #MP ProtectedEntry[%sFailsafe2Setup_autoname, CHECK_WRITE_PROTECTED, LOCK_SETUP]
@@ -642,7 +661,7 @@ demand.
 #MP ;==============================================================================================
 #MP If (FEATURE_HARDWARE_PLATFORM == FEATURE_HARDWARE_PLATFORM_DLT) || (FEATURE_CPU == FEATURE_CPU_STM32F10xxE) || (FEATURE_CPU == FEATURE_CPU_pm2kSTM32F10xxE)
         #MP ;Transition action from Setup to Normal
-        #MP Expand StartNode(nodetype_xsel, #@Setup_to_Normal#)
+        #MP Expand StartNode(nodetype_xsel, #@Setup_toOper_Do#)
     {
         {
             #MP Expand NodetType()
