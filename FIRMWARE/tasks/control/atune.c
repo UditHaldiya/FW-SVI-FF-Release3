@@ -1,5 +1,15 @@
 #define AK_test 0
 #define AK_extract 0
+#define UNDO_59565_1 0
+#define UNDO_59565_2 1
+#define UNDO_59565_3 1
+#define UNDO_59585_1 1
+#define UNDO_59585_2 0
+#define UNDO_59585_3 1
+#define UNDO_59661 1
+#define UNDO_59594 1
+#define UNDO_79755 0
+
 /*
 Copyright 2004 by Dresser, Inc., as an unpublished work.  All rights reserved.
 
@@ -177,7 +187,9 @@ CONST_ASSERT(P_NOT_LOW >= P_LOW_LIMIT);
 #define PADJ_INC_RATIO  16
 #define P_TAU_RATIO  150
 #define D_P_RATIO 1200
-//#define COMP_CONST 3276 //AK:TODO: (maybe) That's 20% of position range (should be 3277)
+#if UNDO_59661
+#define COMP_CONST 3276 //AK:TODO: (maybe) That's 20% of position range (should be 3277)
+#endif
 
 #define COUNT_3  3
 #define COUNT_10  10
@@ -604,6 +616,10 @@ procresult_t tune_Run_Selftune(s16 *procdetails)
 static s16 tune_ComputePoscomp(pos_t posdiff, s16_least biasdiff)
 {
     s16 poscomp;
+#if UNDO_59661
+        UNUSED_OK(posdiff);
+        posdiff = COMP_CONST;
+#endif
     if (biasdiff != 0)
     {
         s16 n2Temp2 =  (s16)((biasdiff));
@@ -1281,9 +1297,11 @@ s16 tune_OutputRampTau(s8 iDir, s16 nOutInc, s32 nBiasSave, s16 nTau[Xends], s32
 ///AK:NOTE: Try to move the valve by .5%
     mode_SetControlMode(CONTROL_OFF, (s32)nPosIni);
     s32 nIPOutput = nBiasSave + nOutInc;
+#if !UNDO_59594
     tick_t start_ticks = timer_GetTicks();
     tick_t spent;
-
+#endif
+    
     s16 i = 0;
     do
     {
@@ -1306,7 +1324,9 @@ s16 tune_OutputRampTau(s8 iDir, s16 nOutInc, s32 nBiasSave, s16 nTau[Xends], s32
 
 ///AK:Q: ABS - is it OK if the valve does move but in a different direction?
 /// DZ: hopefully not
+#if !UNDO_59594
         spent = timer_GetTicksSince(start_ticks);
+#endif
         if ( ABS((nPosScaled-nPosIni)) < HALF_PCT_82)
         {
             bNotMoved = true;
@@ -1315,18 +1335,23 @@ s16 tune_OutputRampTau(s8 iDir, s16 nOutInc, s32 nBiasSave, s16 nTau[Xends], s32
         {
             bNotMoved = false;
         }
-    }while( ( (i++<COUNT_100) && bNotMoved  ) || (i<COUNT_10) ); //AP has 7, not 10 ///AK:Q: Where does 7(now,10) come from? and 100, too?
-    buffer_InitializeDiagnosticBuffer();            /// DZ: time ranges.
-    //nTau[iDir] = i; ///AK:NOTE: The time (in nominal 50 ms intervals) of the valve's starting moving.
-
+    }while( ( (i++<COUNT_100) && bNotMoved  ) || 
+#if UNDO_59565_1           
+           (i<7) );
+#else
+           (i<COUNT_10) ); //AP has 7, not 10 ///AK:Q: Where does 7(now,10) come from? and 100, too?
+#endif
 ///AK:NOTE: bNotMoved not guaranteed
 ///AK:Q: Is it OK?
 /// DZ: Acceptable
-
-
+    buffer_InitializeDiagnosticBuffer();            /// DZ: time ranges.
+#if UNDO_59594
+    nTau[iDir] = i; ///AK:NOTE: The time (in nominal 50 ms intervals) of the valve's starting moving.
+#else
     //Remove time accumulation error
-    spent /= T0_050;
-    nTau[iDir] = (s16)MIN(spent, INT16_MAX); ///AK:NOTE: The time (in nominal 50 ms intervals) of the valve's starting moving.
+    spent /= T0_050; ///AK:NOTE: The time (in nominal 50 ms intervals) of the valve's starting moving
+    nTau[iDir] = (s16)MIN(spent, INT16_MAX); 
+#endif
     *final_out = nIPOutput;
     return 0;
 }
@@ -1498,8 +1523,10 @@ static s16 StepTest(s8 iDir, s16 nOutInc, u16 nBiasSave, s16 nSpeed[Xends], s16 
 ///AK:NOTE: Try to move the valve by .5%
     mode_SetControlMode(CONTROL_OFF, (s32)nPosIni);
     nIPOutput = (u16)( ((s32)nBiasSave) + ((s32)nOutInc) );
+#if !UNDO_59594
     tick_t start_ticks = timer_GetTicks();
     tick_t spent;
+#endif
 
     i = 0;
     do
@@ -1523,7 +1550,9 @@ static s16 StepTest(s8 iDir, s16 nOutInc, u16 nBiasSave, s16 nSpeed[Xends], s16 
 
 ///AK:Q: ABS - is it OK if the valve does move but in a different direction?
 /// DZ: hopefully not
+#if !UNDO_59594
         spent = timer_GetTicksSince(start_ticks);
+#endif
         if ( ABS((nPosScaled-nPosIni)) < HALF_PCT_82)
         {
             bNotMoved = true;
@@ -1532,14 +1561,20 @@ static s16 StepTest(s8 iDir, s16 nOutInc, u16 nBiasSave, s16 nSpeed[Xends], s16 
         {
             bNotMoved = false;
         }
-    }while( ( (i++<COUNT_100) && bNotMoved  ) || (i<COUNT_10) ); //AP has 7, not 10 ///AK:Q: Where does 7(now,10) come from? and 100, too?
+    }while( ( (i++<COUNT_100) && bNotMoved  ) || 
+#if UNDO_59565_1           
+           (i<7) );
+#else
+           (i<COUNT_10) ); //AP has 7, not 10 ///AK:Q: Where does 7(now,10) come from? and 100, too?
+#endif
     buffer_InitializeDiagnosticBuffer();            /// DZ: time ranges.
-    //nTau[iDir] = i; ///AK:NOTE: The time (in nominal 50 ms intervals) of the valve's starting moving.
-
+#if UNDO_59594
+    nTau[iDir] = i; ///AK:NOTE: The time (in nominal 50 ms intervals) of the valve's starting moving.
+#else
     //Remove time accumulation error
     spent /= T0_050;
     nTau[iDir] = (s16)MIN(spent, INT16_MAX); ///AK:NOTE: The time (in nominal 50 ms intervals) of the valve's starting moving.
-
+#endif
 
 
 ///AK:NOTE: bNotMoved not guaranteed
@@ -1867,7 +1902,11 @@ static TuneCase_t Para_Adjust(PIDData_t *pid, StepData_t *tune_xchange, TuneCase
             return case_c;
         }
         else if( (nY_last < (FOUR_PT7_PCT_770-((2*pid->DeadZone)+(Y_ADJ_RATE1*nSCount))) )
+#if UNDO_59565_2
+                && (tune_xchange->nOvershoot < 4) )
+#else
                 && (tune_xchange->nOvershoot < OVERSHOOT_LOW) )
+#endif
         {
             if (pid->I > I_MID)
             {
@@ -1884,7 +1923,11 @@ static TuneCase_t Para_Adjust(PIDData_t *pid, StepData_t *tune_xchange, TuneCase
             case_c = vent_notslow_smallY;
             return case_c;
         }
+#if UNDO_59585_1
+        else if(tune_xchange->nOvershoot > (5+nSCount))
+#else
         else if(tune_xchange->nOvershoot > (5*nSCount)) //U: THS was (5+nSCount)
+#endif
         {
             if( (tune_xchange->nOvershoot>tune_xchange->nOvershoot_p) && (case_p==vent_large_overshoot) )
             {
@@ -1893,7 +1936,11 @@ static TuneCase_t Para_Adjust(PIDData_t *pid, StepData_t *tune_xchange, TuneCase
             }
             else
             {
+#if UNDO_59565_3
+                pid->PAdjust -= (s16)((tune_xchange->nOvershoot*nDeltaP)/20);
+#else
                 pid->PAdjust -= (s16)((tune_xchange->nOvershoot*nDeltaP)/PADJ_INC_RATIO);  //Was: /20 but in a different place, /16
+#endif
                 case_c = vent_large_overshoot;
             }
             return case_c;
@@ -2356,7 +2403,9 @@ static bool_t CheckStable(u8_least index, PIDData_t *pid)
         }
     }
     //Set new live PID parameters atomically
+#if !UNDO_59585_2
     tune_LimitPID(pid); //AK: That was missing
+#endif
     ErrorCode_t err = tune_SetCurrentPIDData(pid);
     MN_DBG_ASSERT(err == ERR_OK);
     UNUSED_OK(err); //for release build
@@ -2370,7 +2419,7 @@ static bool_t CheckStable(u8_least index, PIDData_t *pid)
         */
         ret = (process_WaitForTime(T2_500));
     }
-#if 0
+#if !UNDO_59585_3
     if(!ret) 
     {
         ret = !util_WaitForPos(T0_050,  STABLE_POS_TEST, false);
@@ -2428,15 +2477,18 @@ static void tune_LimitPID(PIDData_t *pid)
 
     if( (pid->P+pid->PAdjust)<P_LOW_LIMIT)
     {
+#if UNDO_79755
+        pid->PAdjust = 0;
+#else        
         /* Need to increase PAdjust. Do it by the smallest amount possible
         */
-        pid->PAdjust = (s16)MAX(P_LOW_LIMIT - (s32)pid->P, pid->PAdjust);
+        pid->PAdjust = (s16)(P_LOW_LIMIT - (s32)pid->P);
         /* PROOF
-        1. P+Padjust = P + MAX(P_LOW_LIMIT-P, {...}) >= P+(P_LOW_LIMIT-P) = P_LOW_LIMIT
-        2. Padjust is within its range if
+           Padjust is within its range if
             P_LOW_LIMIT - P <= PADJ_HIGH_LIMIT, or
             P >= P_LOW_LIMIT-PADJ_HIGH_LIMIT, which is always the case
         */
+#endif
     }
     pid->Beta = CLAMP(pid->Beta, BETA_LOW_LIMIT, BETA_HIGH_LIMIT);
 }
