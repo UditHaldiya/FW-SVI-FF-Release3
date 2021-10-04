@@ -345,12 +345,13 @@ static ErrorCode_t tune_SetRamPIDData(const PIDData_t *pPIDData, PIDData_t *dst)
     s32 signedP = pPIDData->P; //promotion OK
     if(
        (signedP > P_HIGH_LIMIT) ||
-        (signedP < P_LOW_LIMIT) ||
+        //(signedP < P_LOW_LIMIT) ||
         (pPIDData->I > I_HIGH_LIMIT) ||
         (pPIDData->D > D_HIGH_LIMIT) ||
         (pPIDData->PAdjust < PADJ_LOW_LIMIT)  ||
         (pPIDData->PAdjust > PADJ_HIGH_LIMIT) ||
-        ((signedP + pPIDData->PAdjust) < P_LOW_LIMIT) ||
+        //((signedP + pPIDData->PAdjust) < P_LOW_LIMIT) ||
+        ((signedP + pPIDData->PAdjust) < 0) ||
         (pPIDData->Beta < BETA_LOW_LIMIT)  ||
         (pPIDData->Beta > BETA_HIGH_LIMIT) ||
         (pPIDData->PosComp < PCOMP_LOW_LIMIT)  ||
@@ -610,7 +611,7 @@ static s16 tune_ComputePoscomp(pos_t posdiff, s16_least biasdiff)
         //AK:NOTE n2Temp is COMP_CONST/n2Temp2 or 1+COMP_CONST/n2Temp2, depending on rounding luck
         //AK:TODO: Instead of const COMP_CONST=20%, it may be a better idea to use the difference
         //      of actually attained stable positions.
-        poscomp = ABS(poscomp);
+        //See MAX at the end - poscomp = ABS(poscomp);
     }
     else
     {
@@ -2204,7 +2205,7 @@ static void Data_Processing(const PIDData_t *pid, StepData_t *tune_xchange)
             }
         }
     }
-    tune_xchange->DY_min = nT_DY_min;
+    tune_xchange->DY_min = nDY_min;
 
     //look at the DYmin from above and determine if D is too large
     bool_t bD_Large = false;
