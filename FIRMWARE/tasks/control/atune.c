@@ -2361,20 +2361,22 @@ static bool_t CheckStable(u8_least index, PIDData_t *pid)
     MN_DBG_ASSERT(err == ERR_OK);
     UNUSED_OK(err); //for release build
 
-    if (control_GetBiasChangeFlag() > 0) //AK:TODO: make it !=.
+    bool_t ret = (control_GetBiasChangeFlag() > 0); //AK:TODO: make it !=.
+    if(!ret) 
     {
-        return true;
+        /* Per DZ, the intention of Wait is to let the new control parameter to have a chance play the role.
+        On a slow valve, which this function makes slower, we may do excessive gain reduction - and eventually fail on time
+        So, I (AK) added wait for stable position
+        */
+        ret = (process_WaitForTime(T2_500));
     }
-
-    /* Per DZ, the intention of Wait is to let the new control parameter to have a chance play the role.
-    On a slow valve, which this function makes slower, we may do excessive gain reduction - and eventually fail on time
-    So, I (AK) added wait for stable position
-    */
-    if(process_WaitForTime(T2_500))
+#if 0
+    if(!ret) 
     {
-        return true;
+        ret = !util_WaitForPos(T0_050,  STABLE_POS_TEST, false);
     }
-    return !util_WaitForPos(T0_050,  STABLE_POS_TEST, false);
+#endif
+    return ret;
 }
 
 static s16 Change10Pct(s16 nValue, bool_t bIncrease)
