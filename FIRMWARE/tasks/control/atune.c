@@ -16,8 +16,110 @@ demand.
      CPU: Any
 
     OWNER: DZ
+    $Archive: /MNCB/Dev/LCX2AP/FIRMWARE/tasks/control/atune.c $
+    $Date: 1/20/12 10:53a $
+    $Revision: 128 $
+    $Author: Arkkhasin $
 
     \ingroup control
+*/
+/* $History: atune.c $
+ *
+ * *****************  Version 128  *****************
+ * User: Arkkhasin    Date: 1/20/12    Time: 10:53a
+ * Updated in $/MNCB/Dev/LCX2AP/FIRMWARE/tasks/control
+ * TFS:8748 - remove old pressure-related interfaces
+ *
+ * *****************  Version 127  *****************
+ * User: Arkkhasin    Date: 12/01/11   Time: 4:17p
+ * Updated in $/MNCB/Dev/LCX2AP/FIRMWARE/tasks/control
+ * TFS:8313 Lint
+ *
+ * *****************  Version 126  *****************
+ * User: Arkkhasin    Date: 11/04/11   Time: 7:41p
+ * Updated in $/MNCB/Dev/LCX2AP/FIRMWARE/tasks/control
+ * TFS:8072 NVMEM upgrade
+ *
+ * *****************  Version 124  *****************
+ * User: Justin Shriver Date: 5/20/11    Time: 8:14p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:6337
+ *
+ * *****************  Version 123  *****************
+ * User: Justin Shriver Date: 5/20/11    Time: 5:23p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:6337
+ *
+ * *****************  Version 122  *****************
+ * User: Justin Shriver Date: 5/18/11    Time: 10:21a
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:6337
+ *
+ * *****************  Version 121  *****************
+ * User: Justin Shriver Date: 5/17/11    Time: 1:07p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:6337
+ *
+ * *****************  Version 120  *****************
+ * User: Justin Shriver Date: 5/13/11    Time: 9:59p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:6305 LINT
+ *
+ * *****************  Version 119  *****************
+ * User: Justin Shriver Date: 5/13/11    Time: 6:15p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:6305 LINT
+ *
+ * *****************  Version 118  *****************
+ * User: Justin Shriver Date: 5/13/11    Time: 6:05p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:6305 LINT
+ *
+ * *****************  Version 117  *****************
+ * User: Justin Shriver Date: 5/13/11    Time: 5:41p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:5384 Instrument Autotune Temporarily
+ * TFS:3968 Negative subscript
+ * TFS:4923 Autotune Performance
+ *
+ * *****************  Version 116  *****************
+ * User: Justin Shriver Date: 1/13/11    Time: 12:07p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:5384 add debug capabilities
+ *
+ * *****************  Version 115  *****************
+ * User: Arkkhasin    Date: 10/29/10   Time: 2:28a
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:4417 (MISRA)
+ *
+ * *****************  Version 114  *****************
+ * User: Arkkhasin    Date: 5/14/10    Time: 11:48p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * WRITE_NUMBER is now in uopublic.h
+ *
+ * *****************  Version 113  *****************
+ * User: Arkkhasin    Date: 3/30/10    Time: 6:40p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * Constrained the use of nvramtypes.h
+ *
+ * *****************  Version 112  *****************
+ * User: Arkkhasin    Date: 3/24/10    Time: 1:59p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * Added assert in tune_GetCurrentPIDData()
+ * Changed to pneu_ style of deciding single acting and supply pressure
+ * presence
+ *
+ * *****************  Version 111  *****************
+ * User: Arkkhasin    Date: 3/08/10    Time: 2:52p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ *         - adjust WRITE_NUMBER
+ *
+ * *****************  Version 110  *****************
+ * User: Arkkhasin    Date: 2/25/10    Time: 5:22p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * Changed to always tune the active slot of PID params; on success
+ * replace slot 0 and restore the active slot
+ * Also, added standard tombstone header.
 */
 #include "mnwrap.h"
 #include "oswrap.h"
@@ -49,7 +151,7 @@ demand.
 #include "param.h"
 #include "pneumatics.h"
 #include "faultpublic.h"
-CONST_ASSERT(P_LOW_LIMIT!=0); //just make use of the unuses
+CONST_ASSERT(P_LOW_LIMIT!=0);
 
 /*Note ifdef is allowed only for header guards and
   Including instrumentation include file, it should
@@ -110,7 +212,7 @@ static const diag_t* m_pDiagBuffer;
 #define TUNE_TIME_LIMIT 10
 #define TUNE_TIME_START 5
 #define FAIL_ACTUATION 31
-#define FAIL_NVWRITE 32
+//no longer used #define FAIL_PROTECTED 32
 #define FAIL_OPEN_LOOP 33
 #define FAIL_P_TOO_SMALL 45
 #define FAIL_PADJ_TOO_BIG 46
@@ -187,7 +289,6 @@ static s16 nTau_avg;
 
 /** member data */
 static PIDData_t       m_PIDData[NUM_POSCTL_PARAMSETS]; //!< PID parameters
-
 //static PIDExtData_t    m_PIDExtData; //!< Computed PID parameters (stroking speed data)
 static TuneData_t m_TuneData;
 
@@ -245,7 +346,6 @@ static s16 Change20Pct(s16 nValue, bool_t bIncrease);
         CHECKFIELD_CLEAR()
     };
 
-
 /** \brief PID parameters accessor
     Performs integrity test of the referenced data struct.
     NOTE: The API does not guarantee non-volatility of data pointed to or
@@ -263,17 +363,74 @@ const void *TypeUnsafe_tune_GetPIDData(u8_least index, void *dst)
     return STRUCT_TESTGET(&m_PIDData[index], dst);
 }
 
-/** \brief Sets the working copy of PID data
+/** \brief Current PID parameters accessor
+    Performs integrity test of the referenced data struct and returns data.
+\param dst - a pointer to the receiving object (may be a NULL)
+\return a pointer to const PID parameters
+*/
+const PIDData_t *tune_GetCurrentPIDData(PIDData_t *dst)
+{
+    const PIDData_t *p = tune_GetPIDData(posctl_GetCtlSetIndex(), dst);
+    MN_DBG_ASSERT(p!=NULL);
+    return p;
+}
 
+#if 0
+/** \brief PID Computed (Extended) parameters accessor
+    Performs integrity test of the referenced data struct
+    NOTE: The API does not guarantee non-volatility of data pointed to or
+    of the pointer itself (the latter happens to be true in implementation though).
+    The user who cares must make a copy in a critical section.
+    \return a pointer to const PID Extended parameters
+*/
+const PIDExtData_t*   tune_GetPIDExtData(void)
+{
+    ///----- AK:NOTE: The issue with OOS data consistency is now resolved, the lines removed
+    u8 u1DeviceMode = mode_GetCurrentMode();
+    if((u1DeviceMode == MODE_OPERATE) || (u1DeviceMode == MODE_MANUAL) )
+    ///----- AK:ENDNOTE:
+
+    {
+        Struct_Test(PIDExtData_t, &m_PIDExtData);
+    }
+    return &m_PIDExtData;
+}
+#endif
+
+
+/** \brief Calculates ext. PID data and writes to RAM PID and PID ext. atomically
+
+Does NOT perform check on PID parameters limits!!!
 \param pPIDData - pointer to PID data to make available to the system
 */
-static ErrorCode_t tune_SetRamPIDData(const PIDData_t *pPIDData, PIDData_t *dst)
+static void tune_CommitPIDData(u8_least index, const PIDData_t* pPIDData)
 {
-    ErrorCode_t err;
+    MN_ENTER_CRITICAL();
+        Struct_Copy(PIDData_t, &m_PIDData[index], pPIDData);
+    MN_EXIT_CRITICAL();
+}
+
+ErrorCode_t tune_SetCurrentPIDData(const PIDData_t *src)
+{
+    tune_CommitPIDData(0, src);
+    return ERR_OK;
+}
+
+
+/** \brief Validates and sets new PID parameters and recomputes the Computed (Extended) PID paramters.
+On success, saves the new set to NVMEM.
+\param pPIDData - pointer to const struct of requested PID parameters (maybe, with incorrect checksum)
+\return an error code (ERR_OK on success)
+*/
+ErrorCode_t TypeUnsafe_tune_SetPIDData(u8_least index, const void *src)
+{
+    const PIDData_t* pPIDData = src;
+
     if(pPIDData == NULL)
     {
         pPIDData = &def_PIDData;
     }
+
     /** validate the input */
     if(
        (pPIDData->P > P_HIGH_LIMIT) ||
@@ -286,51 +443,28 @@ static ErrorCode_t tune_SetRamPIDData(const PIDData_t *pPIDData, PIDData_t *dst)
         (pPIDData->PosComp < PCOMP_LOW_LIMIT)  ||
         (pPIDData->PosComp > PCOMP_HIGH_LIMIT) ||
         (pPIDData->Band > BOOST_HIGH_LIMIT) ||
-        (pPIDData->DeadZone > DEADZONE_HIGH_LIMIT) || (pPIDData->DeadZone < 0)
+        (pPIDData->DeadZone > DEADZONE_HIGH_LIMIT)
+#if 0
+        || (pPIDData->Damping > DAMP_HIGH_LIMIT) ||
+        (pPIDData->Damping < DAMP_LOW_LIMIT) ||
+        ( (pPIDData->Damping < DAMP_MIDHI_LIMIT) &&
+        (pPIDData->Damping > DAMP_MIDLO_LIMIT) )  //DAMP_ LO and HI ranges cannot overlap; see related CONST_ASSERT above.
+#endif
       )
     {
-        err = ERR_INVALID_PARAMETER; /* Legit. early return: prerequisite test before side effects */
+        return ERR_INVALID_PARAMETER; /* Legit. early return: prerequisite test before side effects */
     }
-    else
-    {
-        Struct_Copy(PIDData_t, dst, pPIDData);
-        err = ERR_OK;
-    }
-    return err;
-}
-
-/** \brief Validates and sets new PID parameters and recomputes the Computed (Extended) PID paramters.
-On success, saves the new set to NVMEM.
-\param pPIDData - pointer to const struct of requested PID parameters (maybe, with incorrect checksum)
-\return an error code (ERR_OK on success)
-*/
-ErrorCode_t TypeUnsafe_tune_SetPIDData(u8_least index, const void *src)
-{
-    ErrorCode_t err;
 
     if(index >= NUM_POSCTL_PARAMSETS)
     {
-        err = ERR_INVALID_PARAMETER; /* Legit. early return: prerequisite test before side effects */
-    }
-    else
-    {
-        err = tune_SetRamPIDData(src, &m_PIDData[index]);
-    }
-    if(err == ERR_OK)
-    {
-        if(oswrap_IsOSRunning()) //Otherwise slot is not yet initialized
-        {
-            if(index == posctl_GetCtlset(NULL)->slot)
-            {
-                //Fix up the working set
-                ErrorCode_t e = tune_SetCurrentPIDData(src);
-                MN_DBG_ASSERT(e == ERR_OK); //an error is purely a coding error
-            }
-        }
-        err = ram2nvramAtomic(NVRAMID_PIDData+index);
+        return ERR_INVALID_PARAMETER; /* Legit. early return: prerequisite test before side effects */
     }
 
-    return err;
+    //tune_StrokeSpeedCalc(pPIDData, &pidExt); // Compute Computed PID parameters
+
+    tune_CommitPIDData(index, pPIDData); //get consistent data in RAM first
+
+    return ram2nvramAtomic(NVRAMID_PIDData+index);
 }
 
 /** \brief Tests if supplied tune data are acceptable.
@@ -401,21 +535,6 @@ ErrorCode_t    TypeUnsafe_tune_SetTuneData(const void *src)
 #endif //OLD_NVRAM
 }
 
-//When we set working PID from active slot, the slot's content must be available
-CONST_ASSERT(NVRAMID_CtlSetSlot > NVRAMID_PIDData);
-//We need working data in case we want to tentatively change the content, such as disable deadzone
-static PIDData_t wrk_ctlset;
-
-const PIDData_t *tune_GetWorkinPIDData(PIDData_t *dst)
-{
-    return STRUCT_TESTGET(&wrk_ctlset, dst);
-}
-
-ErrorCode_t tune_SetCurrentPIDData(const PIDData_t *src)
-{
-    return tune_SetRamPIDData(src, &wrk_ctlset);
-}
-
 /* ------------------------ Here the real thing begins -------------------------------- */
 
 /** \brief A wrapper function for the self-tune process
@@ -436,6 +555,7 @@ procresult_t tune_Run_Selftune(s16 *procdetails)
     s32 nRet, nFailed;
     procresult_t nReturn;
 
+    PIDData_t savepid; //save for cleanup on failure
     PIDData_t workpid; //working copy
 #if OPTIONAL_TUNE_DIAG==1
     extDataAutoTune.Times[PID_PHASE_START] = timer_GetTicks();
@@ -472,6 +592,7 @@ procresult_t tune_Run_Selftune(s16 *procdetails)
     u8_least index = posctl_GetCtlSetIndex();
 
     (void)tune_GetPIDData(index, &workpid);
+    savepid = workpid;
 
     nFailed = 1;
 
@@ -509,29 +630,19 @@ procresult_t tune_Run_Selftune(s16 *procdetails)
 
     if (nFailed != 0)
     {
-        /* If auto_tune failed or cancelled: restore working control set*/
-        (void)tune_GetPIDData(index, &wrk_ctlset);
+        /* If auto_tune failed or cancelled*/
+        tune_CommitPIDData(index, &savepid);
         nReturn = PROCRESULT_FAILED;
 
     }
     else
     {
-        nReturn = PROCRESULT_OK;
-        if(index == CTLPARAMSET_AUTOTUNE)
-        {
-            //Commit to home parameters and NVMEM
-            ErrorCode_t e = tune_SetPIDData(index, &wrk_ctlset);
-            if(e != ERR_OK)
-            {
-                nReturn = PROCRESULT_FAILED;
-                Reason = FAIL_NVWRITE;
-            }
-        }
-        else
+        if(index != CTLPARAMSET_AUTOTUNE)
         {
             //Restore the starting PID set
-            (void)tune_GetPIDData(index, &wrk_ctlset);
+            tune_CommitPIDData(index, &savepid);
         }
+        nReturn = PROCRESULT_OK;
     }
 
 #if OPTIONAL_TUNE_DIAG==1
@@ -578,7 +689,7 @@ static s32 tune_Tune_Function(u8_least index, PIDData_t *pid)
 
     tune_LimitPID(pid); //AK:TODO: This seems unnecessary, although it doesn't hurt
     pid->DeadZone = 0;
-    (void)tune_SetCurrentPIDData(pid);
+    tune_CommitPIDData(index, pid);
 
     if (control_GetBiasChangeFlag() > 0) //AK:TODO: Make it !=
     {
@@ -1006,7 +1117,7 @@ static s32 tune_RampingTest(u8_least index, PIDData_t *pid)
     {       /// DZ: Intended. Just to make it stable
         return 1;
     }
-    (void)tune_SetCurrentPIDData(pid);
+    tune_CommitPIDData(index, pid);
     //ramp from 64 to 60
     for(i=24; i>=0; i--)
     {
@@ -1386,7 +1497,6 @@ static s32 tune_CloseLoop(u8_least index, PIDData_t *pid)
     pos_t arg2, arg3;
     case_c = 0;
     nSCount = 0;
-    UNUSED_OK(index);
     ui_setNext(UINODEID_TUNE3);
     #if OPTIONAL_TUNE_DIAG == 1
         extDataAutoTune.Times[PID_PHASE_TUNE_CLOSED_START]=timer_GetTicks();
@@ -1406,7 +1516,7 @@ static s32 tune_CloseLoop(u8_least index, PIDData_t *pid)
     do
     {
         tune_LimitPID(pid);
-        (void)tune_SetCurrentPIDData(pid);
+        tune_CommitPIDData(index, pid);
         nOvershoot_p = nOvershoot;
         case_p = case_c;
         nT_90_p = nT_90;
@@ -1467,7 +1577,7 @@ static s32 tune_CloseLoop(u8_least index, PIDData_t *pid)
             }
             return -1;
         }
-        (void)tune_SetCurrentPIDData(pid); //updated params to control
+        tune_CommitPIDData(index, pid); //updated params to control
         #if OPTIONAL_TUNE_DIAG == 1
             extDataAutoTune.closedLoops++;
             extDataAutoTune.gainP[extDataAutoTune.gainRuns] = pid->P;
@@ -1872,8 +1982,8 @@ static void Data_Processing(const PIDData_t *pid)
         for(i=nT_min+1; i<DATA_PTS; i++)
         {
            //**********************  potential bug - should be nY_min **********************************
-            if(m_pDiagBuffer[i+STEP_CHANGE_INDEX] < nY_min) //U fix as in ESD, was nY_max
-            {
+            if(m_pDiagBuffer[i+STEP_CHANGE_INDEX] < nY_max) ///AK:Q: nY_min intended?
+            {                                               /// DZ: for calc of nOvershoot2
                 nY_min = m_pDiagBuffer[i+STEP_CHANGE_INDEX];
                 nT_min = i;
             }
@@ -2026,7 +2136,6 @@ and increase the I coefficient in a hope to stabilize the valve.
 */
 static bool_t CheckStable(u8_least index, PIDData_t *pid)
 {
-    UNUSED_OK(index);
     //AK:TODO: Why not the latest .err ?
     if(( (m_pPosErr->err7>HALF_PCT_82) && (m_pPosErr->err1<-HALF_PCT_82)) || //If errors are outside the tube
      ( (m_pPosErr->err7<-HALF_PCT_82) && (m_pPosErr->err1>HALF_PCT_82)))
@@ -2048,7 +2157,7 @@ static bool_t CheckStable(u8_least index, PIDData_t *pid)
         }
     }
     //Set new live PID parameters atomically
-    (void)tune_SetCurrentPIDData(pid);
+    tune_CommitPIDData(index, pid);
 
     if (control_GetBiasChangeFlag() > 0) //AK:TODO: make it !=.
     {
@@ -2117,6 +2226,59 @@ static void tune_LimitPID(PIDData_t *pid)
     pid->Beta = MAX(pid->Beta, BETA_LOW_LIMIT);
     pid->Beta = MIN(pid->Beta, BETA_HIGH_LIMIT);
 }
+
+#if 0
+/** \brief (Re)calculates PID computed (extended) data (stroking speed limits in both directions) atomically
+\param[in] pid - a pointer to PID data
+\param[out] pidext - a pointer to computed data
+*/
+static void tune_StrokeSpeedCalc(const PIDData_t *pid, PIDExtData_t *pidext)
+{
+    // DZ: 8/23/06
+    // This function is internally and externally called to calculate stroking speed limits
+    // based on user specified stroking times for bother filling and exhaust directions
+    // parameters description
+    // PIDData_t *pid: a pointer to pid data structure of PIDData_t
+    // PIDExtData_t *pidext: a pointer to extra pid data structure of PIDExtData_t
+    s16 nStrokeTime, nTemp;
+
+    MN_ASSERT(pid!=NULL);
+    MN_ASSERT(pidext!=NULL);
+
+    if(pid->Damping == 0 )
+    {
+        pidext->ratelimit = 0;
+        pidext->cRateOption = 0;
+    }
+    else   // valve stroke speed limit is set
+    {
+        if(pid->Damping > 0)
+        {
+            pidext->cRateOption = RATE_LIMIT_OPEN|RATE_LIMIT_CLOSE;   //limit both directions
+            nStrokeTime = pid->Damping;
+        }
+        else if(pid->Damping > -STROKE_CONST1)
+        {
+            pidext->cRateOption = RATE_LIMIT_OPEN;     // limit open direction only
+            nStrokeTime = -pid->Damping;
+        }
+        else
+        {
+            pidext->cRateOption = RATE_LIMIT_CLOSE;    // limit close direction only
+            nStrokeTime = -pid->Damping-STROKE_CONST1;
+        }
+
+        nTemp = STROKE_CONST2/nStrokeTime; ///AK:Q: Is divide-by-0 possible?  // DZ: No
+
+        if(nTemp < 2)
+        {
+            nTemp = 2;
+        }
+        pidext->ratelimit = nTemp;
+    }
+    STRUCT_CLOSE(PIDExtData_t, pidext);
+}
+#endif
 
 #ifdef OLD_NVRAM
 void tune_InitTuneData(InitType_t Type)
