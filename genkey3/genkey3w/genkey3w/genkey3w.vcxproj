@@ -23,11 +23,11 @@
     <ProjectGuid>{9E71FDC6-F25E-465E-8293-E4B900494D79}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>genkey3w</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
     <SccProjectName>SAK</SccProjectName>
     <SccAuxPath>SAK</SccAuxPath>
     <SccLocalPath>SAK</SccLocalPath>
     <SccProvider>SAK</SccProvider>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -88,7 +88,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>..\FD-SW\inc_FFP;..\FD-SW\includes;..\FIRMWARE\includes;..\FIRMWARE\mn_instrum\noinstrum;..\FD-SW\target\inc;..\FD-SW\target\cfg;..\FD-SW\target\inc\ff;..\FD-SW\target\appl\fbif\inc;..\FD-SW\target\inc\segm;$(IncludePath)</IncludePath>
+    <IncludePath>..\FD-SW\inc_FFP;..\FD-SW\includes;..\..\FIRMWARE\includes;..\FIRMWARE\mn_instrum\noinstrum;..\FD-SW\target\inc;..\FD-SW\target\cfg;..\FD-SW\target\inc\ff;..\FD-SW\target\appl\fbif\inc;..\FD-SW\target\inc\segm;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -112,9 +112,10 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;PROJPARAM_H="project_FFP.h";LITTLE_ENDIAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;PROJPARAM_H="stdlib.h";LITTLE_ENDIAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..\..\FIRMWARE\includes;$(SolutionDir)..\..\FIRMWARE\mn_instrum\noinstrum;$(SolutionDir)..\..\FD-SW\inc_FFP;$(SolutionDir)..\..\FD-SW\includes;$(SolutionDir)..\..\FD-SW\target\inc;$(SolutionDir)..\..\FD-SW\target\inc\ff;$(SolutionDir)..\..\FD-SW\target\inc\segm;$(SolutionDir)..\..\FD-SW\target\cfg;$(SolutionDir)..\..\FD-SW\target\appl\fbif\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -132,7 +133,7 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;PROJPARAM_H_="project_FFAP.h";LITTLE_ENDIAN;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>C:\Users\204061827\TFSSC\Workspaces\SVIFF\genkey3;C:\Users\204061827\TFSSC\Workspaces\SVIFF\FIRMWARE\includes;C:\Users\204061827\TFSSC\Workspaces\SVIFF\FIRMWARE\mn_instrum\noinstrum;C:\Users\204061827\TFSSC\Workspaces\SVIFF\FD-SW\inc_FFP;C:\Users\204061827\TFSSC\Workspaces\SVIFF\FD-SW\includes;C:\Users\204061827\TFSSC\Workspaces\SVIFF\FD-SW\target\inc;C:\Users\204061827\TFSSC\Workspaces\SVIFF\FD-SW\target\inc\ff;C:\Users\204061827\TFSSC\Workspaces\SVIFF\FD-SW\target\inc\segm;C:\Users\204061827\TFSSC\Workspaces\SVIFF\FD-SW\target\cfg;C:\Users\204061827\TFSSC\Workspaces\SVIFF\FD-SW\target\appl\fbif\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)..\..\FIRMWARE\includes;$(SolutionDir)..\..\FIRMWARE\mn_instrum\noinstrum;$(SolutionDir)..\..\FD-SW\inc_FFP;$(SolutionDir)..\..\FD-SW\includes;$(SolutionDir)..\..\FD-SW\target\inc;$(SolutionDir)..\..\FD-SW\target\inc\ff;$(SolutionDir)..\..\FD-SW\target\inc\segm;$(SolutionDir)..\..\FD-SW\target\cfg;$(SolutionDir)..\..\FD-SW\target\appl\fbif\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
