@@ -2,9 +2,9 @@
 #define AK_extract 0
 #define UNDO_59565_1 0 //1? min # of ramp points
 #define UNDO_59565_2 1 //low overshoot thresh
-#define UNDO_59565_3 1 //?
+#define UNDO_59565_3 1 //PAdjust recalc
 #define UNDO_59585_1 1 //overshoot count use
-#define UNDO_59585_2 0 //1
+#define UNDO_59585_2 0 // pid limiting before setting
 #define UNDO_59585_3 0 //1 extra stability #1 didn't help
 #define UNDO_59661 1 //poscomp calc
 #define UNDO_59594 1 //tau calc
