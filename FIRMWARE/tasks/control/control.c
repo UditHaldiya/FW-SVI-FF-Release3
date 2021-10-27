@@ -1,5 +1,5 @@
 /*
-Copyright 2004 by Dresser, Inc., as an unpublished trade secret.  All rights reserved.
+Copyright 2004-2019 by Dresser, Inc., as an unpublished trade secret.  All rights reserved.
 
 This document and all information herein are the property of Dresser, Inc.
 It and its contents are  confidential and have been provided as a part of
@@ -40,21 +40,35 @@ demand.
 #include "sysio.h"
 #include "pbypass.h"
 
-//#include "iplimit.h"
 #include "sysiolopwr.h"
 
 #include "position.h"
 #include "errlimits.h"
 #include "cutoff.h"
 
+/* Local options to decide */
+#define STARTUP_FORCE_JIGGLE_TEST 0  /*TFS:8814 "Remove jiggle test at startup" */
+#define USE_VALVE_MOVE_ESTIMATE 0 //or 1 - used for saving bias but looks obsolete
+#define USE_PILOT_FOR_SUPPLY_THRESHOLD 0 //wasn't working, TFS:37623. If we add it, need to verify pilot tempcomp in existing units
+#define USE_BIAS_TEMPR_ADJ_T_LOW_T_HIGH 1 //1 - as in David's initialization, 0 - as in David's save
+//Not used because now power limit is evaluated externally: #define USE_OUTPUT_LIMIT 0
+#define USE_BORROWED_FROM_SVI1K 1 //Currently, remapping error (and so, tuned poscomp) to full mechanical range
+/* End local options */
+
 //TFS:8333
 #include "pressmon_act_hw.h"
 //#include "pressmon_pilot_hw.h"
 //END TFS:8333
 
+#if USE_BIAS_TEMPR_ADJ_T_LOW_T_HIGH
 #define T_LOW  -20             /* temperature low -20 degree C */
 #define T_HIGH  70             /* temperature high 70 degree C */
+#endif
+
+#if USE_VALVE_MOVE_ESTIMATE
 #define POS_SHIFT   40
+#endif
+
 //Checksum protection policy
 #define CONTROL_CONTROL_STATE 0x01U //Test the whole control state
 #define CONTROL_INCONTROL_TEST 0x02U //Test the jiggle test state
@@ -62,7 +76,6 @@ demand.
 #define CONTROL_CHECKSUM_PROTECT 0U
 //#define CONTROL_CHECKSUM_PROTECT (CONTROL_CONTROL_STATE | CONTROL_INCONTROL_TEST)
 
-#define NOT_INITIALIZED LONG_MIN   //used to delay initialization of continuous diagnostics
 
 #define DETECTOR_AVG_CONST       16            //!< for averaging the error
 
@@ -70,19 +83,21 @@ demand.
 
 #define IN_CONTROL_DETECTOR_ERROR_BAND  INT_PERCENT_OF_RANGE(3.0F) //!< If integral out of this range (+/-) run "in control" detector
 
-/** private defines */
 
 /* -------------------------------------------------------- */
 /* variables definition */
+
+typedef s32 Bias_t;
+
+
 typedef struct ControlState_t
 {
     u8 i_count;                      /// ep:count since last integral operation
     bool_t isBiasLowerLimited;
     bool_t isBiasUpperLimited;
-    s32 LastComputedPosComp; //=0;
+    Bias_t LastComputedPosComp; //=0;
     pos_t m_n2CSigPos_p;               // m_n2CSigPos delayed 1 cycle for set-point delta
     u16 start_count;    /// ep: startup count 0, 1... 65000;
-    u16 stay_count;     /// ep: stay_count: how long at curr pos 0..65000
     bool_t Integral_Previously_Limited; // = false;
     bool_t m_bActuatorAtLim;         // true indicates integral windup to [actuator pressure] limit
     s16 m_n2Erf1;
@@ -90,10 +105,13 @@ typedef struct ControlState_t
     u8 BiasChangeFlag;     /* set to +/-1 if big change of BIAS */ /// AK:Q: This doesn't appear accurate (?) AK:NOTE: Can be enum.
     bool_t isIPLowerLimited; //Could be automatic but used in 1 run delay
     bool_t isIPUpperLimited; //Ditto
-    s16 m_n2Pos_p;
 
     s8 cBoost;     // boost state is 0 or 1
     u16 nBoostCount;
+
+    ctlmode_t  m_n1ControlMode; //< the mode of the control routine; the previous value used to track change
+    bool_t m_bRegularControl;
+    bool_t m_bShutZone;
 
     s32 nErrorCount;         // cumulative count of successive errors for pos err
     u16 CheckWord;
@@ -103,10 +121,10 @@ static ControlState_t cstate;
 
 typedef struct IntegralState_t
 {
-    s32 Low_Integral_Limit;
-    s32 High_Integral_Limit;
-    s32 m_Integral;             //!< separate integral value until transferred to bias (work point)
-    u16 BIAS;
+    Bias_t Low_Integral_Limit;
+    Bias_t High_Integral_Limit;
+    Bias_t m_Integral;             //!< separate integral value until transferred to bias (work point)
+    Bias_t BIAS;
     u16 CheckWord;
 } IntegralState_t;
 
@@ -114,23 +132,24 @@ static IntegralState_t m_BiasData;
 
 typedef struct InControlTest_t
 {
-    bool_t m_bOKtoSave;         //!< "in control" detector succeeds - ok to transfer integral to bias; could be a return code
-    bool_t m_bSaveBias;         //!<  "in control" detector succeeds - delayed request to save [base]bias in NVM
+    //Bias_t poscomp; //!< to compute validity of a bias candidate for save
+    bool_t m_bSaveBias;         //!< "in control" detector succeeds - ok to transfer integral to bias
     bool_t m_bProbeActive;          //!< true when "in control" detector is active
-#if 0
-    /*TFS:8814 "Remove jiggle test at startup" */
-    bool_t startup; // = true;      //!< true means force "in control" detector regardless of integral magnitude
-#endif //0
-    u16 BiasAvgAtBase;
-    s16 m_n2SPOffset;               //!< amount to jiggle the valve for "in control" detection
+#if STARTUP_FORCE_JIGGLE_TEST
+    bool_t startup; //!< true means force "in control" detector regardless of integral magnitude
+#endif
+    Bias_t BiasAvgAtBase;
+    pos_t m_n2SPOffset;               //!< amount to jiggle the valve for "in control" detection
     u16 timeKtr; // = 0;
     u16 cycleKtr;
-    s16 avgErr;                 //!< average error used by "in control" detector
+    pos_t avgErr;                 //!< average error used by "in control" detector
+#if USE_VALVE_MOVE_ESTIMATE
+    pos_t m_n2Pos_p;
+#endif
     u16 CheckWord;
 } InControlTest_t;
 
 static InControlTest_t ictest;
-
 
 typedef struct ControlTrace_t
 {
@@ -143,6 +162,14 @@ typedef struct ControlTrace_t
     s32 m_IpCurr;                //!< P * E plus D contribution to PWM
     s16 m_diagCalcPeriod;        //for diagnosics in ext_analysis  // TFS:5746
     u16 Integral_Limit_Status;
+    u32 BiasesSaved;
+    u16 BiasesRejected;
+    bool_t m_bIControl; //flag of integral control enabled
+    bool_t Air_Low_Limit;
+    bool_t m_bRegularControl;
+#if USE_VALVE_MOVE_ESTIMATE
+    bool_t m_bValveMove; //estimate of whether the valve is moving - for the intended purpose of saving bias.
+#endif
 } ControlTrace_t;
 
 static ControlTrace_t ctltrace;
@@ -164,15 +191,10 @@ static BiasExt_t m_BiasExt; /// AK:NOTE: This config is "never" changed and is N
 static BiasData_t m_NVMEMBiasData;   /// AK:NOTE: This is NEVER tested except when saved in FRAM.
 
 
-/* Weak - m_n1ControlMode enforced in normal mode; m_n4ManualPos not protected
-This is solved in later versions of device mode.
-*/
-static ctlmode_t  m_n1ControlMode; // - the mode of the control routine
-
 //Continuous diagnostice only - not critical
-static s16 m_nTravelAccum;
-static bool_t m_nDirection;
-static s32 m_n4PositionScaled_1;       /* temp for m_n4PositionScaled used in continuous diagnostic */
+static s32 m_nTravelAccum; //Abs. travel accumulation modulo STANDARD_RANGE
+static bool_t m_nDirection; //up/down for the purpose of counting valve cycles.
+static s32 m_n4PositionScaled_1;  /* "previous" m_n4PositionScaled used in continuous diagnostic */
 static ContinuousDiagnostics_t m_ContinuousDiagnostics;
 static tick_t nDiagTime;
 static u16 lets_save; //count seconds to hour
@@ -194,7 +216,6 @@ static u16 m_CtlOutputValue;    /** TFS:4226 Diag Var */
 
 //Updated every control cycle
 static PosErr_t m_PosErr;       //*** ATO:  setpoint - position,   ATC: position - setpoint ***
-static bool_t Air_Low_Limit;
 
 //================ End Self-repairing variables ==================
 
@@ -202,14 +223,13 @@ static bool_t Air_Low_Limit;
 //To make automatic
 static s16 m_n2CSigPos;                 // active, damped and normalized set-point (and perhaps jiggle-test-perturbed)
 static bool_t m_bATO;
-static bool_t m_bRegularControl;
-static bool_t m_bValveMove;
 static u16 m_n2PosRange; /// AK:NOTE: STD range of mechanical travel (is u16 enough?). Can be precomputed
-static bool_t m_bIControl; //may need a copy in trace
 static s16 m_n2Err_p=0;
 static s16 m_n2Deriv; //may need a copy in trace
 static u8 m_nPosAtStops = CLOSED_1; /// AK:NOTE: Recomputed every time in control_PID() from scaled pos and computed stops
+#if USE_PILOT_FOR_SUPPLY_THRESHOLD
 static bool_t Pilot_Low;
+#endif
 
 //This is the minimum actuator pressure
 //#define ACTUATOR_LOW_PRESS_LIMIT                STD_FROM_PSI(1.0F)
@@ -245,24 +265,24 @@ static const ContinuousDiagnostics_t  def_ContinuousDiagnostics =
 /************************************************/
 /* private function prototypes */
 static void Integral_Control(const ctlExtData_t *data);
-static s32 Proportional_Control(const ctlExtData_t *data);
-static void IsIControl(const ctlExtData_t *data);
+static s32 Proportional_Control(const ctlExtData_t *data, bool_t m_bIControl);
+static bool_t IsIControl(const ctlExtData_t *data);
 static void checkAirPressure(const ctlExtData_t *data);
 static void control_SetPositionErrorFlag(const ctlExtData_t *data);
 #ifdef OLD_NVRAM
 static void control_SaveContinuousDiagnostics(void);
 #endif //OLD_NVRAM
 
+static void control_EnterClosedLoop(const ctlExtData_t *data);
+static const ctlExtData_t *control_PopulateData(ctlExtData_t *data);
+
+#define ISTEP 100       // default integral range (counts) when PosComp >= COMP_BASE
 
 /** \brief common integral range limit for "in control" detection and integral trimming
 
     \param e - the value in internal percent of range
     \param Pcomp - the pcomp value from the PID structure
 */
-
-
-#define ISTEP 100       // default integral range (counts) when PosComp >= COMP_BASE
-
 MN_INLINE s32 ErrorRangeToPWMRange(s16 e, s16 Pcomp)
 {
     s32 ret;
@@ -286,7 +306,6 @@ MN_INLINE s32 GetDetectorIntegralLimit(s16 Pcomp)
     return ErrorRangeToPWMRange((s16)IN_CONTROL_DETECTOR_ERROR_BAND, Pcomp);
 }
 
-
 /** \brief This function determines the output to D/A to produce analog current to I/P
     by typically calling function bios_WritePwm(PWMvalue).
 
@@ -302,7 +321,7 @@ static void IPCurrent_StoreAndOutput(s32 ipcurr, u16 OutputLim)
 
     cstate.isIPUpperLimited = false;
     cstate.isIPLowerLimited = false;
-    if (m_n1ControlMode==CONTROL_OFF)
+	if (cstate.m_n1ControlMode==CONTROL_OFF)
     {
         // if control mode is CONTROL_OFF, don't change - keep the previous output
         // what is the correct action in this mode??
@@ -311,12 +330,12 @@ static void IPCurrent_StoreAndOutput(s32 ipcurr, u16 OutputLim)
     else
     {
         enumPWMNORM_t pwmNormalize = PWMSTRAIGHT;         /** TFS:4108 **/
-        if ( (OutputLim <= MIN_DA_VALUE) || (m_n1ControlMode==CONTROL_IPOUT_LOW) )
+        if ( (OutputLim <= MIN_DA_VALUE) || (cstate.m_n1ControlMode==CONTROL_IPOUT_LOW) )
         {
             // if it is low power or control mode is CONTROL_IPOUT_LOW just set I/P to minimum
             CtlOutputValue = MIN_DA_VALUE;        // set to minimum count
         }
-        else if ((m_n1ControlMode==CONTROL_IPOUT_HIGH) || (m_n1ControlMode==CONTROL_IPOUT_HIGH_FACTORY) )
+    	else if ((cstate.m_n1ControlMode==CONTROL_IPOUT_HIGH) || (cstate.m_n1ControlMode==CONTROL_IPOUT_HIGH_FACTORY) )
         {
             // if control mode is CONTROL_IPOUT_HIGH or CONTROL_IPOUT_HIGH_FACTORY set the I/P to maximum
             CtlOutputValue = MAX_DA_VALUE;  // set to maximum count TFS:5698
@@ -324,15 +343,15 @@ static void IPCurrent_StoreAndOutput(s32 ipcurr, u16 OutputLim)
         else
         {
             //in diagnostic IP mode, the I/P follows the input signal
-            if (m_n1ControlMode==CONTROL_IP_DIAGNOSTIC )
+        	if (cstate.m_n1ControlMode==CONTROL_IP_DIAGNOSTIC )
             {
-                ipcurr = mode_DirectOutput(m_n1ControlMode, ipcurr);
+                ipcurr = mode_DirectOutput(cstate.m_n1ControlMode, ipcurr);
             }
             else
             {
                 // SAR 8.3
                 //   DZ: input ipcurr is offset only - add the bias to it to get the output
-                ipcurr += (s32)m_BiasData.BIAS+(s32)cstate.LastComputedPosComp;
+	            ipcurr += m_BiasData.BIAS+cstate.LastComputedPosComp;
                 PIDOut = ipcurr;
             }
 
@@ -345,7 +364,7 @@ static void IPCurrent_StoreAndOutput(s32 ipcurr, u16 OutputLim)
 
         /*AK-7/10/13: preserve the previous behavior where integral
         limiting is NOT in effect in open-loop modes
-        It may well be a bug
+        It could well be a bug but now we use control_EnterClosedLoop(), so things are consistent
         */
         if(pwmNormalize == PWMNORMALIZED)
         {
@@ -359,9 +378,69 @@ static void IPCurrent_StoreAndOutput(s32 ipcurr, u16 OutputLim)
             }
         }
     }//end outer if-else
-
 } // ----- end of IPCurrent_StoreAndOutput() -----
 
+/** \brief Compute position compensation (crude feedforward)
+	\param[in] ctlExtData_t *data: a pointer to the data structure that holds control parameters
+*/
+static void control_ComputePoscomp(const ctlExtData_t *data)
+{
+    s16_least nFull_delta;
+	s16 scaledSetPoint =
+#if USE_BORROWED_FROM_SVI1K //TFS:4011
+		(s16)intscale32( (s32)m_n2CSigPos, data->m_pCPS->n4OpenStopAdj, 0, (u8)STANDARD_NUMBITS );
+#else
+		m_n2CSigPos;
+#endif
+    s16 SpringCompensation = 0;
+    s16 HysterisisCompensation = 0;
+
+    //calculate the setpoint change from the last setpoint
+    if (m_bATO)
+    {
+        nFull_delta = (scaledSetPoint  - STANDARD_ZERO);
+    }
+    else
+    {
+        nFull_delta = (STANDARD_100 - scaledSetPoint);
+    }
+
+    if(data->m_pPID->PosComp != COMP_BASE)
+    {
+        if(data->m_pPID->PosComp < COMP_BASE)
+        {
+            //PosComp < COMP_BASE means we need to make an adjustment
+            //PosComp is 1/slope so multiply by setpoint step
+            SpringCompensation = (s16)(nFull_delta/data->m_pPID->PosComp);
+        }
+        else if(data->m_pPID->PosComp < COMP_MAX)
+        {
+            //PosComp is > COMP_BASE - this case is primarily for double acting
+            // correction is -SPChange/(2^N) where N =  COMP_MAX - PosComp
+            if (nFull_delta >= 0)
+            {
+                HysterisisCompensation = -(s16)( ((u16)nFull_delta) >> (COMP_MAX-data->m_pPID->PosComp) );
+            }
+            else
+            {
+                HysterisisCompensation = -(s16)(( (u16)(-nFull_delta)) >> (COMP_MAX-data->m_pPID->PosComp)) ;
+            }
+        }
+        else
+        {
+           //will get here only if PosComp >= COMP_MAX
+            //Already set SpringCompensation = 0;
+            //Already set HysterisisCompensation = 0;
+        }
+    }
+
+    //Add the position based terms; also good for COMP_BASE (zero)
+    cstate.LastComputedPosComp = (s16)( (s32)SpringCompensation + (s32)HysterisisCompensation);
+    //save the setpoint as the last setpoint
+    cstate.m_n2CSigPos_p = m_n2CSigPos;
+    // restart the integral timer
+    cstate.i_count = 0;
+}
 
 /** \brief This function is externally called by atune.c for auto-tuning to manipulate the output to D/A
     to produce analog current to I/P by calling function bios_WritePwm(PWMValue).
@@ -373,7 +452,7 @@ static void IPCurrent_StoreAndOutput(s32 ipcurr, u16 OutputLim)
 void control_SetPWM(u16_least PWMValue)
 {
     //this should only be called open loop with control off
-    if(m_n1ControlMode == CONTROL_OFF)
+    if(cstate.m_n1ControlMode == CONTROL_OFF)
     {
         (void)sysio_WritePwm((s32)(u16)PWMValue, PWMNORMALIZED);
     }
@@ -424,6 +503,19 @@ void control_GetSetpointPosition(s32* pn4Setpoint , s32* pn4Position)
 #define JIGGLE_CYCLES   5
 
 
+
+//lint -sem(control_IsModeClosedLoop, pure)
+/** \brief A simple wrapper for closed-loop control mode
+\param ctlmode - control mode to test
+\return true iff closed loop
+*/
+static bool_t control_IsModeClosedLoop(ctlmode_t ctlmode)
+{
+    return (ctlmode==CONTROL_MANUAL_POS);
+}
+
+
+
 /** \brief This function is externally called to get current control mode and manual valve position setpoint
     parameters description:
     \param[in] ctlmode_t* pn1ControlMode: a pointer to current control mode m_n1ControlMode
@@ -434,7 +526,7 @@ void control_GetControlMode(ctlmode_t* pn1ControlMode, s32* pn4Setpoint)
     //if the pointers are not null, return the control mode and setpoint to the passed addresses
     if(pn1ControlMode != NULL)
     {
-        *pn1ControlMode = m_n1ControlMode;
+        *pn1ControlMode = cstate.m_n1ControlMode;
     }
     if(pn4Setpoint != NULL)
     {
@@ -448,7 +540,8 @@ void control_GetControlMode(ctlmode_t* pn1ControlMode, s32* pn4Setpoint)
 */
 u16 control_GetBias(void)
 {
-    return ((u16)((s32)cstate.LastComputedPosComp+(s32)m_BiasData.BIAS));
+    Bias_t ret = cstate.LastComputedPosComp+m_BiasData.BIAS;
+    return (u16)CLAMP(ret, 0, UINT16_MAX);
 }
 
 /** \brief This function is externally called to get the current BIAS change flag
@@ -469,6 +562,9 @@ void control_ResetBiasChangeFlag(void)
     MN_ENTER_CRITICAL();
         storeMemberInt(&cstate, BiasChangeFlag, 0);
         storeMemberInt(&cstate, start_count, 0);
+#if STARTUP_FORCE_JIGGLE_TEST
+        storeMemberBool(&ictest, startup, true);
+#endif
     MN_EXIT_CRITICAL();
 }
 
@@ -526,9 +622,6 @@ static void calcSP_Err(const ctlExtData_t *data)
 
     //moved control_RateLimitsGuard(sp);
 
-    //This is good until ctllim_ConditionControlMode is able of changing control mode
-    //(void)ctllim_ConditionControlMode(m_n1ControlMode, &sp);
-
     m_n2CSigPos = (s16)(sp + ictest.m_n2SPOffset); //Guaranteed no overflow by effective sp limit values
 
     //move all of the historical errors down
@@ -540,7 +633,7 @@ static void calcSP_Err(const ctlExtData_t *data)
     //calculate the current position error
     // m_PosErr.err is positive in the fill direction (i.e., need to fill to get to SP)
     // **NOTE:  sp from here down is now the error rather than the setpoint
-    if( m_bATO == true)   // air to open
+    if(m_bATO)   // air to open
     {
         sp = (s32)m_n2CSigPos - m_n4PositionScaled;
     }
@@ -552,7 +645,10 @@ static void calcSP_Err(const ctlExtData_t *data)
     /** TFS:4233 */
     //Adjust PID error to the new range, adjusted to the new open stop..
     s32 errScaled = sp;
+    /** TFS:4233 */
+    //Adjust PID error to the new range, adjusted by open stop to be in full mechanical travel range
     errScaled = intscale32(errScaled, data->m_pCPS->n4OpenStopAdj, 0, (u8)STANDARD_NUMBITS );
+
     //limit the error to fit in 16 bits
     errScaled = CLAMP(errScaled, -INT16_MAX, INT16_MAX);
 
@@ -563,71 +659,174 @@ static void calcSP_Err(const ctlExtData_t *data)
 }
 
 
+static void jiggle_Cancel(void)
+{
+    ictest.m_bProbeActive = false;
+    ictest.cycleKtr       = 0;
+    ictest.m_n2SPOffset   = 0;
+    ictest.timeKtr        = 0;
+}
+
 /** \brief This function determines if it is safe to save the bias (workpoint).  It does this
         by jiggling the valve (+/- .08%) and monitoring for zero average error.
-    \param - data pointer to the control variables structure
     This function supports SAR 11.1 to 11.2
+    \param data - pointer to the control variables structure
+    \return request to save bias
 */
-static void CheckForInControl(const ctlExtData_t *data)
+static bool_t CheckForInControl(const ctlExtData_t *data)
 {
-    s16 nTemp;
+    bool_t bOKtoSave = false;
 
 
     // compute the average error to see if we can safely transfer the integral
     ictest.avgErr = (s16)(((ictest.avgErr * (DETECTOR_AVG_CONST - 1)) + m_PosErr.err)   / DETECTOR_AVG_CONST);
 
-    nTemp = (s16)GetDetectorIntegralLimit(data->m_pPID->PosComp);
-
-    //Only run the jiggle test if the integral is allowed to run
-    //and we have not indicated airloss
-    // if integral is relatively large and error is relatively small, invoke the detector
-    if (
-          (cstate.BiasChangeFlag != AIR_LOLO_3) &&
-          (!process_CheckProcess()) &&  //lint !e960 process_CheckProcess does not have side effects
-          (
-            (ABS(m_BiasData.m_Integral) > nTemp) &&
-            (ABS((s32)ictest.avgErr) < DETECTOR_AVG_ERROR_THRESH)
-          )
-        )
-      {
-        ictest.m_bProbeActive = true;
-
-        // if timeout then restart the detector
-        if (++ictest.timeKtr >= JIGGLE_TIMEOUT)
-        {
-          ictest.cycleKtr       = 0;
-          ictest.m_n2SPOffset   = 0;
-          ictest.timeKtr        = 0;
-        }
-
-        // error must be zero before we jiggle
-        if (ictest.avgErr == 0)
-        {
-          // jiggle the setpoint a little
-          ictest.m_n2SPOffset = (ictest.m_n2SPOffset < 0) ? JIGGLE_AMOUNT : -JIGGLE_AMOUNT;
-          ictest.avgErr     = ictest.m_n2SPOffset;
-          if (++ictest.cycleKtr >= JIGGLE_CYCLES)
-          {
-            ictest.m_bOKtoSave  = true;
-            ictest.cycleKtr     = 0;
-            ictest.m_n2SPOffset = 0;
-            ctltrace.JigglesPassed++;
-          }
-          ictest.timeKtr          = 0;
-        }
-      }
-    // integral is small or integral is not allowed to run because of low pressure
-    // or when process_CheckProcess stopping during process_CheckProcess is
-    // to keep jiggle test from running in some user processes.  Unfortunatly,
-    // it does not block running during step test.
+    /* If David's original conditions (+Ernie's BiasChangeFlag test) for capturing "good" stable bias
+       are not met, discard any jiggle test; otherwise proceed with Ernie's logic
+    */
+    //      in determining valve movement
+    if( !(  (m_nPosAtStops==NOT_STOP_0) && (m_PosErr.err_abs < HALF_PCT_82) &&
+        (ABS(m_PosErr.err8-m_PosErr.err) < PT3_PCT_49) &&
+        (ABS(m_PosErr.err4-m_PosErr.err) < PT3_PCT_49)
+      && (cstate.BiasChangeFlag != AIR_LOLO_3) ) )
+    {
+        jiggle_Cancel(); //David's conditions are not met
+    }
     else
     {
-      ictest.m_bProbeActive = false;
-      ictest.cycleKtr       = 0;
-      ictest.m_n2SPOffset   = 0;
-      ictest.timeKtr        = 0;
+        s16_least nTemp = (s16_least)GetDetectorIntegralLimit(data->m_pPID->PosComp);
+
+	    //Only run the jiggle test if the integral is allowed to run
+	    //and we have not indicated airloss
+	    // if integral is relatively large and error is relatively small, invoke the detector
+	    if (
+	          (cstate.BiasChangeFlag != AIR_LOLO_3) &&
+	          (!process_CheckProcess()) &&  //lint !e960 process_CheckProcess does not have side effects
+	          (
+	            (ABS(m_BiasData.m_Integral) > nTemp) &&
+	            (ABS((s32)ictest.avgErr) < DETECTOR_AVG_ERROR_THRESH)
+	          )
+	        )
+	    {
+	        ictest.m_bProbeActive = true;
+
+	        // if timeout then restart the detector
+	        if (++ictest.timeKtr >= JIGGLE_TIMEOUT)
+	        {
+	            ictest.cycleKtr       = 0;
+	            ictest.m_n2SPOffset   = 0;
+	            ictest.timeKtr        = 0;
+	        }
+
+	        // error must be zero before we jiggle
+	        if (ictest.avgErr == 0)
+	        {
+	            // jiggle the setpoint a little
+	            ictest.m_n2SPOffset = (ictest.m_n2SPOffset < 0) ? JIGGLE_AMOUNT : -JIGGLE_AMOUNT;
+	            ictest.avgErr     = ictest.m_n2SPOffset;
+	            if (++ictest.cycleKtr >= JIGGLE_CYCLES)
+	            {
+	                bOKtoSave  = true;
+	                ictest.cycleKtr     = 0;
+	                ictest.m_n2SPOffset = 0;
+	                ctltrace.JigglesPassed++;
+	            }
+	            ictest.timeKtr          = 0;
+	        }
+	    }
+	    // integral is small or integral is not allowed to run because of low pressure
+	    // or when process_CheckProcess stopping during process_CheckProcess is
+	    // to keep jiggle test from running in some user processes.  Unfortunatly,
+	    // it does not block running during step test.
+	    else
+	    {
+	        jiggle_Cancel();
+        }
     }
+    return bOKtoSave;
 }
+
+/** \brief Initialize control state variables on entering closed loop mode
+	\param[in] ctlExtData_t *data: a pointer to the data structure that holds control parameters
+*/
+static void control_EnterClosedLoop(const ctlExtData_t *data)
+{
+    //m_BiasData doesn't seem to be affected
+
+    //history control errors
+    m_PosErr.err = 0;   m_PosErr.err1 = 0;  m_PosErr.err2 = 0;
+    m_PosErr.err3 = 0;  m_PosErr.err4 = 0;  m_PosErr.err5 = 0;
+    m_PosErr.err6 = 0;  m_PosErr.err7 = 0;
+
+    /* Rate limits base to current position (needs to be corrected for tight shutoff)
+        varcache.
+            m_n2CSigPosRL
+            m_n2CSigPos
+            m_PosErr.err8
+            m_PosErr.err
+            m_PosErr.err_abs
+
+    */
+    control_ResetRateLimitsLogic();
+    calcSP_Err(data);
+
+    //cstate
+    /* Set cstate.
+        m_n2CSigPos_p
+        i_count
+        LastComputedPosComp
+    */
+    control_ComputePoscomp(data);
+    cstate.m_n2Erf1 = 0; //AK: Well, at least not random.
+
+    /*AK: cstate integral-related flags
+    are quite something. The good news (REVIEW!) is that they are set outside
+    Integral_Control() every control cycle, and have at least I_CALC_LOW/2=5
+    control cycles to set properly because i_count is set to 0 above.
+    The exception is Integral_Previously_Limited to count time to resetting
+    integral. It is only logical to restart saturation window afresh after
+    exiting an open-loop mode.
+    */
+    cstate.Integral_Previously_Limited = false;
+    //and the rest
+    cstate.isBiasLowerLimited = false;
+    cstate.isBiasUpperLimited = false;
+    cstate.m_bActuatorAtLim = false;
+    cstate.isIPLowerLimited = false;
+    cstate.isIPUpperLimited = false;
+
+    /*Makes no sense to continue with any boost existing before an open-loop
+    mode which we are leaving
+    Perhaps it is possible to play with cBoost and nBoostCount to make a more
+    intelligent setting but it's not obvious and not immediately needed
+    */
+    cstate.cBoost = 0;
+
+    /* Error calculations need not span interruption by a period of open-loop
+    mode
+    */
+    cstate.nErrorCount = 0;
+
+#if USE_VALVE_MOVE_ESTIMATE
+    ictest.m_n2Pos_p = (pos_t)m_n4PositionScaled; //need to start somewhere
+#endif
+    //ictest
+    /* Set ictest.
+        m_bProbeActive
+        cycleKtr
+        m_n2SPOffset
+        timeKtr
+    */
+    jiggle_Cancel();
+#if STARTUP_FORCE_JIGGLE_TEST
+    ictest.startup = true; //Larry, what's your take on ictest.startup?
+#endif
+    ictest.avgErr = m_PosErr.err;
+
+    //Other
+    bios_SetBypassSwitch(false);   // bypass pressure loop switch if false: =loop on!
+}
+
 
 #define TIME_REQUIRED_FOR_INTEGRAL_RESET_MS (u32)20000
 
@@ -637,22 +836,22 @@ static void CheckForInControl(const ctlExtData_t *data)
 */
 static void CheckForOvershoot(const ctlExtData_t *data)
 {
-  if (cstate.Integral_Previously_Limited == true)
-  {
-    tick_t time_stopped = timer_GetTicksSince(cstate.Integral_First_Stopped) * TB_MS_PER_TICK;
-    if (time_stopped > TIME_REQUIRED_FOR_INTEGRAL_RESET_MS)
+    if (cstate.Integral_Previously_Limited == true)
     {
-       cstate.m_bActuatorAtLim = true;
-      //Set the actuator fault
-      error_SetFault(FAULT_ACTUATOR);
+        tick_t time_stopped = timer_GetTicksSince(cstate.Integral_First_Stopped) * TB_MS_PER_TICK;
+        if (time_stopped > TIME_REQUIRED_FOR_INTEGRAL_RESET_MS)
+        {
+            cstate.m_bActuatorAtLim = true;
+            //Set the actuator fault
+            error_SetFault(FAULT_ACTUATOR);
+        }
+        else
+        {
+            //Do nothing the flag m_bActuatorAtLim is only reset by the code below that checks for overshoot
+        }
     }
-    else
-    {
-      //Do nothing the flag m_bActuatorAtLim is only reset by the code below that checks for overshoot
-    }
-  }
 
-  if (
+    if (
          ( (!IsSameSign(m_BiasData.m_Integral, (s32)m_PosErr.err)) || (m_BiasData.m_Integral ==0) ) &&
         !process_CheckProcess())            //lint !e960 process_CheckProcess does not have side effects
     {
@@ -688,7 +887,7 @@ static void CheckForOvershoot(const ctlExtData_t *data)
         }
         UNUSED_OK(data);
 
-        u16 newBIAS = (u16)((s32)m_BiasData.BIAS - (amount - m_BiasData.m_Integral));
+        Bias_t newBIAS = m_BiasData.BIAS - (amount - m_BiasData.m_Integral);
         storeMemberInt(&m_BiasData, BIAS, newBIAS);
     }
 }
@@ -700,6 +899,47 @@ static void testIntegralState(void)
 }
 
 
+#if USE_VALVE_MOVE_ESTIMATE
+/** \brief A very rough estimate of whether the valve moved
+\return true iff considered moved
+*/
+static bool_t control_HasValveMoved(void)
+{
+    bool_t m_bValveMove;
+// ep: magic number 15 - fixed in later version
+// AK:Q: Should nPosShift be exactly the same as nGap in control_ContinuousDiagnostics()?
+// DZ: two different applications. keep both for flexibility.  Highly related.  Exactly the same? ?? possible.
+// AK:Q: How is it computed, anyway?
+// DZ: Estimate for noise. A rough estimate.
+
+    //compute estimate of noise in position units
+    pos_t nPosShift = POS_SHIFT + (pos_t)(15u*(MAX_FOR_16BIT/(m_n2PosRange)));
+
+    //compute change in position
+    pos_t nPosChange = (pos_t)ABS(m_n4PositionScaled - ictest.m_n2Pos_p);
+
+    if(nPosChange > nPosShift)     /* noise level */
+    {
+        //position change greater than noise level
+
+        //Set Flag for valve move and reset count
+        m_bValveMove = true;
+
+        //save position as previous
+        ictest.m_n2Pos_p = (pos_t)m_n4PositionScaled;
+    }
+    else
+    {
+        //position change less than noise level
+
+        //reset valve move flag and increment count
+        m_bValveMove = false;
+    }
+    ctltrace.m_bValveMove = m_bValveMove;
+    return m_bValveMove;
+}
+#endif //USE_VALVE_MOVE_ESTIMATE
+
 
 /** \brief This function is internally called to
     /1) calculate position setpoint change and compensate bias for its change
@@ -710,89 +950,19 @@ static void testIntegralState(void)
     it also reset bias change flag when meet certain conditions.
     \param[in] ctlExtData_t *data: a pointer to the data structure that holds control parameters
 */
-
-
 static void airloss_handle(const ctlExtData_t *data)
 {
 // Air loss, hard stop or handwheel causes position errors, which are unable to be removed.
 // That may tend to cause integral windup.  In control, bias is monitered to detect possible windup
 // and stop the integral to prevent the windup if detected. Then waits for recovery.
 
-    s16 nPosChange, nPosShift, nSP_delta, nFull_delta;
-    s16 SpringCompensation;
-    s16 HysterisisCompensation;
-    s16 scaledSetPoint;    //TFS:4011
-
-
-    SpringCompensation = 0;
-    HysterisisCompensation = 0;
-    //TFS:4011 -- Adjust PosComp to the new range, adjusted to the new open stop..
-    scaledSetPoint = (s16)intscale32( (s32)m_n2CSigPos, data->m_pCPS->n4OpenStopAdj, 0, (u8)STANDARD_NUMBITS );
-
-    //calculate the setpoint change from the last setpoint
-    if (m_bATO==true)
-    {
-        nSP_delta = m_n2CSigPos  - cstate.m_n2CSigPos_p;
-        //Note that the "limit" STANDARD_ZERO is not actually a limit
-        //the user can send in signals less than STANDARD_0
-        //TFS:4011    nFull_delta = (m_n2CSigPos  - STANDARD_ZERO);
-        nFull_delta = (scaledSetPoint  - STANDARD_ZERO);
-    }
-    else
-    {
-        nSP_delta = cstate.m_n2CSigPos_p - (m_n2CSigPos  );
-        //Note that the "limit" STANDARD_100 is not actually a limit
-        //the user can send in signals greater than STANDARD_100
-        //TFS:4011    nFull_delta = (STANDARD_100 - m_n2CSigPos);
-        nFull_delta = (STANDARD_100 - scaledSetPoint);
-    }
+    pos_least_t nSP_delta = m_n2CSigPos - cstate.m_n2CSigPos_p;
 
     //These are empirical calculations based on trial and error
     //dont need to do anything for very small steps (below 0.3%) or if PosComp indicates no adjustment
-    if (  (ABS((s32)nSP_delta)    > PT3_PCT_49 ) &&
-          (data->m_pPID->PosComp != COMP_BASE)
-       )
+    if (ABS(nSP_delta) > PT3_PCT_49 )
     {
-
-        if(data->m_pPID->PosComp < COMP_BASE)
-        {
-            //PosComp < COMP_BASE means we need to make an adjustment
-            //PosComp is 1/slope so multiply by setpoint step
-            SpringCompensation = (s16)(nFull_delta/data->m_pPID->PosComp);
-        }
-        else if(data->m_pPID->PosComp < COMP_MAX)
-        {
-            //PosComp is > COMP_BASE - this case is primarily for double acting
-            // correction is -SPChange/(2^N) where N =  COMP_MAX - PosComp
-            if (nFull_delta >= 0)
-            {
-                HysterisisCompensation = -(s16)( ((u16)nFull_delta) >> (COMP_MAX-data->m_pPID->PosComp) );
-            }
-            else
-            {
-                HysterisisCompensation = -(s16)(( (u16)(-nFull_delta)) >> (COMP_MAX-data->m_pPID->PosComp)) ;
-            }
-        }
-        else
-        {
-           //will get here only if PosComp >= COMP_MAX
-            SpringCompensation = 0;
-            HysterisisCompensation = 0;
-        }
-
-        //Add the position based terms
-        cstate.LastComputedPosComp = (s16)( (s32)SpringCompensation + (s32)HysterisisCompensation);
-
-        /* TFS:4011--move up in the function: Adjust PosComp to the new range, adjusted to the new open stop..
-        LastComputedPosComp = (s16)intscale32( (s32)LastComputedPosComp, data->m_pCPS->n4OpenStopAdj,
-                                               0, (u8)STANDARD_NUMBITS );
-        */
-
-        //limit the new bias
-        //save the setpoint as the last setpoint
-        cstate.m_n2CSigPos_p = m_n2CSigPos;
-        // restart the integral timer
-        cstate.i_count = 0;
+        control_ComputePoscomp(data);
     }
 
 /* BIAS AVERAGE and ANTI WINDUP */
@@ -804,107 +974,39 @@ static void airloss_handle(const ctlExtData_t *data)
 
     CheckForOvershoot(data);            // See if overshoot following pneumatic saturation
 
-
-// ep: magic number 15 - fixed in later version
-// AK:Q: Should nPosShift be exactly the same as nGap in control_ContinuousDiagnostics()?
-// DZ: two different applications. keep both for flexibility.  Highly related.  Exactly the same? ?? possible.
-// AK:Q: How is it computed, anyway?
-// DZ: Estimate for noise. A rough estimate.
-// AK:Q: Architecturally, does computing the noise threshold belong here?
-// DZ: It was a small thing and is handy here.  For this I did not have Architecture thing in mind at that time.
-// AK: Future: Would fuzzy logic be better than boolean logic here?
-// DZ: Very well be.
-
-// AK:NOTE: m_bValveMove == (stay_count!=0). Could be a #define or eliminated altogether
-
-    //compute estimate of noise in position units
-    nPosShift = (s16)POS_SHIFT + (s16)(15u*(UINT16_MAX/((u32)m_n2PosRange)));
-
-    //compute change in position
-    nPosChange = (s16)ABS(m_n4PositionScaled - cstate.m_n2Pos_p);
-
-    if(nPosChange > nPosShift)     /* noise level */
+    bool_t bOKtoSave = CheckForInControl(data);        // Jiggle the actuator if necessary
+#if USE_VALVE_MOVE_ESTIMATE
+    bool_t m_bValveMove = control_HasValveMoved();
+    if(m_bValveMove)
     {
-        //position change greater than noise level
-
-        //Set Flag for valve move and reset count
-        m_bValveMove = true;
-        cstate.stay_count = 0;
-
-        //save position as previous
-        cstate.m_n2Pos_p = (s16)m_n4PositionScaled;
+        bOKtoSave = false;
+        jiggle_Cancel();
     }
-    else
-    {
-        //position change less than noise level
+#endif //USE_VALVE_MOVE_ESTIMATE
 
-        //reset valve move flag and increment count
-        m_bValveMove = false;
+    if (bOKtoSave)
+    {
+        storeMemberBool(&ictest, m_bSaveBias, true);
+
+        //Repeated pattern; could be a function
+        storeMemberInt(&m_BiasData, m_Integral, 0); //
+        storeMemberInt(&m_BiasData, Low_Integral_Limit, 0);
+        storeMemberInt(&m_BiasData, High_Integral_Limit, 0);
+
+        cstate.start_count   = START_COUNT_MAX;   //startup mode is done
+
+        cstate.BiasChangeFlag = 0;
+
+        //capture bias average at base, and now let it get rejected if out of range
 #if 0
-        if (cstate.stay_count > STAY_COUNT_MAX)
-        {
-            cstate.stay_count = STAY_COUNT_MAX;
-        }
-        cstate.stay_count++;
+        ictest.BiasAvgAtBase = MAX(m_BiasData.BIAS, BIAS_LOW_LIMIT);
+#else
+        ictest.BiasAvgAtBase = m_BiasData.BIAS;
 #endif
-    }
-
-
-// AK:Q: Should it be in the very end of the function, vs. additional clearing below?
-// DZ: no difference to me
-// AK:Q: Should we set a catch-all FAULT_ACTUATOR if air loss is detected?
-// DZ: if air loss detected, BiasChangeFlag should be set to non-zero.
-
-    CheckForInControl(data);        // Jiggle the actuator if necessary
-
-    /* ERP 3/27/2007 Added AIR_LOLO_3 to the condition below. If the actuator is
-       held near the setpoint by external means when air is lost, the code below
-       could erroneously recompute ictest.BiasAvgAtBase as well as reset BiasChangeFlag
-       to 0. Other non-zero bias states may be cleared by the code below. This
-       is expected.
-    */
-
-    //if the error is small and not changing then get average accuracy to use
-    //      in determining valve movement
-    if(  (m_nPosAtStops==NOT_STOP_0) && (m_PosErr.err_abs < HALF_PCT_82) &&
-        (ABS(m_PosErr.err8-m_PosErr.err) < PT3_PCT_49) &&
-        (ABS(m_PosErr.err4-m_PosErr.err) < PT3_PCT_49)
-      && (cstate.BiasChangeFlag != AIR_LOLO_3) )
-    {
-/// AK:Q: Are STAY_COUNT_LOW, STAY_COUNT_HIGH absolute counts of control cycles or time values measured in control cycles?
-///       What's their meaning and intention?
-// DZ: counts; a way to detect how long valve is not moving much.
-        //STAY_COUNT_HIGH = 900
-
-        if ( ictest.m_bOKtoSave) /// AK:NOTE "5" is now 0.03% STD.
-        {
-            ictest.m_bOKtoSave   = false;
-            ictest.m_bSaveBias   = true;
-
-            //Repeated pattern; could be a function
-            storeMemberInt(&m_BiasData, m_Integral, 0); //
-            storeMemberInt(&m_BiasData, Low_Integral_Limit, 0);
-            storeMemberInt(&m_BiasData, High_Integral_Limit, 0);
-
-            cstate.start_count   = START_COUNT_MAX;   //startup mode is done
-
-            cstate.BiasChangeFlag = 0;
-
-            //error_ClearFault(FAULT_ACTUATOR); /// AK:Q: Can it clear a fault set just above?
-            // DZ: a good question.  Can it???
-
-            //reset bias average at base
-            // No longer use BiasAvg for this.  Just current bias value
-            // If it is wrong the Jiggle mechanism will fix it soon.
-            if(m_BiasData.BIAS > (u16)(BIAS_LOW_LIMIT ))
-            {
-                ictest.BiasAvgAtBase = (u16)(m_BiasData.BIAS);
-            }
-            else
-            {
-                ictest.BiasAvgAtBase = BIAS_LOW_LIMIT;
-            }
-        }
+        /* Strictly speaking, we also need to capture temperature
+        But we believe it won't change much for the crude compensation
+        before we do the compensation at save time.
+        */
     }
 }
 
@@ -919,14 +1021,11 @@ static void airloss_handle(const ctlExtData_t *data)
     It calls function Proportional_Control(data) to calculat Proportional control;
     It calls function IPCurrent_StoreAndOutput(lVal) to output the result;
     \param[in] ctlExtData_t *data: a pointer to the data structure that holds control parameters
+	\return control output
 */
-static void control_PID(const ctlExtData_t *data)
+static s32 control_PID(const ctlExtData_t *data)
 {
     s32 lVal, lErf;
-
-// AK:NOTE: These booleans can and probably should be precomputed
-
-    //set low cost and single acting flags
 
     MN_ASSERT((data->m_pPID!=NULL) && (data->m_pPositionStop!=NULL));
 
@@ -944,25 +1043,11 @@ static void control_PID(const ctlExtData_t *data)
         m_nPosAtStops = NOT_STOP_0;
     }
 
-    //Prime the recursive variables
-    if ((cstate.start_count <= 1) && (m_bRegularControl == true))
+    //regular control means closed loop control
+    airloss_handle(data);
+    if( (mode_GetEffectiveMode(mode_GetMode()) & (MODE_OPERATE|MODE_MANUAL)) !=0U )
     {
-        cstate.m_n2Pos_p = (s16)m_n4PositionScaled;
-        cstate.start_count++;
-    }
-
-    // calc SP and Err
-    calcSP_Err(data);
-    checkAirPressure(data); /// AK:NOTE: Architecturally, this seems to belong to the owner of board pressures. Bias change flag should then look at the faults.
-
-    //regular control means controling on setpoint (manual or signal)
-    if (m_bRegularControl == true)
-    {
-        airloss_handle(data);
-        if( (mode_GetEffectiveMode(mode_GetMode()) & (MODE_OPERATE|MODE_MANUAL)) !=0U )
-        {
-            control_SetPositionErrorFlag(data);
-        }
+        control_SetPositionErrorFlag(data);
     }
 
 
@@ -981,42 +1066,28 @@ static void control_PID(const ctlExtData_t *data)
     }
 
     //I control
-    if ( m_bRegularControl == true )
+    bool_t m_bIControl = IsIControl(data);
+    if(m_bIControl)
     {
-        IsIControl(data);
-        if((m_bIControl == true) )
+        if (cstate.start_count < START_COUNT_MAX)
         {
-            if (cstate.start_count < START_COUNT_MAX)
-            {
-                cstate.start_count++;
-            }
-            m_n2Deriv = 0;
-            Integral_Control(data);
+            cstate.start_count++;
         }
+        m_n2Deriv = 0;
+        Integral_Control(data);
+    }
 #if (CONTROL_CHECKSUM_PROTECT & CONTROL_INTEGRAL_TEST_INTERLEAVE) != 0
-        else
-        {
-            testIntegralState();
-        }
-#endif
-    }
-
-    //P control
-    if (m_bRegularControl == true)
-    {
-        lVal = Proportional_Control(data);
-        // end of addition
-    }
     else
     {
-       //not regular control - no P
-        lVal = 0;
+        testIntegralState();
     }
+#endif
 
-    //set the I/P
+    //P control
+    lVal = Proportional_Control(data, m_bIControl);
     ctltrace.m_IpCurr = lVal;
-    IPCurrent_StoreAndOutput(lVal, data->OutputLim);
 
+    return lVal;
 } //-----  end of control_PID() ------
 
 
@@ -1036,19 +1107,18 @@ static void checkAirPressure(const ctlExtData_t *data)
 
     //Note the function checkAirPressure is called continiously in PID
     //This is required to make sure that these flags are not stale
+#if USE_PILOT_FOR_SUPPLY_THRESHOLD
     Pilot_Low = false;
-    //if (!m_bLCRelay && !error_IsFault(m_bSingleActing ? FAULT_PRESSURE2 : FAULT_PRESSURE3)) //lint !e960 error_IsFault does not have side effects
-    bool_t HaveSupply;
-
+#endif
     const BoardPressure_t *pres = pres_GetRawPressureData();
 
     pres_t m_n2Press_Supply = pres->Pressures[PRESSURE_SUPPLY_INDEX];
-    HaveSupply = m_n2Press_Supply != PRESSURE_INVALID;
+    bool_t HaveSupply = m_n2Press_Supply != PRESSURE_INVALID;
 
     if(HaveSupply)
     {
-        s16 supply_loss_threshold;
-        supply_loss_threshold = data->pPneumaticParams->SupplyLossThreshold_Supply;
+        pres_t supply_loss_threshold = data->pPneumaticParams->SupplyLossThreshold_Supply;
+
         if( m_n2Press_Supply < supply_loss_threshold)  // No air
         {
             cstate.BiasChangeFlag = AIR_LOLO_3;      // air loss
@@ -1068,14 +1138,16 @@ static void checkAirPressure(const ctlExtData_t *data)
     else
     {
 #if 1
-        s16 m_n2Press_IP = pres_GetPressureData()->Pressures[PRESSURE_PILOT_INDEX];
+        pres_t m_n2Press_IP = pres_GetPressureData()->Pressures[PRESSURE_PILOT_INDEX];
 
         if( m_n2Press_IP < data->pPneumaticParams->SupplyLossThreshold_Pilot)
         {
             // SAR 3.3 partial
             cstate.BiasChangeFlag = AIR_LOLO_3;                // air loss
             error_SetFault(FAULT_AIR_SUPPLY_LOW);
+#if USE_PILOT_FOR_SUPPLY_THRESHOLD
             Pilot_Low = true;
+#endif
         }
         else
         {
@@ -1157,10 +1229,6 @@ static bool_t isOutputAtLimit(const ctlExtData_t *data)
 {
     bool_t  isActuatorFaultPresent;
     bool_t  result;
-    s32 pilot_low_limit;
-    s32 pilot_high_limit;
-    s16 pilot;
-    u8  pilot_limit, pressure_limit, count_limit;
     s16 diffLimit;
 
     bool_t  exhausting = IS_EXHAUSTING();       // true if reducing I/P current
@@ -1170,24 +1238,25 @@ static bool_t isOutputAtLimit(const ctlExtData_t *data)
     /*Get pointer to pressures (raw_pressures are compensated, but they don't
     include user calibration */
 
-    const s16 * raw_pressures = pres_GetRawPressureData()->Pressures;
+    const pres_t * raw_pressures = pres_GetRawPressureData()->Pressures;
 
     /* Initilize limits to false */
     result = false;
-    pilot_limit = LIMIT_INACTIVE;
-    pressure_limit = LIMIT_INACTIVE;
-    count_limit = LIMIT_INACTIVE;
+
+    //trace only!
+    u8 pilot_limit = LIMIT_INACTIVE;
+    u8 pressure_limit = LIMIT_INACTIVE;
+    u8 count_limit = LIMIT_INACTIVE;
 
     /*Read Pilot pressure*/
-    pilot = raw_pressures[PRESSURE_PILOT_INDEX];
+    pres_t pilot = raw_pressures[PRESSURE_PILOT_INDEX];
     /*Check if Pilot pressure is not faulty, note that this test is currently redundant
     as a pilot pressure fault would put the system in
     failsafe */
 
-    pilot_low_limit = data->pPneumaticParams->presLimitsPilot.presLimit[Xlow];
-    pilot_high_limit = data->pPneumaticParams->presLimitsPilot.presLimit[Xhi];
+    pres_least_t pilot_low_limit = data->pPneumaticParams->presLimitsPilot.presLimit[Xlow];
+    pres_least_t pilot_high_limit = data->pPneumaticParams->presLimitsPilot.presLimit[Xhi];
 
-    //if (error_IsFault(FAULT_PRESSURE4) == false )
     if (pilot != PRESSURE_INVALID)
     {
         /*Check the exhausting direction */
@@ -1232,13 +1301,12 @@ static bool_t isOutputAtLimit(const ctlExtData_t *data)
     }
     // Establish method for determining saturation.  Use pilot pressure if LowCost
     // or if any of the needed pressure sensors are deemed faulty.
-    const BoardPressure_t *pres = pres_GetRawPressureData();
 
     if(
-       (pres->Pressures[PRESSURE_SUPPLY_INDEX] == PRESSURE_INVALID) ||
-       (pres->Pressures[PRESSURE_ACT1_INDEX] == PRESSURE_INVALID) ||
+       (raw_pressures[PRESSURE_SUPPLY_INDEX] == PRESSURE_INVALID) ||
+       (raw_pressures[PRESSURE_ACT1_INDEX] == PRESSURE_INVALID) ||
        ((data->pPneumaticParams->SingleActing == 0) &&
-            (pres->Pressures[PRESSURE_ACT2_INDEX] == PRESSURE_INVALID)
+            (raw_pressures[PRESSURE_ACT2_INDEX] == PRESSURE_INVALID)
        )
       )
     {
@@ -1249,14 +1317,12 @@ static bool_t isOutputAtLimit(const ctlExtData_t *data)
         isActuatorFaultPresent = false;
     }
 
-    if ( isActuatorFaultPresent == false )
+    if ( !isActuatorFaultPresent )
     {
-        s16     actuatorLimit, mainPressure;
-
         // compare with  cycle_GetSupplyPressure();
-        actuatorLimit  = raw_pressures[PRESSURE_SUPPLY_INDEX];
+        pres_t actuatorLimit  = raw_pressures[PRESSURE_SUPPLY_INDEX];
         actuatorLimit -= ACTUATOR_TO_SUPPLY_PRESS_TOLERANCE(actuatorLimit);
-        mainPressure   = raw_pressures[PRESSURE_MAIN_INDEX];       // ACT1 for SA; ACT1 - ACT2 for DA
+        pres_t mainPressure   = raw_pressures[PRESSURE_MAIN_INDEX];       // ACT1 for SA; ACT1 - ACT2 for DA
 
         // single acting && sensors OK
         if (data->pPneumaticParams->SingleActing != 0)
@@ -1369,11 +1435,14 @@ static bool_t isOutputAtLimit(const ctlExtData_t *data)
         {
             /* This test for limit is not active, no need to do anything */
         }
+#if USE_PILOT_FOR_SUPPLY_THRESHOLD
         /* Test for low pilot pressure when filling */
-        if (Pilot_Low == true)
+        if (Pilot_Low)
         {
+            // SAR 3.3 partial
             result = true;
         }
+#endif //USE_PILOT_FOR_SUPPLY_THRESHOLD
     }
     else
     {
@@ -1397,7 +1466,39 @@ static bool_t isOutputAtLimit(const ctlExtData_t *data)
             /* This test for limit is not active, no need to do anything */
         }
     }
-    if ( Air_Low_Limit == true )
+    //This code is moved here from IsIControl
+    //Implements Version 6.0 SAR3.4 through BiasChangeFlag = 3
+    // SAR 3.3 partial
+    bool_t Air_Low_Limit = false;
+    if (/* (m_bIControl == true) && */ (cstate.BiasChangeFlag != 0) )
+    {
+        if (cstate.BiasChangeFlag == AIR_LOLO_3)
+        {
+            if (!IS_EXHAUSTING())
+            {
+                //This path handles SAR 3.5
+                // SAR 3.3 partial
+                Air_Low_Limit = true;
+            }
+            else
+            {
+                //Do nothing if we are trying to empty
+                //we should not limit the integral just because
+                //we have low supply pressure, since the unit
+                //can exhaust
+            }
+        }
+        else
+        {
+             //This branch used to set m_bIControl = false for
+             //other BiasChangeFlags there are no other non zero flags
+             //so no need for this branch
+        }
+
+    }
+    ctltrace.Air_Low_Limit = Air_Low_Limit;
+
+    if ( Air_Low_Limit )
     {
          // SAR 3.3 partial
          result = true;
@@ -1423,11 +1524,12 @@ static bool_t isOutputAtLimit(const ctlExtData_t *data)
 
     \param[in] data - a pointer to the data structure that holds position limits
 */
-static void IsIControl(const ctlExtData_t *data)
+static bool_t IsIControl(const ctlExtData_t *data)
 {
     s16 nTemp2;
     bool_t bMoving_I;
 
+    bool_t m_bIControl; //flag of integral control enabled
     if(  ( (m_n4PositionScaled <  data->m_pCPS->ExtraPosLow) &&
            (m_n2CSigPos        <= m_n4PositionScaled) ) ||
          ( (m_n4PositionScaled >  data->m_pCPS->ExtraPosHigh) &&
@@ -1497,12 +1599,14 @@ static void IsIControl(const ctlExtData_t *data)
             // if SA turn off integral
             if (data->pPneumaticParams->SingleActing != 0)
             {
+                //REQ 35-5 disable integral control on single acting when I<2
                 m_bIControl = false;  // m_bIControl = m_bIControl;  temporay!!! to avoid noise
             }
             // if DA to avoid limit cycling if DA
             else  // double acting
             {
                //this is to avoid limit cycling which sometimes occurs with error in this range
+                //REQ 35-6, REQ 35-7, REQ 35-8, REQ 35-9 partially disable integral for double acting
                 if( (m_PosErr.err_abs > TWO_PCT_328) ||
                     (m_PosErr.err_abs < ONE_PCT_164) ||
                     (m_PosErr.err_abs < ABS((s32)m_PosErr.err8)) )
@@ -1513,35 +1617,8 @@ static void IsIControl(const ctlExtData_t *data)
         }
     }
 
-    //Implements Version 6.0 SAR3.4 through BiasChangeFlag = 3
-    // SAR 3.3 partial
-    Air_Low_Limit = false;
-    if ( (m_bIControl == true) && (cstate.BiasChangeFlag != 0) )
-    {
-        if (cstate.BiasChangeFlag == AIR_LOLO_3)
-        {
-            if (!IS_EXHAUSTING())
-            {
-                //This path handles SAR 3.5
-                // SAR 3.3 partial
-                Air_Low_Limit = true;
-            }
-            else
-            {
-                //Do nothing if we are trying to empty
-                //we should not limit the integral just because
-                //we have low supply pressure, since the unit
-                //can exhaust
-            }
-        }
-        else
-        {
-             //This branch used to set m_bIControl = false for
-             //other BiasChangeFlags there are no other non zero flags
-             //so no need for this branch
-        }
-
-    }
+    ctltrace.m_bIControl = m_bIControl;
+    return m_bIControl;
 }
 
 /**
@@ -1555,7 +1632,7 @@ static void IsIControl(const ctlExtData_t *data)
 
      Proportional_Control() includes D control via the m_n2Deriv term
 */
-static s32 Proportional_Control(const ctlExtData_t *data)
+static s32 Proportional_Control(const ctlExtData_t *data, bool_t m_bIControl)
 {
     s16 nZdead;             // dead area (zdead+offset) where boost is not applied
     u16 nBand;              // working copy of PID->Band which is a function of supply pressure
@@ -1615,6 +1692,10 @@ static s32 Proportional_Control(const ctlExtData_t *data)
         }
     }
 
+	// boost is mainly used to overcome the flat spot of the pneumatic relay
+	// The deadband is empirically derived from supply pressure.
+    //      Boost is calculated at self tuning but not again after
+    //      even if supply pressure changes
 
     // finalize selected boost coefficients based on configured relay type
     boostCoeff = &data->pPneumaticParams->boostCoeff;
@@ -1761,7 +1842,6 @@ static s32 Proportional_Control(const ctlExtData_t *data)
             // if computed output greater than deadband+offset, apply boost 1 and set boost state 1
             else if(lVal > (nZdead+nOffset) )    // +/- 800/(m_pPID->PositionCompensation-5)
             {
-                //lVal += boostCoeff->boosthigh * nBand;
                 lVal += boostCoeff->boost[Xhi] * nBand;
                 cstate.cBoost = 1;
             }
@@ -1769,7 +1849,6 @@ static s32 Proportional_Control(const ctlExtData_t *data)
             // if computed output greater than deadband/2, apply boost 2 and set boost state 1
             else if(lVal > (nZdead/2))
             {
-                //lVal += boostCoeff->boostlow * nBand;
                 lVal += boostCoeff->boost[Xlow] * nBand;
                 cstate.cBoost = 1;
             }
@@ -1791,8 +1870,15 @@ static s32 Proportional_Control(const ctlExtData_t *data)
         cstate.nBoostCount = BOOST_COUNT_HIGH;
 
         // main proportional output calculation with P and D terms
-        lKp2 = lKp + (((s32)data->m_pPID->PAdjust*lKp)/(s32)data->m_pPID->P);
-    //TFS:3520, TFS:3596 -- separate terms P, D and Boost
+        if(data->m_pPID->P == 0)
+        {
+            lKp2 = 0;
+        }
+        else
+        {
+            lKp2 = lKp + (((s32)data->m_pPID->PAdjust*lKp)/(s32)data->m_pPID->P);
+        }
+        //TFS:3520, TFS:3596 -- separate terms P, D and Boost
         PTerm = (lKp2 * m_n2Err_p) / P_CALC_SCALE;
         DTerm = (lKp * m_n2Deriv) / D_CALC_SCALE;
         lVal = PTerm + DTerm;
@@ -1946,9 +2032,6 @@ static void control_SetPositionErrorFlag(const ctlExtData_t *data)
 
 
 
-// end  Stolen from ESD
-
-
 
 /**
      DZ: 8/22/06
@@ -1965,11 +2048,11 @@ static void Integral_Control(const ctlExtData_t *data)
    //note:  if error is large or small, don't apply too much integral
    //       in the middle, apply more integral
     s16 nCalcFreq,              //number of cycles to skip until doing integral
-        out_I,                  // computed output value added to bias
         nLimit,
         nTinC;
     s32 lVal, pVal;
     bool_t integral_stopped;
+    Bias_t out_I;                  // computed output value added to bias
 
     cstate.i_count++;                  // count of control cycles since last computed integral
 
@@ -2238,16 +2321,16 @@ static void Integral_Control(const ctlExtData_t *data)
 
             // out_I is the final contribution of Integral at this moment
             // compute new bias value
-            lVal = (s32)m_BiasData.BIAS;
-            pVal = (s32)m_BiasData.BIAS + (s32)out_I;
+            lVal = m_BiasData.BIAS;
+            pVal = m_BiasData.BIAS + out_I;
             cstate.isBiasUpperLimited = false;
             cstate.isBiasLowerLimited = false;
 
-            u16 newBIAS;
+            Bias_t newBIAS;
             // limit new bias value
-            if(pVal > ((s32)BIAS_HIGH_LIMIT - (s32)cstate.LastComputedPosComp))
+            if(pVal > (BIAS_HIGH_LIMIT - cstate.LastComputedPosComp))
             {
-                newBIAS = (u16)((s32)BIAS_HIGH_LIMIT -(s32)cstate.LastComputedPosComp);
+                newBIAS = BIAS_HIGH_LIMIT - cstate.LastComputedPosComp;
                 cstate.isBiasUpperLimited = true;
                 // this allows us to integrate away from the limit
                 if (out_I < 0 )
@@ -2256,12 +2339,12 @@ static void Integral_Control(const ctlExtData_t *data)
                     //note abs(out_I )<500 so we don't have to check this against limits
                     //also the code for checking it is remarkably complex however if
                     //change the code marked NLIMIT Calc we must revisit this
-                    newBIAS = (u16)(newBIAS + out_I);
+                    newBIAS = newBIAS + out_I;
                 }
             }
-            else if(pVal < ((s32)BIAS_LOW_LIMIT -(s32)cstate.LastComputedPosComp))
+            else if(pVal < (BIAS_LOW_LIMIT - cstate.LastComputedPosComp))
             {
-                newBIAS = (u16)((s32)BIAS_LOW_LIMIT -(s32)cstate.LastComputedPosComp);
+                newBIAS = BIAS_LOW_LIMIT - cstate.LastComputedPosComp;
                 cstate.isBiasLowerLimited = true;
                 // this allows us to integrate away from the limit
                 if (out_I > 0 )
@@ -2270,17 +2353,17 @@ static void Integral_Control(const ctlExtData_t *data)
                     //note abs(out_I )<500 so we don't have to check this against limits
                     //also the code for checking it is remarkably complex however if
                     //change the code marked NLIMIT Calc we must revisit this
-                    newBIAS = (u16)(newBIAS + out_I);
+                    newBIAS = newBIAS + out_I;
                 }
             }
             else
             {
-                newBIAS = (u16)pVal;
+                newBIAS = pVal;
                //**** may need to be limited - look in air loss handler to see if it is limited
 
             }
             storeMemberInt(&m_BiasData, BIAS, newBIAS);
-            s32 newIntegral = m_BiasData.m_Integral - (lVal - (s32)m_BiasData.BIAS);
+            s32 newIntegral = m_BiasData.m_Integral - (lVal - m_BiasData.BIAS);
             storeMemberInt(&m_BiasData, m_Integral, newIntegral);
         }
     }
@@ -2297,72 +2380,43 @@ static void Integral_Control(const ctlExtData_t *data)
      DZ: 8/22/06
     \brief This function is internally called each cycle to prepare for control. This is called before
       control_PID(data) is called
-     When the counter start_count == 0, manual setpoint m_n4ManualPos is initialized to valve position.
      Hard stop positions are initialized.
     m_bRegularControl and setpoint m_n4Setpoint are determined in this function.
 
     \param[in] data: a pointer to the data structure that holds position limits
+    \return true iff closed-loop control
 */
-static void control_Prepare(const ctlExtData_t *data)
+static bool_t control_Prepare(const ctlExtData_t *data)
 {
-
     if(data->OutputLim <= MIN_DA_VALUE)
     {
         control_ResetRateLimitsLogic();
     }
     control_RateLimitsGuard();
 
-    m_n1ControlMode = mode_GetEffectiveControlMode(&m_n4Setpoint);
-    // if first time after reset, establish some initial conditions
-    if (cstate.start_count == 0)
-    {
-        /* startup */
-        cstate.m_n2CSigPos_p = m_bATO ? 0 : (data->m_pCPS->ExtraPosHigh + THREE_PCT_491);
-        cstate.start_count++;
-    }
-
-    // if control mode is some diagnostic vakue, turn off most of contol calculations
-    if ( (m_n1ControlMode == CONTROL_IPOUT_LOW) ||
-         (m_n1ControlMode == CONTROL_IPOUT_HIGH) ||
-         (m_n1ControlMode == CONTROL_IPOUT_HIGH_FACTORY) ||
-         (m_n1ControlMode == CONTROL_IP_DIAGNOSTIC) ||
-         (m_n1ControlMode == CONTROL_OFF) ||
-         (data->OutputLim <= MIN_DA_VALUE) )
-    {
-        m_bRegularControl = false;
-    }
-    else
-    {
-        m_bRegularControl = true;
-    }
-
+    ctlmode_t m_n1ControlMode = mode_GetEffectiveControlMode(&m_n4Setpoint);
+    bool_t m_bRegularControl = control_IsModeClosedLoop(m_n1ControlMode);
     bool_t m_bShutZone = cutoff_Eval(m_bRegularControl);
 
     if(m_bShutZone)
     {
         m_bRegularControl = false;
     }
-    //cstate.m_bShutZone = m_bShutZone; //need for output control for now
+    cstate.m_bShutZone = m_bShutZone; //need for output control for now
 
-    // determine active setpoint based on control mode
-    if (m_n1ControlMode == CONTROL_MANUAL_POS)
-    {
-        //closed-loop mode
-        //m_n4Setpoint = mode_GuardSetpoint(m_DeviceMode, m_n1ControlMode, m_n4ManualPos);
-    }
-    else
-    {
-        if ( (m_n1ControlMode == CONTROL_IPOUT_LOW) ||
-            (m_n1ControlMode == CONTROL_IPOUT_HIGH) ||
-            (m_n1ControlMode == CONTROL_IPOUT_HIGH_FACTORY) ||
-            (m_n1ControlMode == CONTROL_OFF) )
-        {
-                cstate.i_count = 0;                    // reset integral interval counter
-        }
-    }
+	if(m_bRegularControl && !cstate.m_bRegularControl)
+	{
+		//Entering closed-loop for the first time
+        control_EnterClosedLoop(data);
+	}
+    cstate.m_bRegularControl = m_bRegularControl;
+	cstate.m_n1ControlMode = m_n1ControlMode;
+
+    return m_bRegularControl;
 }
 
 /* -------------------------------------------------------- */
+
 
 /**
      DZ: 8/22/06
@@ -2372,7 +2426,7 @@ static void control_Prepare(const ctlExtData_t *data)
     \param[in] nGap - noise estimation used to determine if valve is closed.
 */
 
-static void increments(s16 nGap)
+static void increments(s32 nGap)
 {
     Diagnos_t ValvePosition;
     ContinuousDiagnostics_t cd;
@@ -2451,62 +2505,60 @@ static void increments(s16 nGap)
 */
 void control_ContinuousDiagnostics(void)
 {
-    u16 ndiff, nGap;
+    pos_least_t ndiff, nGap;
 
-    //first time through, initialize m_n4PositionScaled_1 to the current position
-    if(m_n4PositionScaled_1 == NOT_INITIALIZED)
+    /* Intermediate Calculations for Counters */
+
+    // change since last movement
+    pos_least_t PositionScaled = m_n4PositionScaled; //take a snapshot
+
+    ndiff = ABS(PositionScaled - m_n4PositionScaled_1);
+
+    /// AK:Q: Should nPosShift in airloss_handle() be exactly the same as nGap? (See also questions there)
+    // DZ: Not necessary for flexibility for different cases.
+
+    // compute noise threshold to determine if valve has moved
+    nGap = (NOISE_RATIO*UINT16_MAX)/m_n2PosRange; //AK: change of order is a better resolution
+    nGap = nGap + (NOISE/2);
+
+    // if has moved
+    if(ndiff > nGap)     /* noise level */
     {
-        m_n4PositionScaled_1 = m_n4PositionScaled;
+        /* Travel Accumulator */
+        m_nTravelAccum += ndiff;
+
+        /* Valve cycles Counter */
+        bool_t direction = m_n4PositionScaled < m_n4PositionScaled_1; //true if down
+        if( !equiv(direction, m_nDirection))
+        {
+            m_ContinuousDiagnostics.CyclesCntr += 1u;
+            m_nDirection = direction;
+        }
+
+        // new value for last movement
+        m_n4PositionScaled_1 = PositionScaled;
+    }
+    /* Valve Travel */
+    // if cumulative travel is full stroke or more, count a stroke
+    if(m_nTravelAccum >= STANDARD_RANGE)     /* equal to full close to full opening = 16384 */
+    {
+        m_ContinuousDiagnostics.TotalTravelCntr += 1u;
+        m_nTravelAccum -= STANDARD_RANGE;
+    }
+
+    /* Time Counter incrementation */
+    increments(nGap);
+
+    // check current bias value and set fault if outside of alarm limits
+    Bias_t steady_state_output = m_BiasData.BIAS + cstate.LastComputedPosComp;
+    if( (steady_state_output < BIAS_ALARM_LOW_LIMIT) || (steady_state_output > BIAS_ALARM_HIGH_LIMIT))
+    {
+        error_SetFault(FAULT_BIAS_OUT_OF_RANGE);
     }
     else
     {
-        /* Intermediate Calculations for Counters */
-
-        // change since last movement
-        ndiff = (u16)ABS(m_n4PositionScaled - m_n4PositionScaled_1);
-
-        /// AK:Q: Should nPosShift in airloss_handle() be exactly the same as nGap? (See also questions there)
-        // DZ: Not necessary for flexibility for different cases.
-
-        // compute noise threshold to determine if valve has moved
-        nGap = (u16)(NOISE_RATIO*(UINT16_MAX/(u32)m_n2PosRange));
-        nGap = nGap + ((u16)NOISE>>1);
-
-        // if has moved
-        if(ndiff > nGap)     /* noise level */
-        {
-            /* Travel Accumulator */
-            m_nTravelAccum += (s16)ndiff;
-
-            /* Valve cycles Counter */
-            bool_t direction = m_n4PositionScaled < m_n4PositionScaled_1; //true if down
-            if( !equiv(direction, m_nDirection))
-            {
-                m_ContinuousDiagnostics.CyclesCntr += 1u;
-                m_nDirection = direction;
-            }
-
-            // new value for last movement
-            m_n4PositionScaled_1 = m_n4PositionScaled;
-        }
-        /* Valve Travel */
-        // if cumulative travel is full stroke or more, count a stroke
-        if(m_nTravelAccum >= STANDARD_RANGE)     /* equal to full close to full opening = 16384 */
-        {
-            m_ContinuousDiagnostics.TotalTravelCntr += 1u;
-            m_nTravelAccum -= STANDARD_RANGE;
-        }
-
-        /* Time Counter incrementation (this doesn't rely on m_n4PositionScaled_1) */
-        increments((s16)nGap);
-    }
-
-    //see if we can clear the bias alarms
-    if( !(((u32)m_BiasData.BIAS < BIAS_ALARM_LOW_LIMIT) || ((u32)m_BiasData.BIAS > BIAS_ALARM_HIGH_LIMIT)))
-    {
         error_ClearFault(FAULT_BIAS_OUT_OF_RANGE);
     }
-
 
 }
 
@@ -2531,7 +2583,7 @@ static void control_InitContinuousDiagnostics(void)
 {
     m_nDirection = false; //meaning up by default
     /* time_lowpwr = (u16)bios_GetTimer0Ticker(); */
-    m_n4PositionScaled_1 = NOT_INITIALIZED; //begin new life
+    m_n4PositionScaled_1 = m_n4PositionScaled; //begin new life
 }
 
 
@@ -2596,63 +2648,56 @@ const PosErr_t*  control_GetPosErr(void)
 */
 void control_CheckSaveBias(void)
 {
-    s16 nTemp, nTinC;
-    u16 //uiBiasDiff,
-        uiBiasNew;
+    //In case we need them in the critical section, precompute
+    s16_least nTinC = tempr_GetInstantTempr(TEMPR_MAINBOARD)/100;       // compute temperature in degrees C
+#if USE_BIAS_TEMPR_ADJ_T_LOW_T_HIGH //as in David's initialization
+    // limit the temperature to -20 .. +70 degrees C
+    nTinC = CLAMP(nTinC, T_LOW, T_HIGH);
+#else //as in David's save
+    // if temperature is less than 25 C, scale the bias
+    nTinC = MIN(nTinC, T_BASE);
+#endif
+    s16_least nTemp = (s16_least)(m_BiasExt.nBiasTempCoef*(T_BASE-nTinC));
+    Bias_t uiBiasNew = (s32)ictest.BiasAvgAtBase + nTemp;
 
-    bool_t save = false;
+    Struct_Test(BiasExt_t, &m_BiasExt);
 
-    //In case we need them in the critical section
-    nTinC = tempr_GetInstantTempr(TEMPR_MAINBOARD)/100;       // compute temperature in degrees C
+    bool_t save = false; //do we really want to crawl the bias?
 
-    // check current bias value and set fault if outside of alarm limits
-    if( ((u32)m_BiasData.BIAS < BIAS_ALARM_LOW_LIMIT) || ((u32)m_BiasData.BIAS > BIAS_ALARM_HIGH_LIMIT))
+    /* We don't care to check valve conditions: All we do is a deferred write of
+    previosly captured bias.
+    */
+    if (ictest.m_bSaveBias)
     {
-        error_SetFault(FAULT_BIAS_OUT_OF_RANGE);
-    }
+        // need a time-coherent snapshot - this code runs in Process context
+        MN_ENTER_CRITICAL();
 
-    // need a time-coherent snapshot - this code runs in Process context
-    MN_ENTER_CRITICAL();
+            storeMemberBool(&ictest, m_bSaveBias, false);
 
-        // if we are at the upper/lower stop, the valve is moving or there is significant positon error
-        //  then don;t save the bias, just get out of here
-        if ( (m_nPosAtStops > NOT_STOP_0) || (m_bValveMove == true) || (m_PosErr.err_abs > ONE_PCT_164) )
-        {   // Valve position not at limits (1%) and err lower than 1%
-            // return;
-        }
-        else
-        {
-            if (ictest.m_bSaveBias)
-            {
-                storeMemberBool(&ictest, m_bSaveBias, false);
-                /* BIAS is stable */
 
-                // if temperature is less than 25 C, scale the bias
-                if (nTinC < T_BASE)             // 25 C
+            // if computed (scaled) bias is significantly different from saved bias,
+            //  change bias structure and set the save flag
+            if( (m_NVMEMBiasData.BiasSaved > (uiBiasNew + m_BiasExt.uiBiasShift) ) ||
+                (m_NVMEMBiasData.BiasSaved < (uiBiasNew - m_BiasExt.uiBiasShift) ) )
+            {   /* Test the Bias drift since the last record */
+
+                /* Reject outlandish biases
+                */
+                //Bias_t steady_state_output = uiBiasNew + ictest.poscomp; //at the time of save
+                if( (uiBiasNew < BIAS_LOW_LIMIT) || (uiBiasNew > BIAS_HIGH_LIMIT) )
                 {
-                    nTemp = (s16)(m_BiasExt.nBiasTempCoef*(T_BASE-nTinC));
-                    uiBiasNew = (u16)((s32)ictest.BiasAvgAtBase + nTemp);
+                    ctltrace.BiasesRejected++;
                 }
                 else
                 {
-                    uiBiasNew = ictest.BiasAvgAtBase;
-                }
-
-                Struct_Test(BiasExt_t, &m_BiasExt);
-
-                // if computed (scaled) bias is significantly different from saved bias,
-                //  change bias structure and set the save flag
-                if( (m_NVMEMBiasData.BiasSaved > (uiBiasNew + m_BiasExt.uiBiasShift) ) ||
-                    (m_NVMEMBiasData.BiasSaved < (uiBiasNew - m_BiasExt.uiBiasShift) ) )
-                {   /* Test the Bias drift since the last record */
-                    storeMemberInt(&m_NVMEMBiasData, BiasSaved, uiBiasNew);
+                    storeMemberInt(&m_NVMEMBiasData, BiasSaved, (u16)uiBiasNew);
                     save = true;
                 }
             }
-        }
-    MN_EXIT_CRITICAL();
+        MN_EXIT_CRITICAL();
+    }
 
-    // if th esave flag was set above, save the bias to FRAM now
+    // if the save flag was set above, save the bias to FRAM now
     if(save)
     {
 #ifdef OLD_NVRAM
@@ -2666,70 +2711,87 @@ void control_CheckSaveBias(void)
 #else
         (void)ram2nvramAtomic(NVRAMID_BiasData);
 #endif //OLD_NVRAM
+        ctltrace.BiasesSaved++;
     }
 }
 
-static void control_RunOnce(void)
+/** \brief Completes reset initialization using previous system init
+    including NVMEM data and input variables (A/D)
+*/
+static void control_PostInit(const ctlExtData_t *data)
 {
-    s16 nTemp, nTinC;
-
-    m_BiasData.BIAS = m_NVMEMBiasData.BiasSaved; //other members are fine with default 0s (review!)
-
-    // now begin the intitial bias computation based on the value saved in FRAM
-    // if the saved vlue is out of range, use the default
-    if( (m_NVMEMBiasData.BiasSaved < (u16)(BIAS_LOW_LIMIT + BIAS_MARGIN_LO)) ||
-        (m_BiasData.BIAS > (u16)(BIAS_HIGH_LIMIT - BIAS_MARGIN_HI)) )
-    {
-        m_BiasData.BIAS = BIAS_DEFAULT;
-    }
+    // Compute the intitial bias based on the value saved in FRAM
 
     // compute the current board temperature
-    nTinC = tempr_GetInstantTempr(TEMPR_MAINBOARD)/100;       // compute temperature in degrees C
-
+    tempr_fast_t nTinC = tempr_GetInstantTempr(TEMPR_MAINBOARD)/100;       // compute temperature in degrees C
+#if USE_BIAS_TEMPR_ADJ_T_LOW_T_HIGH //as in David's initialization
     // limit the temperature to -20 .. +70 degrees C
     nTinC = CLAMP(nTinC, T_LOW, T_HIGH);
-
-    // nTemp = (s16)((m_BiasExt.nBiasTempCoef*(T_BASE-nTinC))-m_BiasExt.nBiasAdd);    //nBiasAdd=-500
-
+#else //as in David's save
+    // if temperature is less than 25 C, scale the bias
+    nTinC = MIN(nTinC, T_BASE);
+#endif
 
     // compute bias adjustment from coefficient and limited board temperature
-    nTemp = (s16)(m_BiasExt.nBiasTempCoef*(T_BASE-nTinC));
+    Bias_t nTemp = (m_BiasExt.nBiasTempCoef*(T_BASE-nTinC));
 
-    // if not warmstart (in-place reset) deduct [500] from the adjustment
-    // this is to prevent unwanted opening of the valve on startup
-    if (reset_IsWarmstart()==false)
+    /* if not warmstart (in-place reset) deduct [500] from the adjustment
+         this is to prevent unwanted opening of the valve on startup.
+        The "opening" assumes ATO, else it is closing and we don't what this.
+    */
+    if (!reset_IsWarmstart())
     {
-        nTemp -= m_BiasExt.nBiasAdd;   //nBiasAdd=-500
+        if(m_bATO)
+        {
+            nTemp -= m_BiasExt.nBiasAdd;   //nBiasAdd=-500
+        }
     }
 
     // limit the bias adjustment value
     nTemp = CLAMP(nTemp, BIAS_CHANGE_LO, BIAS_CHANGE_HI);
 
-    if( m_BiasData.BIAS > (u16)((s32)BIAS_LOW_LIMIT + nTemp) )
+    Bias_t bias = (Bias_t)m_NVMEMBiasData.BiasSaved;
+
+    // if the saved value is out of range, use the default
+    if( (bias < (BIAS_LOW_LIMIT + BIAS_MARGIN_LO)) ||
+        (bias > (BIAS_HIGH_LIMIT - BIAS_MARGIN_HI)) )
     {
-        m_BiasData.BIAS = (u16)((s32)m_BiasData.BIAS - nTemp);
+        bias = BIAS_DEFAULT;
     }
 
+    if( bias > (BIAS_LOW_LIMIT + nTemp) )
+    {
+        bias = bias - nTemp;
+    }
+	//TODO: more likely that bias = MAX(BIAS_LOW_LIMIT, bias - nTemp; was intended
 
-    ictest.BiasAvgAtBase = m_BiasData.BIAS;
+    m_BiasData.BIAS = bias;
+    ictest.BiasAvgAtBase = bias;
     PIDOut = ictest.BiasAvgAtBase;
     cstate.BiasChangeFlag = 0;
     // finished adjusting the bias
 
-    m_bValveMove = false;
-    cstate.i_count = 0;      cstate.start_count = 0;
-    cstate.stay_count = 0;
-    m_PosErr.err = 0;   m_PosErr.err1 = 0;  m_PosErr.err2 = 0;
-    m_PosErr.err3 = 0;  m_PosErr.err4 = 0;  m_PosErr.err5 = 0;
-    m_PosErr.err6 = 0;  m_PosErr.err7 = 0;  m_PosErr.err8 = 0;
-    cstate.m_n2Erf1 = 0;
-    bios_SetBypassSwitch(false);   // bypass pressure loop switch if false: =loop on!
+    cstate.start_count = 0;
 
     STRUCT_CLOSE(ControlState_t, &cstate);
     STRUCT_CLOSE(InControlTest_t, &ictest);
     STRUCT_CLOSE(BiasData_t, &m_NVMEMBiasData);
 
     STRUCT_CLOSE(IntegralState_t, &m_BiasData);
+
+
+    /* Here is the stuff that logically doesn't belong here
+    but is needed because of criss-cross module interfaces
+    */
+    m_n4PositionScaled = vpos_GetScaledPosition();
+    m_n4Setpoint = m_n4PositionScaled; //init setpoint; OK to overwrite
+    cstate.m_n2CSigPos_p = m_bATO ? 0 : (data->m_pCPS->ExtraPosHigh + THREE_PCT_491); //David's value
+
+    control_EnterClosedLoop(data);
+
+    bias += cstate.LastComputedPosComp; //steady-state output init
+    PIDOut = (u16)CLAMP(bias, 0, UINT16_MAX);
+
 }
 
 #ifdef OLD_NVRAM
@@ -2764,9 +2826,17 @@ void  control_InitControlData(InitType_t Type)
         m_BiasExt  = def_BiasExt;
         STRUCT_CLOSE(BiasExt_t, &m_BiasExt);
         m_BiasData.BIAS = m_NVMEMBiasData.BiasSaved;
-        m_NVMEMBiasData.BiasSaved = BIAS_LOW_LIMIT;
     }
 
+    /* if the saved bias value is out of range, use the default.
+        This is a crutch for the gullible ancient NVRAM taking everything for face value.
+    */
+    if( (m_NVMEMBiasData.BiasSaved < (u16)(BIAS_LOW_LIMIT + BIAS_MARGIN_LO)) ||
+        (m_NVMEMBiasData.BiasSaved > (u16)(BIAS_HIGH_LIMIT - BIAS_MARGIN_HI)) )
+    {
+        m_NVMEMBiasData.BiasSaved = BIAS_DEFAULT;
+    }
+    STRUCT_CLOSE(BiasData_t, &m_NVMEMBiasData);
     sysio_InitLowPowerData(Type);
 
     //NOTE:  this routine is called on reset so there is really no chance that
@@ -2777,7 +2847,18 @@ void  control_InitControlData(InitType_t Type)
     //calculate any data derived from the persisted data
     control_InitContinuousDiagnostics(); //AK: added
 
-    control_RunOnce();
+    cstate.BiasChangeFlag = 0;
+    cstate.m_n1ControlMode = CONTROL_INVALID; //force init on the first run
+
+    // set the [low] power state to low power and clear the marginal power fault
+    cstate.m_nLowPower = LOW_POWER;     // m_bMarginalPower = false;
+    error_ClearFault(FAULT_MARGINAL_POWER);
+
+    cstate.start_count = 0;
+
+    STRUCT_CLOSE(ControlState_t, &cstate);
+    STRUCT_CLOSE(InControlTest_t, &ictest);
+
 }
 #endif //OLD_NVRAM
 
@@ -2816,6 +2897,7 @@ ErrorCode_t control_SetNVMEMBiasData(const BiasData_t* pBiasData)
 #ifdef OLD_NVRAM
     /** get sole use of FRAM */
     MN_FRAM_ACQUIRE();
+
         // write the data to fram and release fram
         ram2nvram((void*)&m_NVMEMBiasData, NVRAMID_BiasData);
 
@@ -2895,14 +2977,30 @@ void  control_SaveControlDiagData(void)
 }
 #endif //OLD_NVRAM
 
+/** \brief Common dumb routine to populate control stuff
+Kinda dumb constructor
+*/
+static const ctlExtData_t *control_PopulateData(ctlExtData_t *data)
+{
+    data->ControlLimits = control_GetLimits(NULL);
+    data->OutputLim = sysio_GetPWMHightLimit();
+    data->m_pPID = tune_GetCurrentPIDData(NULL);
+    data->m_pPositionStop = pos_GetPositionConf(NULL);
+    data->pPneumaticParams = pneu_GetParams(NULL);
+    data->m_pCPS = pos_GetComputedPositionConf(NULL);
+    data->m_pComputedErrorLimits = pos_GetErrorLimits(NULL);
+    return data;
+}
+
+/** \brief Finish initialization of all state variables
+*/
 void control_FirstRun(void)
 {
-    //ctlExtData_t extdata;
-    //const ctlExtData_t *data = control_PopulateData(&extdata); //quickly for cut-n-paste uniformity
+    ctlExtData_t extdata;
+    const ctlExtData_t *data = control_PopulateData(&extdata); //quickly for cut-n-paste uniformity
 
     //pwr_CalcLimits();
-    //control_PostInit(data);
-    control_RunOnce();
+    control_PostInit(data);
     control_InitContinuousDiagnostics(); //AK: added
 }
 
@@ -2931,57 +3029,43 @@ void control_Control(void)
 #endif
 
     ctlExtData_t extdata;
-    ctlExtData_t *data = &extdata; //quickly for cut-n-paste uniformity
+    const ctlExtData_t *data = control_PopulateData(&extdata); //quickly for cut-n-paste uniformity
 
-    //data->m_pComputedSignalData = cnfg_GetComputedSignalData();
-    data->ControlLimits = control_GetLimits(NULL);
+    checkAirPressure(data); /// AK:NOTE: Architecturally, this seems to belong to the owner of board pressures. Bias change flag should then look at the faults.
 
-    data->OutputLim = sysio_GetPWMHightLimit();
-
-    /* m_pDASignalLimits = cnfg_GetDASignalLimits(); */
-
-
-    // get more pointers to needed working data
-    data->m_pPID = tune_GetCurrentPIDData(NULL);
-    data->m_pPositionStop = pos_GetPositionConf(NULL);
-    data->pPneumaticParams = pneu_GetParams(NULL);
-
+    // calc SP and Err
+    calcSP_Err(data);
 
 /// AK:NOTE: m_n2PosRange could be computed once on init (or when LowPositionStop changes); m_pPositionStop would not then be needed.
 /// AK:NOTE: m_n2PosRange is never used directly; only in a denominator in 2 places; can be precomputed
 /// AK:Q: Is u16 a sufficient container? What's the guarantee?
 //  DZ: give me a practical example it is not sufficient.
-
-#if 0
-    if (data->m_pPositionStop->HighPositionStop > data->m_pPositionStop->LowPositionStop)
-    {
-        m_n2PosRange = (u16)(data->m_pPositionStop->HighPositionStop - data->m_pPositionStop->LowPositionStop);
-    }
-    else
-    {
-        m_n2PosRange = (u16)(data->m_pPositionStop->LowPositionStop - data->m_pPositionStop->HighPositionStop);
-    }
-#else
     m_n2PosRange = (u16)mn_abs(data->m_pPositionStop->rangeval[Xhi] - data->m_pPositionStop->rangeval[Xlow]);
-#endif
-
-    /* compute valve position in scaled range */
-    data->m_pCPS = pos_GetComputedPositionConf(NULL);
 
     // yet more working data
     m_bATO = data->m_pPositionStop->bATO;
-    data->m_pComputedErrorLimits = pos_GetErrorLimits(NULL);
 
     // get scaled (0 - 100 percent) position
     m_n4PositionScaled = vpos_GetScaledPosition();
 
     // prepare to call the PID algorithm
-    control_Prepare(data);
+    bool_t m_bRegularControl = control_Prepare(data);
 
-    //Call PID algorithm only if not in Full Throttle due to CUT_OFF_HI/LO
-    if ( m_bRegularControl )
+    //Call PID algorithm only in closed-loop control
+    s32 lVal; //control output
+    if(m_bRegularControl)
     {
-        control_PID(data);
+        // call the PID algorithm
+        lVal = control_PID(data);
+    }
+    //Ugly!
+    else
+    {
+        lVal = 0; //don't care
+    }
+    if(!cstate.m_bShutZone)
+    {
+        IPCurrent_StoreAndOutput(lVal, data->OutputLim);
     }
 
 #if (CONTROL_CHECKSUM_PROTECT & CONTROL_CONTROL_STATE) != 0
@@ -3054,9 +3138,11 @@ static u8 BuildControlByte(void)
 
     u8 ControlByte;
 
-    ControlByte = (u8)m_bRegularControl & 0x1U;         //Regular Control
-    ControlByte += ((u8)m_bIControl << 1) & 0x2U;       //Integral Control
-    ControlByte += ((u8)m_bValveMove << 2) & 0x4U;      //Moving
+    ControlByte = (u8)ctltrace.m_bRegularControl & 0x1U;         //Regular Control
+    ControlByte += ((u8)ctltrace.m_bIControl << 1) & 0x2U;       //Integral Control
+#if USE_VALVE_MOVE_ESTIMATE
+    ControlByte += ((u8)ctltrace.m_bValveMove << 2) & 0x4U;      //Moving
+#endif
     ControlByte += ((u8)bJigglningNow << 3) & 0x8U;     //Jiggle On
     ControlByte += ((u8)1 << 4) & 0x10U;                /** TFS:6073 */  //overshooting removed -- always 1.
     return ControlByte;
