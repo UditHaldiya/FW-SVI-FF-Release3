@@ -544,8 +544,6 @@ static void collect(void)
     }
 }
 
-
-#define DATAHOG_RUNFLAG 0x8000U
 /** \brief Simple high-speed collector of various data per bitmask
 
 If used at all:
@@ -558,18 +556,6 @@ void datahog_Collect(void)
     if(oswrap_IsContext(TASKID_CYCLE))
     {
         Struct_Test(DatahogState_t, &DatahogState);
-        //Indicate "Running" state in the buffer header
-        u16 runmask = 0U;
-        if(DatahogState.status[DatahogState.DatahogConfId] == DatahogCollecting)
-        {
-            runmask = DATAHOG_RUNFLAG;
-        }
-        //We steal MSB of high halfword of sampling interval to indicate
-        diag_t *devid = buffer_GetXDiagnosticBuffer(DIAGBUF_DEFAULT)+ (DIAGRW_HEADERSZ - DEVID_SIZE);
-        u16 upper = (u16)*devid;
-        upper &= ~DATAHOG_RUNFLAG;
-        upper |= runmask;
-        *devid = (diag_t)upper;
     }
     //Presample
     if(oswrap_IsContext(DatahogConf[HogConfPerm].taskid))

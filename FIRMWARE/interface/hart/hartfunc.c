@@ -82,6 +82,9 @@ demand.
 #include "ao.h"
 #endif
 
+#include "datahog.h"
+#include "diagrw.h"
+
 //#include "hartapputils.h"
 #include "ramdatamap.h"
 
@@ -1179,6 +1182,7 @@ s8_least hartcmd_TestLED(const u8 *src, u8 *dst)
 }
 #endif //FEATURE_LOCAL_UI == FEATURE_LOCAL_UI_SIMPLE
 
+#define DATAHOG_RUNFLAG 0x80U //for data collection indiaction; do not change!
 
 /**
 \brief Reads data from the diagnostic data buffer
@@ -1238,6 +1242,30 @@ s8_least hartcmd_ReadDataBufferRaw(const u8 *src, u8 *dst)
         UNUSED_OK(d->BufferId);
         UNUSED_OK(d->DataSampleSize);
         UNUSED_OK(d->DataSampleSkipCount);
+        
+        /* A kink to let DTM know (in the buffer header) if data collection is running
+            (Moved from unconditional run in datahog_Collect to avoid 
+            data conflict with autotune)
+        */
+        if(util_GetU16(s->DataOffset[0]) == 0U) //reading the header 
+        {
+            const DatahogState_t *pstate = datahog_GetState(NULL);
+            u8 runmask = 0U;
+
+            MN_ENTER_CRITICAL();
+                if(pstate->status[pstate->DatahogConfId] == DatahogCollecting)
+                {
+                    runmask = DATAHOG_RUNFLAG;
+                }
+            MN_EXIT_CRITICAL();
+            //We steal MSB of high halfword of sampling interval to indicate running data collection
+            u8 *devid_high = d->RawDataSamples[sizeof(diag_t)*(DIAGRW_HEADERSZ - DEVID_SIZE) + 1U]; //+1 byte because buffer is stored little-endian
+            u8 upper = *devid_high;
+            upper &= ~DATAHOG_RUNFLAG;
+            upper |= runmask;
+            *devid_high = upper;
+        }
+
         err = ERR_OK;
     }
 
