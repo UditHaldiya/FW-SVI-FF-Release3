@@ -1,14 +1,17 @@
-#define AK_test 0
-#define AK_extract 0
 #define UNDO_59565_1 0 //1? min # of ramp points
-#define UNDO_59565_2 1 //low overshoot thresh
-#define UNDO_59565_3 1 //PAdjust recalc
+#define UNDO_59565_2 0 //low overshoot thresh
+#define UNDO_59565_3 0 // *PAdjust recalc
 #define UNDO_59585_1 1 //overshoot count use
 #define UNDO_59585_2 0 // pid limiting before setting
-#define UNDO_59585_3 0 //1 extra stability #1 didn't help
-#define UNDO_59661 1 //poscomp calc
-#define UNDO_59594 1 //tau calc
+#define UNDO_59585_3 0 // *0 extra stability #1 didn't help
+#define UNDO_59661 0 // **poscomp calc
+#define UNDO_59594 0 // *tau calc
 #define UNDO_79755 0 //Padjust limiting
+#define OPTION_STABILIZE_BY_POS 1 //vs. wait for time
+#define OPTION_STABILIZE_BIAS 1 //vs. wait for time
+#define OPTION_PREINIT_POSCOMP 1 //prelim poscomp calc
+#define OPTION_POSTCALC_POSCOMP 1 //the original place, doesn't work well without it
+#define OPTION_USE_SMOOTHED_POS 0 // 1 doesn't do much good. use smoothed (1st-order filtered) position where applicable
 
 /*
 Copyright 2004 by Dresser, Inc., as an unpublished work.  All rights reserved.
@@ -148,7 +151,7 @@ static const diag_t* m_pDiagBuffer;
 #define RAMPING_RATE2      ((s32)(PERCENT_TO_SCALED_RANGE/6.0F))
 #define POS_ONE 40.0F
 #define POS_TWO 45.0F
-#define STEP_CHANGE_INDEX (13 + EXTDIAG_HEADERSZ) //Step test uses extra space for the header
+#define STEP_CHANGE_INDEX (13) //But no, old step test doesn't!! Step test uses extra space for the header
 #define DATA_PTS 100
 #define AVERAGE_PTS 10
 #define TEST_TIMES_LIMIT 8
@@ -525,10 +528,6 @@ procresult_t tune_Run_Selftune(s16 *procdetails)
 
     (void)tune_GetPIDData(index, &workpid);
 
-#if AK_test
-    workpid= def_PIDData;
-#endif
-
     procresult_t nReturn = PROCRESULT_FAILED;
 
     //signal that we have started
@@ -538,23 +537,19 @@ procresult_t tune_Run_Selftune(s16 *procdetails)
     m_pPosErr = control_GetPosErr();
 
     ui_setNext(UINODEID_TUNE1);
-    s8_least nRet = tune_Tune_Function(index, &workpid);
+    s8_least nRet = tune_Tune_Function(index, &workpid); //poscomp may be computed here
     if(nRet == 0)
     {
         ui_setNext(UINODEID_TUNE2);
-        nRet = tune_RampingTest(index, &workpid);
+        nRet = tune_RampingTest(index, &workpid); //poscomp is finalized here
     }
 
     if(nRet == 0)
     {   /* close loop test to adjust/fine-tune the parameters */
         ui_setNext(UINODEID_TUNE3);
 
-#if !AK_test
         nRet = tune_CloseLoop(index, &workpid);
         if(nRet == 1)
-#else
-        UNUSED_OK(tune_CloseLoop);
-#endif
         {
             nReturn = PROCRESULT_OK;
         }
@@ -613,7 +608,7 @@ procresult_t tune_Run_Selftune(s16 *procdetails)
 }
 
 
-static s16 tune_ComputePoscomp(pos_t posdiff, s16_least biasdiff)
+static s16 tune_ComputePoscomp(pos_least_t posdiff, s16_least biasdiff)
 {
     s16 poscomp;
 #if UNDO_59661
@@ -689,9 +684,6 @@ static s32 tune_Tune_Function(u8_least index, PIDData_t *pid)
 #endif
 
     pid->DeadZone = 0;
-#if AK_test
-    pid->PosComp = COMP_BASE; //AK: Experimental
-#endif
     tune_LimitPID(pid); //AK:TODO: This seems unnecessary, although it doesn't hurt
     (void)tune_SetCurrentPIDData(pid);
 
@@ -719,6 +711,7 @@ static s32 tune_Tune_Function(u8_least index, PIDData_t *pid)
 
     //in phase 2 display the bias at the beginning
     WRITE_NUMBER((s32)BIAS, 0);
+#if !OPTION_STABILIZE_BIAS //new try
     if(process_WaitForTime(T2_500)==true)
     {
         return 1;    // early exit - user cancelled
@@ -727,6 +720,10 @@ static s32 tune_Tune_Function(u8_least index, PIDData_t *pid)
     //This is presumed to be a steady-state Bias.
     //AK:TODO: The 2.5 s stabilization time may not be reliable: A valve util is called for.
     BIAS = control_GetBias();
+#else
+    BIAS = util_GetStableBias(FORTY_PCT, T0_250, NOISE_BAND_STABLE,
+                NOISE_BAND_PRES_STABLE);
+#endif
 
     //AK:TODO: Bias limits could/should be narrower since we know where we are (~ 40%)
     if( (BIAS > BIAS_UPPER_VALUE) || (BIAS < BIAS_LOWER_VALUE) )
@@ -913,9 +910,9 @@ back by CheckPosStablize() - which may be called unconditionally.
         Reason = FAIL_PADJ_TOO_BIG;
         return 7;
     }
-
-    //pid->PosComp = tune_AdjustPoscomp(bSingleActing, (poscomp[Xfill]+poscomp[Xvent])/2);
-
+#if OPTION_PREINIT_POSCOMP //new try
+    pid->PosComp = tune_AdjustPoscomp(bSingleActing, (poscomp[Xfill]+poscomp[Xvent])/2);
+#endif
     return 0; //moved up call chain: tune_RampingTest(index, pid); //AK:TODO: Move this to the top-level wrapper (which should also do UI notifications)
 }
 
@@ -1147,8 +1144,12 @@ static s32 tune_RampingTest(u8_least index, PIDData_t *pid)
 
 
     mode_SetControlMode(CONTROL_MANUAL_POS, STD_FROM_PERCENT(60.0));
+#if !OPTION_STABILIZE_BY_POS //new try
     (void)process_WaitForTime(T1_000); //stabilize
-    pos_t startpos = vpos_GetScaledPosition();
+#else
+    (void)util_WaitForPos(T0_250, NOISE_BAND_STABLE, true); //make sure we arrived at setpoint
+#endif
+    pos_least_t startpos = vpos_GetSmoothedScaledPosition(); //vpos_GetScaledPosition();
 
 
     //ramp from 60 to 40
@@ -1157,18 +1158,20 @@ static s32 tune_RampingTest(u8_least index, PIDData_t *pid)
         nManualPos = (s16)(FORTY_PCT+ (i*RAMPING_RATE1));
         //control_SetPositionSP((s32)nManualPos);
         mode_SetControlMode(CONTROL_MANUAL_POS, nManualPos);
-        BIAS = control_GetControlOutput(); //control_GetBias();
 
-///AK:NOTE: Service output
-        //toggle display between bias and position
-        if ( ((i%6)< 3))
+        ///AK:NOTE: Service output
         {
-            WRITE_NUMBER((s32)BIAS, 0);
-        }
-        else
-        {
-            n2Temp = control_GetPosition();
-            WRITE_NUMBER( (s32)( (n2Temp*10)/((s16)PERCENT_TO_SCALED_RANGE)), 1);
+            u16 BIAS1 = control_GetControlOutput(); //control_GetBias();
+            //toggle display between bias and position
+            if ( ((i%6)< 3))
+            {
+                WRITE_NUMBER((s32)BIAS1, 0);
+            }
+            else
+            {
+                n2Temp = control_GetPosition();
+                WRITE_NUMBER( (s32)( (n2Temp*10)/((s16)PERCENT_TO_SCALED_RANGE)), 1);
+            }
         }
 
 ///AK:Q: What is this variable wait for?
@@ -1219,19 +1222,25 @@ static s32 tune_RampingTest(u8_least index, PIDData_t *pid)
 #endif
     } while( ((i++)<COUNT_30) && ( (m_pPosErr->err_abs>errlim) || bLargerErr ) );
 
-#if OPTIONAL_TUNE_DIAG == 1
-    extDataAutoTune.BiasHigh = nBias50;
-    extDataAutoTune.BiasLow = BIAS;
-#endif
 
     if (m_pPosErr->err_abs > FIVE_PT3_PCT_868)
     {
         return 2;    // early exit - can't get to SP
     }
 
+#if !OPTION_STABILIZE_BY_POS
     (void)process_WaitForTime(T1_000); //stabilize
-    pos_t posdiff = vpos_GetScaledPosition() - startpos;
+#else
+    (void)util_WaitForPos(T0_250, NOISE_BAND_STABLE, true); //make sure we arrived at setpoint
+#endif
+
+    //pos_t posdiff = vpos_GetScaledPosition() - startpos;
+    pos_least_t posdiff = vpos_GetSmoothedScaledPosition() - startpos;
     BIAS = control_GetControlOutput(); //control_GetBias();
+#if OPTIONAL_TUNE_DIAG == 1
+    extDataAutoTune.BiasHigh = nBias50;
+    extDataAutoTune.BiasLow = BIAS;
+#endif
 
     //s16 poscomp = tune_ComputePoscomp(COMP_CONST, BIAS-nBias50);
     s16 poscomp = tune_ComputePoscomp(posdiff, BIAS-nBias50);
@@ -1261,7 +1270,9 @@ static s32 tune_RampingTest(u8_least index, PIDData_t *pid)
     }
 
     //NOTE: These new parameters are not yet commited to the control, so the trouble is N/A
+#if OPTION_POSTCALC_POSCOMP
     pid->PosComp = poscomp;
+#endif
     pid->I += (u16)(pid->PosComp); //AK:TODO: Need to understand what is done here
 
     //It is probably happens elsewhere (doesn't it?), but for certainty, do this here at the point of change
@@ -1290,173 +1301,6 @@ static s32 tune_RampingTest(u8_least index, PIDData_t *pid)
 
 /*********************************************************************/
 
-#if AK_extract
-static
-s16 tune_OutputRampTau(s8 iDir, s16 nOutInc, s32 nBiasSave, s16 nTau[Xends], s32 *final_out)
-{
-    bool_t bNotMoved;
-    pos_t nPosIni = control_GetPosition();
-    pos_t nPosScaled;
-///AK:NOTE: Try to move the valve by .5%
-    mode_SetControlMode(CONTROL_OFF, (s32)nPosIni);
-    s32 nIPOutput = nBiasSave + nOutInc;
-#if !UNDO_59594
-    tick_t start_ticks = timer_GetTicks();
-    tick_t spent;
-#endif
-    
-    s16 i = 0;
-    do
-    {
-        (void)sysio_WritePwm(nIPOutput, PWMNORMALIZED);
-        if (process_WaitForTime(T0_050))
-        {
-            return 1;    // early exit - user cancelled
-        }
-///AK: Why this boost? (Negative on double-acting down). Algorithm?
-// DZ: keep ramping valve
-        //SHOULD THIS BE AN AND??????????
-        if((iDir == Xfill) || !bSingleActing )
-        {
-            nIPOutput += (OUT_INC_S-1);
-        }
-
-        nIPOutput += nOutInc/OUT_INC_R3;
-        nPosScaled = control_GetPosition(); ///AK:NOTE: Measured before output
-
-
-///AK:Q: ABS - is it OK if the valve does move but in a different direction?
-/// DZ: hopefully not
-#if !UNDO_59594
-        spent = timer_GetTicksSince(start_ticks);
-#endif
-        if ( ABS((nPosScaled-nPosIni)) < HALF_PCT_82)
-        {
-            bNotMoved = true;
-        }
-        else
-        {
-            bNotMoved = false;
-        }
-    }while( ( (i++<COUNT_100) && bNotMoved  ) || 
-#if UNDO_59565_1           
-           (i<7) );
-#else
-           (i<COUNT_10) ); //AP has 7, not 10 ///AK:Q: Where does 7(now,10) come from? and 100, too?
-#endif
-///AK:NOTE: bNotMoved not guaranteed
-///AK:Q: Is it OK?
-/// DZ: Acceptable
-    buffer_InitializeDiagnosticBuffer();            /// DZ: time ranges.
-#if UNDO_59594
-    nTau[iDir] = i; ///AK:NOTE: The time (in nominal 50 ms intervals) of the valve's starting moving.
-#else
-    //Remove time accumulation error
-    spent /= T0_050; ///AK:NOTE: The time (in nominal 50 ms intervals) of the valve's starting moving
-    nTau[iDir] = (s16)MIN(spent, INT16_MAX); 
-#endif
-    *final_out = nIPOutput;
-    return 0;
-}
-
-static
-s16 tune_OutputRampSpeed(s8 iDir, s16 nOutInc, s32 nBiasSave, s16 nSpeed[Xends], s32 *final_out, s16 poscomp[Xends])
-{
-    s16 i;
-    pos_t nPosScaled;
-    s32 nIPOutput = *final_out;
-
-    for(i=0; i<3; i++)
-    //Assuming the valve is moving
-    {   /* buffer is full */
-        if (buffer_AddDiagnosticData1(0))
-	    {   /* buffer is full */
-	        return 2;
-	    }
-    }
-    //automatically i = 3;
-    tick_t nTimeCounts = timer_GetTicks();
-    pos_t nPosIni = control_GetPosition();
-    while(i<31)
-    {
-        if (process_WaitForTime(1U)) //let process things run FBO Mopup, UI, watchdog
-        {
-            return 1;    // early exit - user cancelled
-        }
-        if( timer_GetTicksSince(nTimeCounts) >= T0_050)  /* 50 ms has elapsed - save the position */
-        {
-            i++;
-#if OPTIONAL_TUNE_DIAG==1
-            if (i==10)
-            {
-                startTime = timer_GetTicks();
-            }
-#endif
-            // DEBUG_WRITE_NUMBER(i, 0);  // decimal point 1
-            nTimeCounts += T0_050;
-            nPosScaled = control_GetPosition();
-            // m_pDiagBuffer[i++] = nPosScaled - nPosIni;
-            if (buffer_AddDiagnosticData1(nPosScaled - nPosIni))
-            {   // buffer is full
-                return 2;
-            }
-            if( iDir == Xfill )
-            {
-                nIPOutput = (u16)((s32)nIPOutput +  (nOutInc/OUT_INC_R2) ); //want nIPOutput += nOutInc/OUT_INC_R2;
-                if (nOutInc >= OUT_INI_SGL)
-                {
-                    nIPOutput += (OUT_INC_L+2);
-                }
-                else
-                {
-                    nIPOutput += (OUT_INC_S+1);
-                }
-                if( (bLCRelay || !bSingleActing ) && (nIPOutput > (nBiasSave+BIAS_CHANGE_THRESH)) )
-                {
-///AK:Q: Why this boost and its conditions?
-///DZ: Extra boost for its extra dead band
-                    nIPOutput += OUT_INC_S;
-                }
-            }
-            else
-            {
-                nIPOutput = (u16)((s32)nIPOutput +  (nOutInc/OUT_INC_R1) ); //want nIPOutput += nOutInc/OUT_INC_R1;
-                if ( !bSingleActing && (nIPOutput < (nBiasSave-BIAS_CHANGE_THRESH)) )
-                {
-                    nIPOutput -= OUT_INC_L;
-                }
-                else
-                {
-                    nIPOutput -= (OUT_INC_S-1);
-                }
-            }
-            control_SetPWM((u32)nIPOutput);
-        }
-#if OPTIONAL_TUNE_DIAG==1
-        extDataAutoTune.dTime = timer_GetTicksSince(startTime);
-#endif
-    }
-
-    poscomp[iDir] = tune_ComputePoscomp(control_GetPosition() - nPosIni, nIPOutput - nBiasSave);
-    nIPOutput = nBiasSave;
-    control_SetPWM((u32)nIPOutput);
-    if (buffer_AddDiagnosticData1(-1))
-    {   /* buffer is full */
-        return 2;
-    }
-    nSpeed[iDir] = m_pDiagBuffer[INDEX2] - m_pDiagBuffer[INDEX1];
-    //in phase 2 write speed
-    WRITE_NUMBER(nSpeed[iDir], 0);  // decimal point 0
-    nSpeed[iDir] = ABS(nSpeed[iDir]);
-    if (process_WaitForTime(T2_500))
-    {
-        return 1;    // early exit - user cancelled
-    }
-   *final_out = nIPOutput;
-    return 0;
-}
-#endif //AK_Extract
-
 /** \brief open loop test
 The test moves the valve by changing output to I/P and record the response in the
 (primary) diagnostic buffer. It will also compute statistics for both directions:
@@ -1472,44 +1316,10 @@ so any early returns are legitimate.
 \param nBiasSave - current (initial) bias
 \return 0 on success; a non-zero on failure
 */
-#if AK_extract
-
 static s16 StepTest(s8 iDir, s16 nOutInc, u16 nBiasSave, s16 nSpeed[Xends], s16 nGain[Xends], s16 nTau[Xends], s16 poscomp[Xends])
 {
-    s32 nIPOutput;
-#if OPTIONAL_TUNE_DIAG==1
-    tick_t startTime=0;
-#endif
-    WRITE_NUMBER((s32)nOutInc, 0);
-    if (nOutInc == 0)
-    {
-        return -1;
-    }
-
-    s16 ret = tune_OutputRampTau(iDir, nOutInc, nBiasSave, nTau, &nIPOutput);
-    if(ret != 0)
-    {
-        return ret;
-    }
-
-    ret = tune_OutputRampSpeed(iDir, nOutInc, nBiasSave, nSpeed, &nIPOutput, poscomp);
-    if(ret != 0)
-    {
-        return ret;
-    }
-
-///AK:Q: What is GAIN_RATIO(=34) ? What's the algorithm here?
-/// DZ: unit conversion.  But not have to be accurate at all.
-    nGain[0+iDir] = (s16)((GAIN_RATIO*nSpeed[iDir])/ABS(nOutInc)); /* unit in %-out/(%-in x sec)x100 */
-    return 0;
-}
-
-#else //AK_extract
-
-
-static s16 StepTest(s8 iDir, s16 nOutInc, u16 nBiasSave, s16 nSpeed[Xends], s16 nGain[Xends], s16 nTau[Xends], s16 poscomp[Xends])
-{
-    s16 i,nPosScaled, nPosIni;
+    s16 i;
+    pos_least_t nPosScaled;
     tick_t nTimeCounts;
     u16 nIPOutput;
     bool_t bNotMoved;
@@ -1517,14 +1327,18 @@ static s16 StepTest(s8 iDir, s16 nOutInc, u16 nBiasSave, s16 nSpeed[Xends], s16 
     tick_t startTime=0;
 #endif
     WRITE_NUMBER((s32)nOutInc, 0);
-    nPosIni = control_GetPosition();
+#if 0
+    pos_t nPosIni = vpos_GetScaledPosition();
+#else
+    pos_least_t nPosIni = vpos_GetSmoothedScaledPosition();
+#endif
     if (nOutInc == 0)
     {
         return -1;
     }
 
 ///AK:NOTE: Try to move the valve by .5%
-    mode_SetControlMode(CONTROL_OFF, (s32)nPosIni);
+    mode_SetControlMode(CONTROL_OFF, nPosIni);
     nIPOutput = (u16)( ((s32)nBiasSave) + ((s32)nOutInc) );
 #if !UNDO_59594
     tick_t start_ticks = timer_GetTicks();
@@ -1547,8 +1361,8 @@ static s16 StepTest(s8 iDir, s16 nOutInc, u16 nBiasSave, s16 nSpeed[Xends], s16 
             nIPOutput += (OUT_INC_S-1);
         }
 
-        nIPOutput = nIPOutput + (u16)(nOutInc/OUT_INC_R3); //want nIPOutput += nOutInc/OUT_INC_R3;
-        nPosScaled = control_GetPosition(); ///AK:NOTE: Measured before output
+        nIPOutput = nIPOutput + (u16)(nOutInc/OUT_INC_R3); //want next nIPOutput += nOutInc/OUT_INC_R3;
+        nPosScaled = vpos_GetScaledPosition(); 
 
 
 ///AK:Q: ABS - is it OK if the valve does move but in a different direction?
@@ -1594,7 +1408,7 @@ static s16 StepTest(s8 iDir, s16 nOutInc, u16 nBiasSave, s16 nSpeed[Xends], s16 
     }
     //automatically i = 3;
     nTimeCounts = timer_GetTicks();
-    nPosScaled = control_GetPosition();
+    nPosScaled = vpos_GetScaledPosition();
     nPosIni = nPosScaled;
     while(i<31)
     {
@@ -1613,9 +1427,9 @@ static s16 StepTest(s8 iDir, s16 nOutInc, u16 nBiasSave, s16 nSpeed[Xends], s16 
 #endif
             // DEBUG_WRITE_NUMBER(i, 0);  // decimal point 1
             nTimeCounts += T0_050;
-            nPosScaled = control_GetPosition();
+            nPosScaled = vpos_GetScaledPosition();
             // m_pDiagBuffer[i++] = nPosScaled - nPosIni;
-            if (buffer_AddDiagnosticData1(nPosScaled - nPosIni))
+            if (buffer_AddDiagnosticData1((pos_t)(nPosScaled - nPosIni)) )
             {   // buffer is full
                 return 2;
             }
@@ -1656,7 +1470,16 @@ static s16 StepTest(s8 iDir, s16 nOutInc, u16 nBiasSave, s16 nSpeed[Xends], s16 
 #endif
     }
 
-    poscomp[iDir] = tune_ComputePoscomp(control_GetPosition() - nPosIni, nIPOutput - nBiasSave);
+#if OPTION_USE_SMOOTHED_POS
+    if (process_WaitForTime(T0_500))
+    {
+        return 1;    // early exit - user cancelled
+    }
+    pos_least_t lastpos = vpos_GetSmoothedScaledPosition();
+#else
+    pos_least_t lastpos = vpos_GetScaledPosition();
+#endif
+    poscomp[iDir] = tune_ComputePoscomp(lastpos - nPosIni, nIPOutput - nBiasSave);
     nIPOutput = nBiasSave;
     control_SetPWM((u32)nIPOutput);
     if (buffer_AddDiagnosticData1(-1))
@@ -1677,7 +1500,6 @@ static s16 StepTest(s8 iDir, s16 nOutInc, u16 nBiasSave, s16 nSpeed[Xends], s16 
     nGain[0+iDir] = (s16)((GAIN_RATIO*nSpeed[iDir])/ABS(nOutInc)); /* unit in %-out/(%-in x sec)x100 */
     return 0;
 }
-#endif //AK_extract
 
 
 
