@@ -10,17 +10,26 @@
 //a fread() helper (to avoid some old? MS bugs)
 static int myfread(char *buf, size_t len, FILE *f)
 {
-	const size_t chunk = 3000;
-	while(len > chunk) {
-		if(1 != fread(buf, chunk, 1, f) || ferror(f)) {
+	size_t chunk = 3000;
+#if 0
+	char *p = fgets(buf, len, f);
+	if (p == NULL) {
+        return MYERR_FILEREAD;
+	}
+#endif
+	do {
+		int n = fread(buf, 1, chunk, f);
+		if(ferror(f)) {
 			return MYERR_FILEREAD;
+		}
+		if (n < chunk) { 
+			chunk = n;
 		}
 		buf += chunk;
 		len -= chunk;
-	}
-    if(len != 0 && (1 != fread(buf, len, 1, f) || ferror(f))) {
-        return MYERR_FILEREAD;
-    }
+	} while (!feof(f));
+	*buf = 0; //terminate
+
     return MYERR_OK;
 }
 
@@ -152,7 +161,8 @@ static dict_t *normalize(char *text, size_t len, const char *separator, int repl
     dict->text = text;
     dict->size = target - text;
     *target = 0; //terminate: we do have this extra byte; see fslurp()'s allocation
-    return dict;
+
+	return dict;
 }
 
 
@@ -173,8 +183,13 @@ int file2dict(dict_t **dict, const char *fname, int replacement)
     char *text;
     size_t len;
     int err;
-    FILE *f = fopen(fname, "rb");
-
+	FILE *f = stdin;
+	if (strcmp(fname, "stdin") != 0) {
+		f = fopen(fname, "rt");
+	}
+	else {
+		f = stdin;
+	}
     *dict = NULL; //just in case
 
     if(f == NULL) {
@@ -183,7 +198,8 @@ int file2dict(dict_t **dict, const char *fname, int replacement)
 
     err = fslurp(f, &text, &len); //slurp the file in
 
-    fclose(f);
+    if(f!=stdin)
+		fclose(f);
 
     if(err != MYERR_OK) {
         return err;

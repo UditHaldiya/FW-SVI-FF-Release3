@@ -218,27 +218,38 @@ void adv_EmitBitmap(size_t len, const void *bitmap)
 int main(int argc, char *argv[])
 {
 	dict_t *dict;
-	u8 bitmap[ADV_BITMAP_SIZE_R2]={0};
+	u8 bitmap[ADV_BITMAP_SIZE_R2] = { 0 };
 	//Not needed but for regeression testing against GenKey2
-	bitmap[ADV_D_BITMAP_START_R2+1] |= 0x02;
+	bitmap[ADV_D_BITMAP_START_R2 + 1] |= 0x02;
 	//read command line params
-	if (0 == strcmp(argv[1], "-M"))
-	{
-		mfgid = argv[2];
-		argv += 2;
-		argc -= 2;
+	int err = MYERR_OK;
+	if (argc < 3) {
+		err = MYERR_USAGE;
 	}
-	int err = file2dict(&dict, argv[1], 0);
-	if(err==MYERR_OK)
-	{
-		err = adv_CreateBitmap(dict, bitmap);
-	}
-	if(err==MYERR_OK)
-	{
-		adv_EmitBitmap(sizeof(bitmap), bitmap);
-		for(int i=2; i<argc; i++)
+	else {
+		if (0 == strcmp(argv[1], "-M"))
 		{
-			adv_EmitKeyR2(sizeof(bitmap), bitmap, argv[i]);
+			mfgid = argv[2];
+			argv += 2;
+			argc -= 2;
+		}
+		if (argc < 3) { //file and at least one id
+			err = MYERR_USAGE;
+		}
+	}
+
+	if (err == MYERR_OK) {
+		err = file2dict(&dict, argv[1], 0);
+		if (err == MYERR_OK) {
+			err = adv_CreateBitmap(dict, bitmap);
+			if (err == MYERR_OK)
+			{
+				adv_EmitBitmap(sizeof(bitmap), bitmap);
+				for (int i = 2; i < argc; i++)
+				{
+					adv_EmitKeyR2(sizeof(bitmap), bitmap, argv[i]);
+				}
+			}
 		}
 	}
 	if(err != MYERR_OK)
