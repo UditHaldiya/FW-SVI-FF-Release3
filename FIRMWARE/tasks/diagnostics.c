@@ -414,7 +414,31 @@ bool_t diag_Perform_StepTest(void)
     return ret;
 }
 
-
+static ErrorCode_t diag_LaunchProcess(ProcId_t procid)
+{
+    ErrorCode_t err = process_SetProcessCommand(procid);
+    if(err == ERR_PROCESS_START)
+    {
+        /* See if we want to override the guard of a previous leg of composite 
+           step test driven by the host software
+        */
+        if(process_IsGuardingDiagBuffer())
+        {
+            if(process_GetProcId() == procid)
+            {
+                //OK, we think it's next leg
+                if((process_GetResourceFlags() & PROCINIT_IGNOREBUFFERGUARD) != 0U)
+                {
+                    //and it allows override
+                    process_ForceProcessCommand(procid);
+                    err = ERR_OK;
+                }
+            }
+        }
+    }
+    return err;
+}
+    
 
 /** \brief runs a step test
 
@@ -441,7 +465,7 @@ ErrorCode_t diag_LaunchStepTest(pos_t StartPosition, pos_t EndPosition, u16 Samp
         m_SamplingTime = SamplingTime;
         m_bParametersAreValid = true;
         m_Type = DIAG_STEP;
-        err = process_SetProcessCommand(PROC_STEP_TEST);
+        err = diag_LaunchProcess(PROC_STEP_TEST);
     }
     return err;
 }
@@ -563,7 +587,7 @@ ErrorCode_t diag_LaunchRampTest(pos_t StartPosition, pos_t EndPosition, pos_t Se
         m_SetpointRampSpeed = SetpointRampSpeed;
         m_DiagDirection = DiagDirection;
 
-        err = process_SetProcessCommand(PROC_DIAG_RAMP_TEST);
+        err = diag_LaunchProcess(PROC_DIAG_RAMP_TEST);
     }
     return err;
 }
@@ -611,7 +635,7 @@ ErrorCode_t diag_LaunchExtDiagnostics(pos_t StartPosition, pos_t EndPosition, po
         m_SetpointRampSpeed = SetpointRampSpeed;
         m_DiagDirection = DiagDirection;
         m_DiagControlOption = DiagControlOption;
-        err = process_SetProcessCommand(PROC_EXT_ACT_SIGNATURE);
+        err = diag_LaunchProcess(PROC_EXT_ACT_SIGNATURE);
     }
     return err;
 }

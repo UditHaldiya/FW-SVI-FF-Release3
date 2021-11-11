@@ -389,7 +389,7 @@ const proctable_t proctable[] =
     {
         .id = PROC_EXT_ACT_SIGNATURE,
         .procf = diag_Run_ExtActuatorSignature,
-        .flags = {.throughflags=0, .initflags = PROCINIT_CLAIMDIAGBUFFER|PROCINIT_CLAIMCTLMODE},
+        .flags = {.throughflags=0, .initflags = PROCINIT_CLAIMDIAGBUFFER|PROCINIT_CLAIMCTLMODE|PROCINIT_IGNOREBUFFERGUARD},
         .action =
         {
             [PROCRESULT_OK] =
@@ -416,7 +416,7 @@ const proctable_t proctable[] =
     {
         .id = PROC_DIAG_RAMP_TEST,
         .procf = diag_Run_RampTest,
-        .flags = {.throughflags=0, .initflags = PROCINIT_CLAIMDIAGBUFFER|PROCINIT_CLAIMCTLMODE},
+        .flags = {.throughflags=0, .initflags = PROCINIT_CLAIMDIAGBUFFER|PROCINIT_CLAIMCTLMODE|PROCINIT_IGNOREBUFFERGUARD},
         .action =
         {
             [PROCRESULT_OK] =
@@ -444,7 +444,7 @@ const proctable_t proctable[] =
     { //by design: restores control mode only if fails
         .id = PROC_STEP_TEST,
         .procf = diag_Run_StepTest_SHIM,
-        .flags = {.throughflags=0U,  .initflags = PROCINIT_CLAIMDIAGBUFFER|PROCINIT_CLAIMCTLMODE},
+        .flags = {.throughflags=0U,  .initflags = PROCINIT_CLAIMDIAGBUFFER|PROCINIT_CLAIMCTLMODE|PROCINIT_IGNOREBUFFERGUARD},
         .action =
         { //rather stealth
             [PROCRESULT_OK] =
