@@ -706,7 +706,9 @@ static bool_t CheckForInControl(const ctlExtData_t *data)
 	            (ABS(m_BiasData.m_Integral) > nTemp) &&
 	            (ABS((s32)ictest.avgErr) < DETECTOR_AVG_ERROR_THRESH)
 	          )
-	        )
+	        && (process_GetProcId() != PROC_AUTOTUNE)
+                  )
+            
 	    {
 	        ictest.m_bProbeActive = true;
 
