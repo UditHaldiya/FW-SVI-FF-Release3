@@ -1,14 +1,3 @@
-#define UNDO_59565_1 0 //1? min # of ramp points
-#define UNDO_59565_2 0 //low overshoot thresh
-#define UNDO_59565_3 0 // *PAdjust recalc
-#define UNDO_59585_1 1 //overshoot count use
-#define UNDO_59585_2 0 // pid limiting before setting
-#define UNDO_59585_3 0 // *0 extra stability #1 didn't help
-#define UNDO_59661 0 // **poscomp calc
-#define UNDO_59594 0 // *tau calc
-#define UNDO_79755 0 //Padjust limiting
-#define OPTION_STABILIZE_BY_POS 1 //vs. wait for time
-#define OPTION_STABILIZE_BIAS 1 //vs. wait for time
 #define OPTION_PREINIT_POSCOMP 1 //prelim poscomp calc
 #define OPTION_POSTCALC_POSCOMP 1 //the original place, doesn't work well without it
 #define OPTION_USE_SMOOTHED_POS 0 // 1 doesn't do much good. use smoothed (1st-order filtered) position where applicable
@@ -120,6 +109,7 @@ static const diag_t* m_pDiagBuffer;
 
 // Tune failure "Reasons"
 #define TUNE_RUNNING 100
+#define FAIL_STABILIZE 30
 #define FAIL_ACTUATION 31
 #define FAIL_NVWRITE 32
 #define FAIL_OPEN_LOOP 33
@@ -190,12 +180,12 @@ CONST_ASSERT(P_NOT_LOW >= P_LOW_LIMIT);
 #define PADJ_INC_RATIO  16
 #define P_TAU_RATIO  150
 #define D_P_RATIO 1200
-#if UNDO_59661
+
 #define COMP_CONST 3276 //AK:TODO: (maybe) That's 20% of position range (should be 3277)
-#endif
+
 
 #define COUNT_3  3
-#define COUNT_10  10
+//#define COUNT_10  10
 #define COUNT_20  20
 #define COUNT_24  24
 #define COUNT_30  30
@@ -204,6 +194,33 @@ CONST_ASSERT(P_NOT_LOW >= P_LOW_LIMIT);
 #define COUNT_100 100
 
 #define FIVE_PCT 5
+
+static const TuneOptions_t TuneOptions_default =
+{
+    .toption = 
+        (1U<<AllowExtraStabilityWait) |
+        (1U<<RampStabilizeByPos) |
+        (1U<<PostStabilizePosPres) |
+        (1U<<StabilizeBias) |
+        0U,
+    .min_number_of_ramp_points = 10, // 7 in AP and R2, 10 in ESD (C9565[1])
+    .low_overshoot_thresh = 4, // 4 in AP, OVERSHOOT_LOW=3 in ESD (C59565[2])
+    .PAdjust_recalc_scale = 20, // inconsistent 20 in AP, PADJ_INC_RATIO=16 in ESD
+    .CheckWord = 0, //don't care
+}; 
+static TuneOptions_t TuneOptions;
+
+const TuneOptions_t *tune_GetTOptions(TuneOptions_t *dst)
+{
+    return STRUCT_TESTGET(&TuneOptions, dst);
+}
+
+ErrorCode_t tune_SetTOptions(const TuneOptions_t *src)
+{
+    STRUCT_GET(src, &TuneOptions);
+    return ERR_OK;
+}
+        
 
 
 static s16 nTuneArray[70];         /* buffer for tune calculation*/
@@ -453,6 +470,14 @@ const void *TypeUnsafe_tune_GetTuneData(void *dst)
 */
 ErrorCode_t    TypeUnsafe_tune_SetTuneData(const void *src)
 {
+    //This is an opportune place to initialize TuneOptions, 
+    //but only during initialization
+    //RED_FLAG! for future delayed init
+    if(!oswrap_IsOSRunning())
+    {
+        STRUCT_GET(&TuneOptions_default, &TuneOptions);
+    }
+    
     const TuneData_t* pTuneData = src;
     if(pTuneData == NULL)
     {
@@ -502,6 +527,8 @@ step 3 in order for it to converge faster.
 procresult_t tune_Run_Selftune(s16 *procdetails)
 {
     PIDData_t workpid; //working copy
+    STRUCT_GET(&TuneOptions, NULL); //test
+    
 #if OPTIONAL_TUNE_DIAG==1
     extDataAutoTune.Times[PID_PHASE_START] = timer_GetTicks();
     /*DIAG INIT*/
@@ -611,10 +638,12 @@ procresult_t tune_Run_Selftune(s16 *procdetails)
 static s16 tune_ComputePoscomp(pos_least_t posdiff, s16_least biasdiff)
 {
     s16 poscomp;
-#if UNDO_59661
+    if((TuneOptions.toption & (1U<<UseActualPosDiffForPoscomp)) == 0U)
+    {
         UNUSED_OK(posdiff);
         posdiff = COMP_CONST;
-#endif
+    }
+
     if (biasdiff != 0)
     {
         s16 n2Temp2 =  (s16)((biasdiff));
@@ -684,6 +713,10 @@ static s32 tune_Tune_Function(u8_least index, PIDData_t *pid)
 #endif
 
     pid->DeadZone = 0;
+    if((TuneOptions.toption & (1U<<StartWithNominalPosComp)) != 0)
+    {
+        pid->PosComp = COMP_BASE;
+    }
     tune_LimitPID(pid); //AK:TODO: This seems unnecessary, although it doesn't hurt
     (void)tune_SetCurrentPIDData(pid);
 
@@ -699,6 +732,7 @@ static s32 tune_Tune_Function(u8_least index, PIDData_t *pid)
     if (tune_Stabilize(index, pid) == 1)
     {
         // DEBUG_WRITE_TEXT("Exit");
+        Reason = FAIL_STABILIZE;
         return 1;
     }
     if (m_pPosErr->err_abs > FIVE_PT3_PCT_868)
@@ -707,24 +741,31 @@ static s32 tune_Tune_Function(u8_least index, PIDData_t *pid)
         return 9;    // early exit - can't get to SP
     }
 
-    u16 BIAS = control_GetBias();
-
     //in phase 2 display the bias at the beginning
+    u16 BIAS = control_GetBias();
     WRITE_NUMBER((s32)BIAS, 0);
-#if !OPTION_STABILIZE_BIAS //new try
-    if(process_WaitForTime(T2_500)==true)
+    
+    if((TuneOptions.toption & (1U<<StabilizeBias)) == 0U)
     {
-        return 1;    // early exit - user cancelled
+        if(process_WaitForTime(T2_500)==true)
+        {
+            return 1;    // early exit - user cancelled
+        }
+
+        //This is presumed to be a steady-state Bias.
+        //AK:TODO: The 2.5 s stabilization time may not be reliable: A valve util is called for.
+        BIAS = control_GetBias();
     }
-
-    //This is presumed to be a steady-state Bias.
-    //AK:TODO: The 2.5 s stabilization time may not be reliable: A valve util is called for.
-    BIAS = control_GetBias();
-#else
-    BIAS = util_GetStableBias(FORTY_PCT, T0_250, NOISE_BAND_STABLE,
+    else
+    {
+        BIAS = util_GetStableBias(FORTY_PCT, T0_250, NOISE_BAND_STABLE,
                 NOISE_BAND_PRES_STABLE);
-#endif
-
+        if(BIAS==BIAS_ERR)
+        {
+            return 1;
+        }
+    }
+        
     //AK:TODO: Bias limits could/should be narrower since we know where we are (~ 40%)
     if( (BIAS > BIAS_UPPER_VALUE) || (BIAS < BIAS_LOWER_VALUE) )
     {
@@ -1056,8 +1097,41 @@ static void tune_EstimatePara(PIDData_t *pid, const s16 nGain[Xends], s16 nTau[X
     pid->I = (u16)((s16)pid->I -(( (m_TuneData.n1Level-2)*(s16)pid->I)/20));
 }
 
+static void SetCurrentPIDData_reckless(PIDData_t *pid)
+{
+    if((TuneOptions.toption & (1U<<AllowOutOfRangeInterimPID)) == 0U)
+    {
+       
+        tune_LimitPID(pid); //AK: That was missing
+        ErrorCode_t err = tune_SetCurrentPIDData(pid);
+        MN_DBG_ASSERT(err == ERR_OK);
+        UNUSED_OK(err); //for release build
+    }
+    else
+    {
+        Struct_Copy(PIDData_t, &wrk_ctlset, pid);
+    }
+}
 
-
+static bool_t pos_wait_stable(void)
+{
+    bool_t cancel;
+    if((TuneOptions.toption & (1U<<RampStabilizeByPos)) == 0U)
+    {
+        cancel = process_WaitForTime(T1_000); //stabilize
+    }
+    else
+    {
+        cancel = !util_WaitForPos(T0_250, NOISE_BAND_STABLE, true); //make sure we arrived at setpoint
+#if 0
+        if(cancel)
+        {
+            Reason = FAIL_STABILIZE;
+        }
+#endif
+    }
+    return cancel;
+}
 
 /** \brief Step 2 of tuning to estimate POS_COMP (which gets the valve fast to around the setpoint).
 The outline: under closed-loop control,
@@ -1108,10 +1182,7 @@ static s32 tune_RampingTest(u8_least index, PIDData_t *pid)
     {       /// DZ: Intended. Just to make it stable
         return 1;
     }
-#if !UNDO_59585_2 //AK added
-    tune_LimitPID(pid); //AK: That was missing
-#endif
-    (void)tune_SetCurrentPIDData(pid);
+    SetCurrentPIDData_reckless(pid);
     //ramp from 64 to 60
     for(i=COUNT_24; i>=0; i--)
     {
@@ -1144,11 +1215,11 @@ static s32 tune_RampingTest(u8_least index, PIDData_t *pid)
 
 
     mode_SetControlMode(CONTROL_MANUAL_POS, STD_FROM_PERCENT(60.0));
-#if !OPTION_STABILIZE_BY_POS //new try
-    (void)process_WaitForTime(T1_000); //stabilize
-#else
-    (void)util_WaitForPos(T0_250, NOISE_BAND_STABLE, true); //make sure we arrived at setpoint
-#endif
+    bool_t cancel = pos_wait_stable();
+    if(cancel)
+    {
+        return 1;
+    }
     pos_least_t startpos = vpos_GetSmoothedScaledPosition(); //vpos_GetScaledPosition();
 
 
@@ -1228,11 +1299,11 @@ static s32 tune_RampingTest(u8_least index, PIDData_t *pid)
         return 2;    // early exit - can't get to SP
     }
 
-#if !OPTION_STABILIZE_BY_POS
-    (void)process_WaitForTime(T1_000); //stabilize
-#else
-    (void)util_WaitForPos(T0_250, NOISE_BAND_STABLE, true); //make sure we arrived at setpoint
-#endif
+    cancel = pos_wait_stable();
+    if(cancel)
+    {
+        return 1;
+    }
 
     //pos_t posdiff = vpos_GetScaledPosition() - startpos;
     pos_least_t posdiff = vpos_GetSmoothedScaledPosition() - startpos;
@@ -1340,10 +1411,9 @@ static s16 StepTest(s8 iDir, s16 nOutInc, u16 nBiasSave, s16 nSpeed[Xends], s16 
 ///AK:NOTE: Try to move the valve by .5%
     mode_SetControlMode(CONTROL_OFF, nPosIni);
     nIPOutput = (u16)( ((s32)nBiasSave) + ((s32)nOutInc) );
-#if !UNDO_59594
+
     tick_t start_ticks = timer_GetTicks();
     tick_t spent;
-#endif
 
     i = 0;
     do
@@ -1367,9 +1437,8 @@ static s16 StepTest(s8 iDir, s16 nOutInc, u16 nBiasSave, s16 nSpeed[Xends], s16 
 
 ///AK:Q: ABS - is it OK if the valve does move but in a different direction?
 /// DZ: hopefully not
-#if !UNDO_59594
+
         spent = timer_GetTicksSince(start_ticks);
-#endif
         if ( ABS((nPosScaled-nPosIni)) < HALF_PCT_82)
         {
             bNotMoved = true;
@@ -1379,20 +1448,20 @@ static s16 StepTest(s8 iDir, s16 nOutInc, u16 nBiasSave, s16 nSpeed[Xends], s16 
             bNotMoved = false;
         }
     }while( ( (i++<COUNT_100) && bNotMoved  ) || 
-#if UNDO_59565_1           
-           (i<7) );
-#else
-           (i<COUNT_10) ); //AP has 7, not 10 ///AK:Q: Where does 7(now,10) come from? and 100, too?
-#endif
+           (i<TuneOptions.min_number_of_ramp_points) );
     buffer_InitializeDiagnosticBuffer();            /// DZ: time ranges.
-#if UNDO_59594
-    nTau[iDir] = i; ///AK:NOTE: The time (in nominal 50 ms intervals) of the valve's starting moving.
-#else
-    //Remove time accumulation error
-    spent /= T0_050;
-    nTau[iDir] = (s16)MIN(spent, INT16_MAX); ///AK:NOTE: The time (in nominal 50 ms intervals) of the valve's starting moving.
-#endif
 
+    if((TuneOptions.toption & (1U<<UseTimeForTauCalc)) == 0U)
+    {
+        UNUSED_OK(spent);
+        nTau[iDir] = i; ///AK:NOTE: The time (in nominal 50 ms intervals) of the valve's starting moving.
+    }
+    else
+    {
+        //Remove time accumulation error
+        spent /= T0_050;
+        nTau[iDir] = (s16)MIN(spent, INT16_MAX); ///AK:NOTE: The time (in nominal 50 ms intervals) of the valve's starting moving.
+    }
 
 ///AK:NOTE: bNotMoved not guaranteed
 ///AK:Q: Is it OK?
@@ -1727,11 +1796,7 @@ static TuneCase_t Para_Adjust(PIDData_t *pid, StepData_t *tune_xchange, TuneCase
             return case_c;
         }
         else if( (nY_last < (FOUR_PT7_PCT_770-((2*pid->DeadZone)+(Y_ADJ_RATE1*nSCount))) )
-#if UNDO_59565_2
-                && (tune_xchange->nOvershoot < 4) )
-#else
-                && (tune_xchange->nOvershoot < OVERSHOOT_LOW) )
-#endif
+                && (tune_xchange->nOvershoot < TuneOptions.low_overshoot_thresh) )
         {
             if (pid->I > I_MID)
             {
@@ -1748,41 +1813,46 @@ static TuneCase_t Para_Adjust(PIDData_t *pid, StepData_t *tune_xchange, TuneCase
             case_c = vent_notslow_smallY;
             return case_c;
         }
-#if UNDO_59585_1
-        else if(tune_xchange->nOvershoot > (5+nSCount))
-#else
-        else if(tune_xchange->nOvershoot > (5*nSCount)) //U: THS was (5+nSCount)
-#endif
+        else
         {
-            if( (tune_xchange->nOvershoot>tune_xchange->nOvershoot_p) && (case_p==vent_large_overshoot) )
+            s16_least thresh;
+            if((TuneOptions.toption & (1U<<OvershootCountUse)) == 0U)
             {
-                pid->D = (u16)Change20Pct((s16)pid->D, true);
-                case_c = vent_large_overshootAgain;
+                thresh = 5*nSCount;
             }
             else
             {
-#if UNDO_59565_3
-                pid->PAdjust -= (s16)((tune_xchange->nOvershoot*nDeltaP)/20);
-#else
-                pid->PAdjust -= (s16)((tune_xchange->nOvershoot*nDeltaP)/PADJ_INC_RATIO);  //Was: /20 but in a different place, /16
-#endif
-                case_c = vent_large_overshoot;
+                thresh = 5+nSCount;
             }
-            return case_c;
-        }
-        else if( (tune_xchange->nOvershoot2 > tune_xchange->nOvershoot) && (tune_xchange->nOvershoot2 > OVERSHOOT_LOW) )
-        {
-            case_c = vent_increased_negOvershoot;
-            pid->D = (u16)Change20Pct((s16)pid->D, false);
-            return case_c;
-        }
-        else
-        {
-            if(tune_xchange->nOvershoot > 2)
+                
+            if(tune_xchange->nOvershoot > thresh)
             {
-                pid->PAdjust -= (s16)((tune_xchange->nOvershoot*nDeltaP)/15);
+                if( (tune_xchange->nOvershoot>tune_xchange->nOvershoot_p) && (case_p==vent_large_overshoot) )
+                {
+                    pid->D = (u16)Change20Pct((s16)pid->D, true);
+                    case_c = vent_large_overshootAgain;
+                }
+                else
+                {
+                    pid->PAdjust -= (s16)((tune_xchange->nOvershoot*nDeltaP)/TuneOptions.PAdjust_recalc_scale);
+                    case_c = vent_large_overshoot;
+                }
+                return case_c;
             }
-            case_c = tunecase_init;
+            else if( (tune_xchange->nOvershoot2 > tune_xchange->nOvershoot) && (tune_xchange->nOvershoot2 > OVERSHOOT_LOW) )
+            {
+                case_c = vent_increased_negOvershoot;
+                pid->D = (u16)Change20Pct((s16)pid->D, false);
+                return case_c;
+            }
+            else
+            {
+                if(tune_xchange->nOvershoot > 2)
+                {
+                    pid->PAdjust -= (s16)((tune_xchange->nOvershoot*nDeltaP)/15);
+                }
+                case_c = tunecase_init;
+            }
         }
     }
     else   /* air fill test */
@@ -2197,6 +2267,13 @@ static s8 tune_Stabilize(u8_least index, PIDData_t *pid)
 
     //detect if valve has moved
     }while( (i>0) && ((m_pPosErr->err_abs>ONE_PCT_164) || (ABS((s32)m_pPosErr->err7)>ONE_PCT_164)) );
+    if((TuneOptions.toption & (1U<<PostStabilizePosPres)) != 0U)
+    {
+        if(!util_WaitStablePosPres(T0_250,  STABLE_POS_TEST, STABLE_PRES_TEST)) //T0_500?
+        {
+            return 1;    // early exit - process cancelled Or Bias changed
+        }
+    }
     return 0;
 }
 
@@ -2228,28 +2305,24 @@ static bool_t CheckStable(u8_least index, PIDData_t *pid)
         }
     }
     //Set new live PID parameters atomically
-#if !UNDO_59585_2
-    tune_LimitPID(pid); //AK: That was missing
-#endif
-    ErrorCode_t err = tune_SetCurrentPIDData(pid);
-    MN_DBG_ASSERT(err == ERR_OK);
-    UNUSED_OK(err); //for release build
+    SetCurrentPIDData_reckless(pid);
 
     bool_t ret = (control_GetBiasChangeFlag() > 0); //AK:TODO: make it !=.
+    if(!ret) 
+    {
+        ret = (process_WaitForTime(T2_500));
+    }
     if(!ret) 
     {
         /* Per DZ, the intention of Wait is to let the new control parameter to have a chance play the role.
         On a slow valve, which this function makes slower, we may do excessive gain reduction - and eventually fail on time
         So, I (AK) added wait for stable position
         */
-        ret = (process_WaitForTime(T2_500));
+        if((TuneOptions.toption & (1U<<AllowExtraStabilityWait)) != 0U)
+        {
+            ret = !util_WaitForPos(T0_050,  STABLE_POS_TEST, false);
+        }
     }
-#if !UNDO_59585_3
-    if(!ret) 
-    {
-        ret = !util_WaitForPos(T0_050,  STABLE_POS_TEST, false);
-    }
-#endif
     return ret;
 }
 
@@ -2302,18 +2375,21 @@ static void tune_LimitPID(PIDData_t *pid)
 
     if( (pid->P+pid->PAdjust)<P_LOW_LIMIT)
     {
-#if UNDO_79755
-        pid->PAdjust = 0;
-#else        
-        /* Need to increase PAdjust. Do it by the smallest amount possible
-        */
-        pid->PAdjust = (s16)(P_LOW_LIMIT - (s32)pid->P);
-        /* PROOF
-           Padjust is within its range if
-            P_LOW_LIMIT - P <= PADJ_HIGH_LIMIT, or
-            P >= P_LOW_LIMIT-PADJ_HIGH_LIMIT, which is always the case
-        */
-#endif
+        if((TuneOptions.toption & (1U<<MinLimitingPAdjust)) == 0U)
+        {
+            pid->PAdjust = 0;
+        }
+        else
+        {
+            /* Need to increase PAdjust. Do it by the smallest amount possible
+            */
+            pid->PAdjust = (s16)(P_LOW_LIMIT - (s32)pid->P);
+            /* PROOF
+               Padjust is within its range if
+                P_LOW_LIMIT - P <= PADJ_HIGH_LIMIT, or
+                P >= P_LOW_LIMIT-PADJ_HIGH_LIMIT, which is always the case
+            */
+        }
     }
     pid->Beta = CLAMP(pid->Beta, BETA_LOW_LIMIT, BETA_HIGH_LIMIT);
 }

@@ -5,7 +5,7 @@ SOURCE:=hart_posctl.c hart_ctllimits.c hart_pneuparams.c hart_charactsp.c \
     hart_dosw.c hart_stops_adjust.c \
     hart_testassert.c hart_write_ctlout.c \
     hart_engunitsif.c \
-        hart_errlimits.c hart_jmperemu.c
+        hart_errlimits.c hart_jmperemu.c hart_tuneoptions.c
 
 ifeq ($(FEATURE_DIGITAL_SETPOINT),SUPPORTED)
 SOURCE+=hart_digsp.c

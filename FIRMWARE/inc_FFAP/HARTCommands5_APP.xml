@@ -70,5 +70,6 @@
     <FileName>..\interface\hart\commonxml\fwdl_options.xml</FileName>
     <FileName>..\interface\hart\commonxml\jmperemu.xml</FileName>
     <FileName>..\interface\hart\commonxml\teststats.xml</FileName>
+    <FileName>..\interface\hart\commonxml\tuneoptions.xml</FileName>
   </Include>
 </HART>

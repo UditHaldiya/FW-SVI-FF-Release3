@@ -24,6 +24,37 @@ demand.
 #include "position.h"
 #include <process.h>
 
+// -------------- tune options ---------------------
+enum
+{
+     OvershootCountUse = 0, //UNDO_59585[1] overshoot count use, 1=like ESD, 0=like AP
+     AllowOutOfRangeInterimPID = 1, //UNDO_59585[2] pid limiting before setting
+     AllowExtraStabilityWait = 2, //UNDO_59585[3] 0 // *0 extra stability #1 didn't help
+     UseActualPosDiffForPoscomp = 3, // UNDO_59661 0 // **poscomp calc
+     UseTimeForTauCalc = 4, // UNDO_59594 0 // *tau calc
+     MinLimitingPAdjust = 5, //UNDO_79755 0 //Padjust limiting
+     RampStabilizeByPos = 6, //OPTION_STABILIZE_BY_POS 1 //vs. wait for time
+     StabilizeBias = 7, //OPTION_STABILIZE_BIAS 1 //vs. wait for time
+     PostStabilizePosPres = 8, //try to get to a stable value in initial stabilization effort
+     StartWithNominalPosComp = 9 //Begin tuning with PosComp=COMP_BASE for uniformity
+     //OPTION_PREINIT_POSCOMP 1 //prelim poscomp calc
+     //OPTION_POSTCALC_POSCOMP 1 //the original place, doesn't work well without it
+     //OPTION_USE_SMOOTHED_POS 0 // 1 doesn't do much good. use smoothed (1st-order filtered) position where applicable
+
+} ;
+
+typedef struct TuneOptions_t
+{
+    u32 toption;
+    u8 min_number_of_ramp_points; //!< 7 in AP, 10 in ESD
+    s8 low_overshoot_thresh; //!< 4 in AP, OVERSHOOT_LOW=3 in ESD
+    s8 PAdjust_recalc_scale; //!< inconsistent 20 in AP, PADJ_INC_RATIO=16 in ESD
+    u16 CheckWord;
+} TuneOptions_t;
+
+extern const TuneOptions_t *tune_GetTOptions(TuneOptions_t *dst);
+extern ErrorCode_t tune_SetTOptions(const TuneOptions_t *src);
+
 typedef struct TuneData_t
 {
     pres_t SupplyPres_User;

@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<HART Version="1.0">
+  <Include></Include>
+  <Commands>
+    <SubCmdOnly CmdNum="129">
+      <SubCommands>
+        <Command Name="Read Tune Options" CmdNum="15" CmdType="Read" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_READ_COMMAND" Description="To support development/troubleshooting">
+          <RequestParams></RequestParams>
+          <ResponseParams>
+            <Struct>Tune Options Study</Struct>
+          </ResponseParams>
+        </Command>
+      </SubCommands>
+    </SubCmdOnly>
+    <SubCmdOnly CmdNum="130">
+      <SubCommands>
+        <Command Name="Write Tune Options" CmdNum="15" CmdType="Write" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_WRITE_COMMAND" Description="To support development/troubleshooting">
+          <RequestParams>
+            <Struct>Tune Options Study</Struct>
+          </RequestParams>
+          <ResponseParams>
+            <Struct>Tune Options Study</Struct>
+          </ResponseParams>
+        </Command>
+      </SubCommands>
+    </SubCmdOnly>
+  </Commands>
+  <Variables>
+    <Variable Name="Tune Options Bitmap" DataType="H_INT4" Description="Tune Options Bitmap" EnRangeCheck="0"></Variable>
+    <Variable Name="Min Number Of Ramp Points" DataType="H_UCHAR" Description="7 in AP, 10 in ESD" EnRangeCheck="1">
+      <Range Model="TypeRange" />
+    </Variable>
+    <Variable Name="Low Overshoot Threshold" DataType="H_UCHAR" Description="4 in AP, OVERSHOOT_LOW=3 in ESD" />
+    <Variable Name="PAdjust Recalc Scale" DataType="H_UCHAR" Description="inconsistent 20 in AP, PADJ_INC_RATIO=16 in ESD" />
+  </Variables>
+  <Structs>
+    <Struct Name="Tune Options Study">
+      <Param>Tune Options Bitmap</Param>
+      <Param>Min Number Of Ramp Points</Param>
+      <Param>Low Overshoot Threshold</Param>
+      <Param>PAdjust Recalc Scale</Param>
+    </Struct>
+  </Structs>
+</HART>
