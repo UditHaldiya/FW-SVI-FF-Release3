@@ -36,11 +36,10 @@ enum
      RampStabilizeByPos = 6, //OPTION_STABILIZE_BY_POS 1 //vs. wait for time
      StabilizeBias = 7, //OPTION_STABILIZE_BIAS 1 //vs. wait for time
      PostStabilizePosPres = 8, //try to get to a stable value in initial stabilization effort
-     StartWithNominalPosComp = 9 //Begin tuning with PosComp=COMP_BASE for uniformity
-     //OPTION_PREINIT_POSCOMP 1 //prelim poscomp calc
-     //OPTION_POSTCALC_POSCOMP 1 //the original place, doesn't work well without it
-     //OPTION_USE_SMOOTHED_POS 0 // 1 doesn't do much good. use smoothed (1st-order filtered) position where applicable
-
+     StartWithNominalPosComp = 9, //Begin tuning with PosComp=COMP_BASE for uniformity - looks pretty bad
+     UseSmoothedPositionForPosComp = 10, // (1 doesn't do much good.) Use smoothed (1st-order filtered) position
+	 UseSmoothedPositionForStep = 11, //Use smoothed (1st-order filtered) position
+	 UsePrelimPosComp = 12 //Use interim poscomp calc
 } ;
 
 typedef struct TuneOptions_t

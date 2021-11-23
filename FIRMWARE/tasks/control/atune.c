@@ -1,7 +1,3 @@
-#define OPTION_PREINIT_POSCOMP 1 //prelim poscomp calc
-#define OPTION_POSTCALC_POSCOMP 1 //the original place, doesn't work well without it
-#define OPTION_USE_SMOOTHED_POS 0 // 1 doesn't do much good. use smoothed (1st-order filtered) position where applicable
-
 /*
 Copyright 2004 by Dresser, Inc., as an unpublished work.  All rights reserved.
 
@@ -33,7 +29,6 @@ demand.
 #include "nvram.h"
 #include "faultpublic.h"
 #include "process.h"
-//#include "bios.h" //includes pwm.h as well
 //added so we don't need bios and could remove possibility of pwm.h
 #include "timer.h"
 #include "timebase.h"
@@ -198,14 +193,17 @@ CONST_ASSERT(P_NOT_LOW >= P_LOW_LIMIT);
 static const TuneOptions_t TuneOptions_default =
 {
     .toption = 
-        (1U<<AllowExtraStabilityWait) |
-        (1U<<RampStabilizeByPos) |
+        (0U<<AllowExtraStabilityWait) |
+        (0U<<RampStabilizeByPos) |
         (1U<<PostStabilizePosPres) |
-        (1U<<StabilizeBias) |
+        (0U<<StabilizeBias) |
+        (0U<<UseSmoothedPositionForPosComp) |
+        (0U<<UseSmoothedPositionForStep) |
+        (1U<<UseActualPosDiffForPoscomp) |
         0U,
     .min_number_of_ramp_points = 10, // 7 in AP and R2, 10 in ESD (C9565[1])
-    .low_overshoot_thresh = 4, // 4 in AP, OVERSHOOT_LOW=3 in ESD (C59565[2])
-    .PAdjust_recalc_scale = 20, // inconsistent 20 in AP, PADJ_INC_RATIO=16 in ESD
+    .low_overshoot_thresh = OVERSHOOT_LOW, // 4 in AP, OVERSHOOT_LOW=3 in ESD (C59565[2])
+    .PAdjust_recalc_scale = PADJ_INC_RATIO, // inconsistent 20 in AP, PADJ_INC_RATIO=16 in ESD
     .CheckWord = 0, //don't care
 }; 
 static TuneOptions_t TuneOptions;
@@ -312,7 +310,7 @@ typedef struct StepData_t
 static void Data_Processing(const PIDData_t *pid, StepData_t *tune_xchange);
 static TuneCase_t Para_Adjust(PIDData_t *pid, StepData_t *tune_xchange, TuneCase_t case_c);
 static s8 CheckPosStablize(u8_least index, PIDData_t *pid);
-static s8 tune_Stabilize(u8_least index, PIDData_t *pid);
+static s8 tune_Stabilize(u8_least index, PIDData_t *pid, u32 option);
 static bool_t CheckStable(u8_least index, PIDData_t *pid);
 static void tune_LimitPID(PIDData_t *pid);
 static void tune_EstimatePara(PIDData_t *pid, const s16 nGain[Xends], s16 nTau[Xends]);
@@ -651,7 +649,7 @@ static s16 tune_ComputePoscomp(pos_least_t posdiff, s16_least biasdiff)
         //AK:NOTE n2Temp is COMP_CONST/n2Temp2 or 1+COMP_CONST/n2Temp2, depending on rounding luck
         //AK:TODO: Instead of const COMP_CONST=20%, it may be a better idea to use the difference
         //      of actually attained stable positions.
-        //See MAX at the end - poscomp = ABS(poscomp);
+        poscomp = ABS(poscomp); //RED_FLAG sign analysis minding ATO/ATC could be beneficial w.r.t. errors
     }
     else
     {
@@ -729,7 +727,7 @@ static s32 tune_Tune_Function(u8_least index, PIDData_t *pid)
     Fail if error is outside 5.3% (per DZ, a  limit believed reasonable)
     */
     mode_SetControlMode(CONTROL_MANUAL_POS, FORTY_PCT);
-    if (tune_Stabilize(index, pid) == 1)
+    if (tune_Stabilize(index, pid, 0U) == 1)
     {
         // DEBUG_WRITE_TEXT("Exit");
         Reason = FAIL_STABILIZE;
@@ -745,13 +743,13 @@ static s32 tune_Tune_Function(u8_least index, PIDData_t *pid)
     u16 BIAS = control_GetBias();
     WRITE_NUMBER((s32)BIAS, 0);
     
+    if(process_WaitForTime(T2_500)==true)
+    {
+        return 1;    // early exit - user cancelled
+    }
+
     if((TuneOptions.toption & (1U<<StabilizeBias)) == 0U)
     {
-        if(process_WaitForTime(T2_500)==true)
-        {
-            return 1;    // early exit - user cancelled
-        }
-
         //This is presumed to be a steady-state Bias.
         //AK:TODO: The 2.5 s stabilization time may not be reliable: A valve util is called for.
         BIAS = control_GetBias();
@@ -951,9 +949,10 @@ back by CheckPosStablize() - which may be called unconditionally.
         Reason = FAIL_PADJ_TOO_BIG;
         return 7;
     }
-#if OPTION_PREINIT_POSCOMP //new try
-    pid->PosComp = tune_AdjustPoscomp(bSingleActing, (poscomp[Xfill]+poscomp[Xvent])/2);
-#endif
+    if((TuneOptions.toption & (1U<<UsePrelimPosComp)) != 0U)
+    {
+        pid->PosComp = tune_AdjustPoscomp(bSingleActing, (poscomp[Xfill]+poscomp[Xvent])/2);
+    }
     return 0; //moved up call chain: tune_RampingTest(index, pid); //AK:TODO: Move this to the top-level wrapper (which should also do UI notifications)
 }
 
@@ -1178,7 +1177,8 @@ static s32 tune_RampingTest(u8_least index, PIDData_t *pid)
             extDataAutoTune.gainRuns=MAX_STEPS;
         }
     #endif
-    if (tune_Stabilize(index, pid) == 1) ///AK:Q: This may change current PID parameters. Is this the intention? If so, what's the algorithm?
+    u32 option = (TuneOptions.toption & (1U<<PostStabilizePosPres));
+    if (tune_Stabilize(index, pid, option) == 1) ///AK:Q: This may change current PID parameters. Is this the intention? If so, what's the algorithm?
     {       /// DZ: Intended. Just to make it stable
         return 1;
     }
@@ -1198,7 +1198,7 @@ static s32 tune_RampingTest(u8_least index, PIDData_t *pid)
         // WRITE_NUMBER( (s32)( ((float32)n2Temp*10.F)/PERCENT_TO_SCALED_RANGE), 1);
         WRITE_NUMBER( ( (n2Temp*10)/((s16)PERCENT_TO_SCALED_RANGE)), 1);
     }
-    if (tune_Stabilize(index, pid) == 1) ///AK:Q: Same as above. What is the theory behind using tune_Stabilize()?
+    if (tune_Stabilize(index, pid, option) == 1) ///AK:Q: Same as above. What is the theory behind using tune_Stabilize()?
     {                           /// DZ: Just to make it stable
         return 1;
     }
@@ -1305,8 +1305,15 @@ static s32 tune_RampingTest(u8_least index, PIDData_t *pid)
         return 1;
     }
 
-    //pos_t posdiff = vpos_GetScaledPosition() - startpos;
-    pos_least_t posdiff = vpos_GetSmoothedScaledPosition() - startpos;
+    pos_least_t posdiff;
+    if((TuneOptions.toption & (1U<<RampStabilizeByPos)) == 0U)
+    {
+        posdiff = vpos_GetScaledPosition() - startpos;
+    }
+    else
+    {
+        posdiff = vpos_GetSmoothedScaledPosition() - startpos;
+    }
     BIAS = control_GetControlOutput(); //control_GetBias();
 #if OPTIONAL_TUNE_DIAG == 1
     extDataAutoTune.BiasHigh = nBias50;
@@ -1340,10 +1347,7 @@ static s32 tune_RampingTest(u8_least index, PIDData_t *pid)
         }
     }
 
-    //NOTE: These new parameters are not yet commited to the control, so the trouble is N/A
-#if OPTION_POSTCALC_POSCOMP
     pid->PosComp = poscomp;
-#endif
     pid->I += (u16)(pid->PosComp); //AK:TODO: Need to understand what is done here
 
     //It is probably happens elsewhere (doesn't it?), but for certainty, do this here at the point of change
@@ -1398,11 +1402,20 @@ static s16 StepTest(s8 iDir, s16 nOutInc, u16 nBiasSave, s16 nSpeed[Xends], s16 
     tick_t startTime=0;
 #endif
     WRITE_NUMBER((s32)nOutInc, 0);
-#if 0
-    pos_t nPosIni = vpos_GetScaledPosition();
-#else
-    pos_least_t nPosIni = vpos_GetSmoothedScaledPosition();
-#endif
+    pos_least_t nPosIni;
+    if((TuneOptions.toption & (1U<<UseSmoothedPositionForStep)) != 0U) 
+    {
+        nPosIni = vpos_GetScaledPosition();
+    }
+    else
+    {
+        bool_t cancel = !util_WaitForPos(T0_250, NOISE_BAND_STABLE, false);
+        if(cancel)
+        {
+            return 1;
+        }
+        nPosIni = vpos_GetSmoothedScaledPosition();
+    }
     if (nOutInc == 0)
     {
         return -1;
@@ -1539,15 +1552,20 @@ static s16 StepTest(s8 iDir, s16 nOutInc, u16 nBiasSave, s16 nSpeed[Xends], s16 
 #endif
     }
 
-#if OPTION_USE_SMOOTHED_POS
-    if (process_WaitForTime(T0_500))
+    pos_least_t lastpos;
+    if((TuneOptions.toption & (1U<<UseSmoothedPositionForPosComp)) != 0U)
     {
-        return 1;    // early exit - user cancelled
+        //if (process_WaitForTime(T0_500))
+        if(!util_WaitForPos(T0_500,  STABLE_POS_TEST, false))
+        {
+            return 1;    // early exit - user cancelled
+        }
+        lastpos = vpos_GetSmoothedScaledPosition();
     }
-    pos_least_t lastpos = vpos_GetSmoothedScaledPosition();
-#else
-    pos_least_t lastpos = vpos_GetScaledPosition();
-#endif
+    else
+    {
+        lastpos = vpos_GetScaledPosition();
+    }
     poscomp[iDir] = tune_ComputePoscomp(lastpos - nPosIni, nIPOutput - nBiasSave);
     nIPOutput = nBiasSave;
     control_SetPWM((u32)nIPOutput);
@@ -2251,7 +2269,7 @@ It does so by scaling proportional gain(s) down and integral up, using CheckStab
 It doesn't fail if it cannot stabilize, settling on the timeout's PID values.
 \return 1 on failure (process canceled or bias change flag set) or 0 on success
 */
-static s8 tune_Stabilize(u8_least index, PIDData_t *pid)
+static s8 tune_Stabilize(u8_least index, PIDData_t *pid, u32 option)
 {
     s8 i = STABLE_TRY_NUM;      //the timeout - 40, i.e., 40*2.5s=10s - is selected empirically
     ///NOTE: Max scaling down: .80**40=.00013 up: 1.2**40=1469.77
@@ -2267,9 +2285,9 @@ static s8 tune_Stabilize(u8_least index, PIDData_t *pid)
 
     //detect if valve has moved
     }while( (i>0) && ((m_pPosErr->err_abs>ONE_PCT_164) || (ABS((s32)m_pPosErr->err7)>ONE_PCT_164)) );
-    if((TuneOptions.toption & (1U<<PostStabilizePosPres)) != 0U)
+    if(option != 0U)
     {
-        if(!util_WaitStablePosPres(T0_250,  STABLE_POS_TEST, STABLE_PRES_TEST)) //T0_500?
+        if(!util_WaitForPos(T0_250,  STABLE_POS_TEST, false)) //T0_500?
         {
             return 1;    // early exit - process cancelled Or Bias changed
         }
