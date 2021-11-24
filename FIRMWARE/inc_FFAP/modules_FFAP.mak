@@ -66,6 +66,7 @@ SUBMODULES+= \
     pbypass_1-0.mak,27138
 
 #HART Glue layer
+MOD_OVERRIDE+=hart_corefac.c
 SUBMODULES+= corefac_1-1.mak,79757 \
     hart_base_1-0.mak,27138 \
     faultsif_1-0.mak,27138 \
