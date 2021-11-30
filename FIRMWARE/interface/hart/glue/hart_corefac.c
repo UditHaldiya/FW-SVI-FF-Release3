@@ -189,7 +189,7 @@ s8_least hartcmd_WriteNVMEMarea(const u8 *src, u8 *dst)
     /* In case FAULT_FACTORYWRITE is set up as not failsafe, for which
     there may be good internal reasons, we enforce failsafe here
     */
-    mode_SetMode(MODE_FAILSAFE);
+    (void)mode_SetMode(MODE_FAILSAFE); //can't do better
     error_SetFault(FAULT_FACTORYWRITE);
 
     s8_least ret;
