@@ -122,6 +122,7 @@ s8_least hartcmd_ClearFailedState(const u8 *src, u8 *dst)
     error_ClearFaults(false); //TBD if a finer clearing mechanism is required
     error_Mopup(); //do it here in case reset is coming
     ErrorCode_t err = mode_SetMode(MODE_OPERATE); //Note: Bypassing mode_SetNormalMode wrapper intentionally
+    mode_Mopup(); //do it here in case reset is coming
     return err2hart(err);
 }
 
