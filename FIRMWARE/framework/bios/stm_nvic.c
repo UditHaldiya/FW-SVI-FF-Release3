@@ -189,9 +189,15 @@ u32 timer_EstimateFunctionLength(void (*func)(void))
 */
 void scb_DoHardReset(void)
 {
+    __DSB();
     u32 aircr = SCB->AIRCR & 0xffffu;
-
-    SCB->AIRCR = aircr | (0x5fau << 16) | SCB_AIRCR_SYSRESETREQ;
+    aircr = aircr | (0x5fau << 16) | SCB_AIRCR_SYSRESETREQ;
+    __DSB();
+    for(;;) //don't escape anywhere!
+    {
+        SCB->AIRCR = aircr; //must/should cause a reset here
+        __DSB();
+    }
 }
 
 void NVIC_SetVectors(void)
