@@ -68,7 +68,7 @@ modmidst :
 
 #added a retry
 modend :
-	$(Hide)$(OFFVCS) @filelist.txt || $(OFFVCS) @filelist.txt
+	$(Hide)$(OFFVCS) /force @filelist.txt || $(OFFVCS) @filelist.txt
     $(pawz)
     @echo Copying modules' files
 	$(Hide)cp.exe filecpy.butt filecpy.bat

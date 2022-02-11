@@ -89,14 +89,17 @@ OFFroot := C:\tfsbuild\$(buildname)\FIRMWARE
 #Default is T (latest)
 OFFver ?=T
 
-#  -- Do not change unless instructed by IT --
-#   Bogus builder user
+#  -- Do not change unless instructed by IT should come from environment --
+#   Bogus builder user, 
 OFFtemplateuser ?=GENPITFI01\502098661
 
-OFFuname:=lg098661sv
-OFFuser :=Logon\$(OFFuname)
+#OFFuname:=lg098661sv
+OFFuname?=svc-TFSBuildValves
+#OFFuser :=Logon\$(OFFuname)
+#OFFuser?=BHI-MASTER\$(OFFuname)
 #   Password of the bogus user
-OFFpass:=Sha2118d
+#OFFpass:=Sha2118d
+#OFFpass?=9Jc*MS8)9?s8g7G6X7j:E515G
 #   Where modules are retrieved
 OFFmodroot:= C:\rbuilder\Core\FIRMWARE
 #   Template workspace
@@ -160,7 +163,7 @@ SS : force
     $(OFFVCS) get $(OFFroot);$(OFFver) /recursive /force $(OFFlogin) || $(OFFVCS) get $(OFFroot);$(OFFver) /recursive $(OFFlogin)
 # 5. Get modules
     echo %TIME% Get modules >> $(PROJDIR)\buildtime.log
-    gnumake -C $(OFFroot) proj=$(PROJ) MODULES VCS_MODULES_ROOT=$(OFFmodroot) MODARG="/force" LOGIN=$(OFFlogin)
+    gnumake -C $(OFFroot) proj=$(PROJ) MODULES VCS_MODULES_ROOT=$(OFFmodroot) MODARG= LOGIN=$(OFFlogin)
 # 6. Execute a plugin if supplied
     $(VC_PLUGIN)
 # 7. Delete temporary workspace

@@ -7,17 +7,20 @@ appserverc = $(firstword $(shell cmd /C sort /R appserverc.txt))
 #synccmd = $(OFFVCS) get . /recursive /noprompt /overwrite
 #modcmd = gnumake proj=FFAP MODULES
 
-#output files (e.g. .mns, .map etc.) will be at FF_Auto_Builds\CXXXXX
-#out_dir := C:\FF_Auto_Builds\FromDevelBranch
-out_dir := C:\Ddrive\Auto_Builds\SVIFF\FromReleasesBranch\FromRelease3
+#This is project family's release path basename
+export ReleaseDir=Release3
+
+#output files (e.g. .mns, .map etc.) will be here
+out_dir := $(BUILD_REPOSITORY)\SVIFF\FromReleasesBranch\From$(ReleaseDir)
 buildname = C$(appserverc)
-#uniqroot = C:\Ddrive\tfsbuildR\SVIFF\Release3
-uniqroot = C:\Users\Public\tfsbuildR\SVIFFReleases\Release3
+
+#Here is where the official build be actually performed; should come from environment vars
+OFFLastBuild?=C:\LastBuild
+uniqroot = $(OFFLastBuild)\SVIFF\FromReleasesBranch\From$(ReleaseDir)
 OFFroot = $(uniqroot)\FIRMWARE
 OFFmodroot = $(uniqroot)\Core\FIRMWARE
 
-#For ffplug.mak
-export ReleaseDir=Release3
+#For ffplug.mak - FF-specific
 
 #select the FF tokenizer version
 export FFTokVer=3.70
@@ -38,7 +41,10 @@ all : appserverc.txt
 	$(modcmd)
     if not exist $(out_dir)\$(buildname) cmd /C mkdir $(out_dir)\$(buildname) && $(MAKE) OFFDir=Rel proj=FFAP plugin=ffplug.mak OFFICIAL notask=1 buildname=$(buildname) OFFver=$(buildname) \
 	ver=FS8.40_3_30356 Hide= \
-	NO_MNS=1 OFFroot=$(OFFroot) OFFmodroot=$(OFFmodroot) MNS_OFFICIAL_DIR=$(out_dir)\$(buildname) avplugin=avplugin.mak silent=1 
+	NO_MNS=1 OFFroot=$(OFFroot) OFFmodroot=$(OFFmodroot) MNS_OFFICIAL_DIR=$(out_dir)\$(buildname) \
+	avplugin=avplugin.mak silent=1 
+
+#> $(out_dir)\$(buildname)\build.log 2>&1
 
 appserverc.txt : force
     $(OFFVCS) history . /noprompt /sort:descending /recursive /stopafter:1 | sed --text -e "$$!d" >$@
