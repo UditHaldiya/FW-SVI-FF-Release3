@@ -35,7 +35,7 @@ demand.
 #include "timedef.h"
 #include "poscharact.h"
 #include "control.h"
-#ifdef AK //define AK to continue work on accounting for warm reset
+#if 1 //#ifdef AK //define AK to continue work on accounting for warm reset
 #include "reset.h"
 #endif
 
@@ -244,8 +244,13 @@ static ErrorCode_t digsp_ClampSetpoint(s32 *p_sp)
     return err;
 }
 
+static tick_t sp_receipt_time = 0U;
+
 /** \brief Sets target TB mode and digital setpoint and captures its timestamp.
-Saving to NVMEM defered to mopup
+Saving to NVMEM (if sp changed noticeably or mode changed) defered to mopup
+
+NEW: We only monitor the fact of receipt of setpoint; the rest is the job of 
+TB.XD_FSTATE in FFP
 \param xmode - external TB target mode; ignored if IPC_MODE_NO_CHANGE
 \param sp - digital setpoint (ignored if SETPOINT_INVALID)
 \return an error code (allowed actions are still performed)
@@ -256,6 +261,11 @@ ErrorCode_t digsp_SetDigitalSetpointEx(u8 xmode, s32 sp)
     digitalsp_t digsp;
     (void)digsp_GetData(&digsp);
 
+    //Ack the receipt of a setpont, whether GOOD or not
+    error_ClearFault_External(FAULT_SETPOINT_TIMEOUT);
+    digsp.timestamp = DigitalSpConf.ShedTime;
+    sp_receipt_time = timer_GetTicks();
+    
     if(sp == SETPOINT_INVALID)
     {
         //Do not use the setpoint
@@ -265,11 +275,9 @@ ErrorCode_t digsp_SetDigitalSetpointEx(u8 xmode, s32 sp)
         sp = poscharact_Direct(sp);
         err = digsp_ClampSetpoint(&sp);
 
-        digsp_req = (mn_abs(sp - digsp.setpoint) > INT_PERCENT_OF_RANGE(0.5));
+        digsp_req = (mn_abs(sp - digsp.setpoint) > INT_PERCENT_OF_RANGE(0.25));
         digsp.setpoint = sp;
         digsp.isValid = true;
-        error_ClearFault_External(FAULT_SETPOINT_TIMEOUT);
-        digsp.timestamp = timer_GetTicks();
     }
 
     if(xmode != IPC_MODE_NO_CHANGE)
@@ -281,7 +289,6 @@ ErrorCode_t digsp_SetDigitalSetpointEx(u8 xmode, s32 sp)
             bool_t accept = true;
             if(xmode == IPC_MODE_AUTO)
             {
-                //if(!digsp.isValid || error_IsFault(FAULT_FIND_STOPS_FAILED))
                 if(error_IsFault(FAULT_FIND_STOPS_FAILED))
                 {
                     accept = false;
@@ -324,7 +331,7 @@ ErrorCode_t digsp_SetDigitalSetpointEx(u8 xmode, s32 sp)
     }
 
     Struct_Copy(digitalsp_t, &digitalsp, &digsp);
-    digsp_req = true;
+    //digsp_req = true;
     return err;
 }
 
@@ -440,9 +447,9 @@ void digsp_Mopup(void)
     smaller than timestamp (modulo 2**32) so the difference will be a huge number.
     So, the order matters a lot.
     */
-    tick_t tstamp = digsp_GetData(NULL)->timestamp;
-    tick_t tdiff = timer_GetTicksSince(tstamp);
-    if(tdiff >= conf.ShedTime)
+    tick_t ttl = digsp_GetData(NULL)->timestamp; //This is TTL of setpoint
+    tick_t tdiff = timer_GetTicksSince(sp_receipt_time);
+    if(tdiff >= ttl)
     {
         bool_t isValid = digitalsp.isValid;
         if(isValid)
@@ -468,7 +475,7 @@ void digsp_Mopup(void)
                     storeMemberInt(&digitalsp, xmode, xmode);
                 }
             MN_EXIT_CRITICAL();
-            error_SetFault(FAULT_SETPOINT_TIMEOUT);
+            error_SetFault(FAULT_SETPOINT_TIMEOUT); //latched, so no worry about tdiff overflow/wraparound
         }
     }
 }
@@ -502,26 +509,45 @@ ErrorCode_t digsp_SetData(const digitalsp_t *src)
     //range check?
     Struct_Copy(digitalsp_t, &digitalsp, src);
     MN_ENTER_CRITICAL();
-        tick_t init_timestamp = DigitalSpConf.InitTime - DigitalSpConf.ShedTime; //pretend setpoint received in the future
+        tick_t init_timestamp = DigitalSpConf.InitTime; //pretend setpoint received in the future
         storeMemberInt(&digitalsp, timestamp, init_timestamp);
-        if((digsp_GetConf(NULL)->sp_option == SSO_current_position))
+#if 0 //digsp_Invalidate won't work because we don't have valve position yet. So, almost the same but not quite.
+        digsp_Invalidate(&DigitalSpConf);
+#else
+        pos_least_t sp = SETPOINT_INVALID;
+        switch(digsp_GetConf(NULL)->sp_option)
         {
-#ifdef AK //looks like a better behavior but needs support elsewhere
-            if(reset_IsWarmstart() && digitalsp.isValid)
-            {
-                //keep last setpoint
-            }
-            else
-#endif
-            {
-                //pick up the valve position later
-                storeMemberS32(&digitalsp, setpoint, SETPOINT_INVALID);
-            }
+            case SSO_last_setpoint:
+                if(reset_IsWarmstart() && digitalsp.isValid)
+                {
+                    //keep last setpoint
+                    sp = digitalsp.setpoint;
+                }
+                else
+                {
+                    //leave sp = SETPOINT_INVALID to pick up valve position in mode guard;
+                }
+                break;
+                
+            case SSO_fixed_setpoint:
+                /* NOTE: This should work but has no FF interface to set.
+                   For now, debug/development only, using an SA command
+                */
+                sp = DigitalSpConf.FixedSetpoint;
+                break;
+                
+            case SSO_current_position:
+            default: //should not be in default but just in case
+                //pick up the valve position (not yet available) later, in mode guard
+                //leave sp = SETPOINT_INVALID;
+                break;
         }
+        storeMemberS32(&digitalsp, setpoint, sp);
+#endif
         storeMemberBool(&digitalsp, isValid, true); //Let the init timeout expire to declare it false
     MN_EXIT_CRITICAL();
     MN_DBG_ASSERT(!oswrap_IsOSRunning());
-    return ram2nvramAtomic(NVRAMID_digitalsp);
+    return ERR_OK; //Do not write back on init! ram2nvramAtomic(NVRAMID_digitalsp);
 }
 
 /** \brief Returns characterized position setpoint
