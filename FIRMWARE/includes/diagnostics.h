@@ -41,6 +41,10 @@ extern ErrorCode_t diag_SetDiagnosticParameters(u8_least Type, u16_least nSpeed,
 extern bool_t diag_Perform_StepTest(void); //deprecated
 
 extern procresult_t diag_Run_ExtActuatorSignature(s16 *procdetails);
+extern procresult_t diag_Run_ExtActuatorSignatureOpen_Internal(void (*sample_func)(diag_t data[2]), taskid_t TaskContext,
+                     pos_t StartPosition, pos_t EndPosition, u16 Speed, u8_least DiagDirection, s16 *procdetails);
+
+
 extern void diag_Run_StepTest(void);
 extern procresult_t diag_Run_RampTest(s16 *procdetails);
 extern ErrorCode_t diag_LaunchStepTest(pos_t StartPosition, pos_t EndPosition, u16 SamplingTime);

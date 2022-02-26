@@ -48,7 +48,6 @@ demand.
 #include "diagnostics.h"
 #include "vramptest.h"
 
-#include "diagnosticsUniversal_sys.h"
 /** private defines */
 
 
@@ -974,11 +973,20 @@ static procresult_t diag_Run_RampTest_Internal(void (*sample_func)(diag_t data[2
     ErrorCode_t err;
 
     ///make sure the parameters are set
-    if( (!m_bParametersAreValid) || ((m_Type != (u8)DIAG_RAMP) && (m_Type != (u8)DIAG_EXT_ACT)) )
+    if( (!m_bParametersAreValid) || ((m_Type != DIAG_RAMP) && (m_Type != DIAG_EXT_ACT)) )
     {
         return PROCRESULT_FAILED;
     }
-
+    u16 maxpoints;
+    if(m_Type == DIAG_RAMP)
+    {
+        maxpoints = MAX_NUM_DSAMPLES(RAMPTEST_HEADERSZ); //happy to fill the whole buffer
+    }
+    else //DIAG_EXT_ACT
+    {
+        maxpoints = DIAG_MAX_SAMPLES; //That's how much we can save in a log file
+    }
+    
     //perform the diagnostic
 
     //display "DIAG"
@@ -1003,7 +1011,7 @@ static procresult_t diag_Run_RampTest_Internal(void (*sample_func)(diag_t data[2
         err = buffer_StartSampling(DIAGBUF_DEFAULT,
                                      TaskContext,
                                      sample_func,
-                                     MAX_NUM_DSAMPLES(RAMPTEST_HEADERSZ),
+                                     maxpoints,
                                      RAMPTEST_HEADERSZ/2U, // diag_t --> dsample_t
                                      NULL);
 
@@ -1019,13 +1027,13 @@ static procresult_t diag_Run_RampTest_Internal(void (*sample_func)(diag_t data[2
           // when both directions are selected, call again with start and end reversed
           if(procresult == PROCRESULT_OK)
           {
+              //dont' sample while we wait for valve to get to position and stable
+              u16 skip = buffer_SuspendSampling(DIAGBUF_DEFAULT); //must be BEFORE counting samples, else we may acquire parasitic samples
+
               SetSamplesFirstDirection();
 
               if(m_DiagDirection == DIAGDIR_UPDOWN)
               {
-                  //dont' sample while we wait for valve to get to position and stable
-                  u16 skip = buffer_SuspendSampling(DIAGBUF_DEFAULT);
-
                   //move the valve to starting position and stabalize
                   procresult = diag_Prepare_VRampTest(false, (pos_t)m_nEndPosition, (pos_t)m_nStartPosition); //use false until we implement both directions
 
@@ -1096,7 +1104,7 @@ void SetSamplesLastDirection(void)
         if(m_FinalPruneScale != m_FirstDirectionPruneScale)
         {
           u16_least Difference = m_FinalPruneScale / m_FirstDirectionPruneScale;
-          m_SamplesFirstDirection = (u16)((m_SamplesFirstDirection + (Difference-1))/Difference);
+          m_SamplesFirstDirection = (u16)(m_SamplesFirstDirection/Difference); //was rounding here, and it was wrong.
         }
     }
 }

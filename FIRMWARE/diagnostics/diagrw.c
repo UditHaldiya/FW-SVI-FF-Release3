@@ -33,6 +33,7 @@ typedef struct diagReadWrite_t
     u8 SignatureAssignment;
     u8 BufferId;
     u8 FileId;
+    u16 maxlen; //!< write size guard
 } diagReadWrite_t;
 
 static diagReadWrite_t diagrw; //! Interface to process
@@ -107,6 +108,7 @@ ErrorCode_t diag_PrepareSignatureWrite(u8 SignatureType, u8 SignatureAssignment)
     {
         diagrw.FileId = LOGF_FULL_ID(fileids[SignatureAssignment], 0U);
         diagrw.BufferId = DIAGBUF_DEFAULT;
+        diagrw.maxlen = DIAGSIGN_LOGFILE_MAXSIZE; //don't store more than we can. This is a guard against overflow bugs elsewhere, if any
     }
     return err;
 }
@@ -186,7 +188,7 @@ ErrorCode_t diag_LaunchSignatureRead(u8 SignatureType, u8 SignatureAssignment, u
 */
 procresult_t diag_WriteBuffer(s16 *procdetails)
 {
-    return diag_WriteBufferEx(procdetails, UINT16_MAX);
+    return diag_WriteBufferEx(procdetails, diagrw.maxlen);
 }
 
 procresult_t diag_WriteBufferEx(s16 *procdetails, s16_least maxlen)

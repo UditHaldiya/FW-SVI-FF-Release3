@@ -61,7 +61,8 @@ bool_t util_WaitStablePosPres(u16 nTime, HardPos_t nPosDB, pres_t nPresDB)
 
     MN_ASSERT(nTime > 0);
 
-    pres_t prev = pres_GetMainPressure();
+    const volatile pres_t *pres = &(pres_GetPressureData()->Pressures[PRESSURE_ACT1_INDEX]);
+    pres_t prev = *pres;
     HardPos_t pos = vpos_GetRawPosition();
 
     // Loop forever
@@ -84,7 +85,7 @@ bool_t util_WaitStablePosPres(u16 nTime, HardPos_t nPosDB, pres_t nPresDB)
         NewPos = vpos_GetRawPosition();
 
         bool_t DirectionPlus = NewPos > pos;
-        pres_t press = pres_GetMainPressure();
+        pres_t press = *pres;
 
             //lint -e{960}  the [mn_]abs function does not have side effects
         if ((mn_abs(pos - NewPos) < nPosDB)
@@ -143,12 +144,6 @@ u16 util_GetStableBias(pos_t nStdPos, u16 nTime, HardPos_t nPosDB, pres_t nPresD
     {
         //keep error - user or error cancel
     }
-#if 0
-    else if(!util_WaitForPos(nTime, nPosDB, true)) //make sure we arrived at setpoint
-    {
-        //keep error - user or error cancel
-    }
-#endif
     else if(!util_WaitStablePosPres(nTime, nPosDB, nPresDB))
     {
         //keep error - user or error cancel
@@ -315,7 +310,7 @@ void vutil_StablePosPresReq_Init(StableReq_t *StableReqState, HardPos_t nPosDB, 
     StableReqState->havePress = havePress;
     StableReqState->press = pres_GetMainPressure();
     StableReqState->pos_diff = 0; //actually, don't care
-    StableReqState->pos = vpos_GetRawPosition();
+    StableReqState->pos = vpos_GetScaledPosition();
 }
 
 /** \brief Check stable position, good for any context
@@ -326,7 +321,7 @@ bool_t vutil_StablePosPresReq_Run(StableReq_t *StableReqState)
 {
     //If position change since last test < | nPosDB | then
     HardPos_t oldPos = StableReqState->pos;
-    StableReqState->pos = vpos_GetRawPosition();
+    StableReqState->pos = vpos_GetScaledPosition();
     HardPos_t pos_diff = StableReqState->pos - oldPos;
     pres_t newpress = pres_GetMainPressure();
     bool_t havePress = StableReqState->havePress && (newpress != PRESSURE_INVALID);
