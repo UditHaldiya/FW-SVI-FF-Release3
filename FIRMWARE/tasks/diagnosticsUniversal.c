@@ -642,7 +642,7 @@ static procresult_t diag_ExtSignaturePrepare(bias_change_t* bc, u16_least Speed)
         //                                               (u32)bc->BiasStart, (u32)bc->BiasEnd, (u32)Speed);
         //lint -e{414} positions not equal tested above - no divide by 0
         bc->BiasPer10Ticks = (s32)(((s32)Speed * BiasDiffBoosted)/((s32)TEN_TICKS*posdiff_bias));
-#if 1
+#if 0 // Use LimitWithSign() for ATC
         bc->BiasPer10Ticks = CLAMP(bc->BiasPer10Ticks, (bias_t)BIAS_PER_MIN, (bias_t)BIAS_PER_MAX);
         UNUSED_OK(LimitWithSign);
 #else
