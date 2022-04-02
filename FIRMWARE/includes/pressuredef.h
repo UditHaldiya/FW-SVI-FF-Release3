@@ -68,7 +68,11 @@ CONST_ASSERT(PRESSURE_INVALID < -STD_FROM_PSI(UNITS_PSI_B));
 
 //constants used by FPressureToPressure and limits
 #define PRESSURE_MAX_PSI (160.0) //! upper range limit of pressure in psi
+#if 0 //may be used in diagnostics somewhere?
 #define PRESSURE_MAX_STD (STD_FROM_PSI(PRESSURE_MAX_PSI))
+#define PRESSURE_LOW_CUTOFF STD_FROM_PSI(0.25)
+#endif //0
+
 #define PRESSURE_MIN_PSI (-5.0) //! lower range limit of pressure in psi
 CONST_ASSERT(PRESSURE_INVALID < STD_FROM_PSI(PRESSURE_MIN_PSI));
 

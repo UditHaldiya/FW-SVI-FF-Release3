@@ -42,7 +42,7 @@ extern bool_t diag_Perform_StepTest(void); //deprecated
 
 extern procresult_t diag_Run_ExtActuatorSignature(s16 *procdetails);
 extern procresult_t diag_Run_ExtActuatorSignatureOpen_Internal(void (*sample_func)(diag_t data[2]), taskid_t TaskContext,
-                     pos_t StartPosition, pos_t EndPosition, u16 Speed, u8_least DiagDirection, s16 *procdetails);
+                     pos_t StartPosition, pos_t EndPosition, pos_least_t Speed, u8_least DiagDirection, s16 *procdetails);
 
 
 extern void diag_Run_StepTest(void);
@@ -94,14 +94,12 @@ CONST_ASSERT((sizeof(dsample_t)%sizeof(diag_t))==0U);
 #define DIAGDIR_UP DIAGDIR_ONEWAY
 
 //used in multiple diagnostic files
-#define POSITION_03 STD_FROM_PERCENT(3.00)
+//#define POSITION_03 STD_FROM_PERCENT(3.00)
 #define POSITION_05 STD_FROM_PERCENT(5.00)
 #define POSITION_10 STD_FROM_PERCENT(10.00)
 #define POSITION_20 STD_FROM_PERCENT(20.00)
 //#define POSITION_90 STD_FROM_PERCENT(90.00)
 //#define POSITION_95 STD_FROM_PERCENT(95.00)
-
-#define PRESSURE_LOW_CUTOFF STD_FROM_PSI(0.25)
 
 #endif
 

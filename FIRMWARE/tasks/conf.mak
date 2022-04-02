@@ -1,6 +1,6 @@
 #tasks
 #SOURCE, if defined, is a space-separated list of the sources in this directory
-SOURCE=diagnostics.c diagnosticsUniversal.c procshims.c #cycle. cmain.c
+SOURCE=diagnostics.c opnlpsgn.c procshims.c #cycle. cmain.c
 
 ifeq ($(FEATURE_LOCAL_UI),SIMPLE)
 #Add UI processes
