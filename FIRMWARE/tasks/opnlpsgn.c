@@ -212,7 +212,7 @@ static procresult_t diag_EstimateBiasAtPos(pos_t startpos, bool_t increasing, po
     curpos = vpos_GetScaledPosition();
 
     /* We will ramp sp from where we found ourselves to at least `mid` and
-    unconditionally stop raming when reached `end`. The code takes care that
+    unconditionally stop ramping when reached `end`. The code takes care that
     position reaches at least `mid`.
     Then we'll parse the buffer of sampled position and bias to work out details.
     */
@@ -221,15 +221,15 @@ static procresult_t diag_EstimateBiasAtPos(pos_t startpos, bool_t increasing, po
     pos_least_t end;
     if(increasing)
     {
-        start = curpos + 1*POS_DELTA;
-        mid = curpos + 2*POS_DELTA;
-        end = curpos + 3*POS_DELTA;
+        start = curpos + 2*POS_DELTA;
+        mid = curpos + 3*POS_DELTA;
+        end = curpos + 4*POS_DELTA;
     }
     else
     {
-        start = curpos - POS_DELTA;
-        mid = curpos - 2*POS_DELTA;
-        end = curpos - 3*POS_DELTA;
+        start = curpos - 2*POS_DELTA;
+        mid = curpos - 3*POS_DELTA;
+        end = curpos - 4*POS_DELTA;
     }
 
     if(procresult == PROCRESULT_OK)
