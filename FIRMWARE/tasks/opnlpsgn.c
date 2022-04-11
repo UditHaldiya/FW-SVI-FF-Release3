@@ -39,6 +39,27 @@ demand.
 
 #include "diagnostics.h"
 
+//Algorithm choices
+#define USE_PRESSURE_LIMIT 1
+#define USE_BIAS_END_LIMIT 0
+#define USE_POS_ATLIMIT_CRITERION 1
+#define USE_STEP_ADAPTATION 1
+#define USE_AUX_BUFFER 0 //required for single loop but needs work with presampling
+
+//Buffer constants
+#if USE_AUX_BUFFER
+#define WORKING_DIAGBUF DIAGBUF_AUX
+#define MAX_NUM_AUX_DSAMPLES(headersz) (((((DIAGNOSTIC_BUFFER_SIZE_AUX-1U)-headersz)/DENTRIES_IN_DSAMPLE)/2U)*2U) //must be even!
+#define WORKING_MAX_DSAMPLES NUM_AUX_DSAMPLES(0U)
+#define WORKING_HEADERSIZE 0U
+#else
+#define WORKING_DIAGBUF DIAGBUF_DEFAULT
+#define WORKING_MAX_DSAMPLES MAX_NUM_DSAMPLES(EXTDIAG_HEADERSZ)
+#define WORKING_HEADERSIZE (EXTDIAG_HEADERSZ)
+#endif
+
+
+
 //Process progress
 //At preparation, for each direction
 #define EXTDIAG_AT_START_POINT 2
@@ -71,20 +92,20 @@ CONST_ASSERT(sizeof(prescan_results_t)%sizeof(diag_t)==0U);
 #define BUFINDEX_POS 0
 #define BUFINDEX_PWM 1
 //structures used internally
-typedef struct test_info_t                //prameters setup by prepare routine to control signature
+typedef struct test_info_t                //! parameters setup by prepare routine to control signature
 {
-    pos_t SpecifiedStartPosition;           //user entered start position
-    pos_t SpecifiedEndPosition;             //user entered end position
-    pos_t PreparationStartPosition;         //limited in range start position for preparation
-    pos_t PreparationEndPosition;           //limited in range end position for preparation
-    bool_t bIPIncreasing;                   //ip increasing when going from start to end
-    bool_t bDirectionIncreasing;            //flag for increasing or decreasing position
+    pos_t SpecifiedStartPosition;           //!< user entered start position
+    pos_t SpecifiedEndPosition;             //!< user entered end position
+    pos_t PreparationStartPosition;         //!< limited in range start position for preparation
+    pos_t PreparationEndPosition;           //!< limited in range end position for preparation
+    bool_t bIPIncreasing;                   //!< ip increasing when going from start to end
+    bool_t bDirectionIncreasing;            //!< flag for increasing or decreasing position
     prescan_results_t crosspoint;
 } test_info_t;
 
 
 //defines
-#define BIAS_STEP_CONTROL_PERIOD ((s32)CTRL_TASK_DIVIDER) //in ticks - We step the bias in Cycle task
+#define BIAS_STEP_CONTROL_PERIOD ((s32)CTRL_TASK_DIVIDER) //! in ticks - We step the bias in Cycle task
 #define BIAS_SCALE_SHIFT 8 //We do want a sensible integer BiasPerStep, but stay in 32-bit world
 #define BIAS_PER_MIN ((bias_t)(0.2*BIAS_SCALE_FACTOR)) //at least once every 5 steps
 #define BIAS_PER_MAX ((bias_t)(100*BIAS_SCALE_FACTOR))
@@ -125,7 +146,7 @@ Samples valve position and bias.
 */
 static void dsampler_SamplePosBias(diag_t data[2])
 {
-    data[BUFINDEX_POS] = vpos_GetScaledPosition();
+    data[BUFINDEX_POS] = (pos_t)vpos_GetSmoothedScaledPosition();
     //known bad data[BUFINDEX_POS] = control_GetBias();
     data[BUFINDEX_PWM] = (diag_t)pwm_GetValue();
 }
@@ -234,13 +255,14 @@ static procresult_t diag_EstimateBiasAtPos(pos_t startpos, bool_t increasing, po
 
     if(procresult == PROCRESULT_OK)
     {
-        //Ramp sp until position crosses startpos and sample position/bias
+        //Ramp sp until position crosses startpos and sample position/bias.
+        //No header, AUX buffer
         ErrorCode_t err = buffer_StartSampling(
-                 DIAGBUF_DEFAULT,
+                 WORKING_DIAGBUF,
                  TASKID_CONTROL, //That's where we are sampling now
                  dsampler_SamplePosBias,
-                 MAX_NUM_DSAMPLES(EXTDIAG_HEADERSZ),
-                 EXTDIAG_HEADERSZ/2U,
+                 WORKING_MAX_DSAMPLES,
+                 WORKING_HEADERSIZE/2U,
                  NULL);
 
         if(err != ERR_OK)
@@ -301,8 +323,8 @@ static procresult_t diag_EstimateBiasAtPos(pos_t startpos, bool_t increasing, po
     diag_UpdatePercentComplete(EXTDIAG_RAMPED_FOR_BIAS_RATE_CATCHUP);
 
     //Unconditional housekeeping
-    buffer_StopSampling(DIAGBUF_DEFAULT);
-    curpos = vpos_GetScaledPosition();
+    buffer_StopSampling(WORKING_DIAGBUF);
+    curpos = vpos_GetScaledPosition(); //Not smoothed here!
     mode_SetControlMode(CONTROL_MANUAL_POS, curpos);
     (void)control_SetTentativeLimits(&ctllims_saved);
 
@@ -312,8 +334,8 @@ static procresult_t diag_EstimateBiasAtPos(pos_t startpos, bool_t increasing, po
     //We need to do it from the end of the buffer because that's where the ramp is visible
     if(procresult == PROCRESULT_OK)
     {
-        diag_t *p = &buffer_GetXDiagnosticBuffer(DIAGBUF_DEFAULT)[EXTDIAG_HEADERSZ];
-        u16_least num_points = VARS_PER_SAMPLE * buffer_GetSamplerInfo(DIAGBUF_DEFAULT)->num_points;
+        diag_t *p = &buffer_GetXDiagnosticBuffer(WORKING_DIAGBUF)[WORKING_HEADERSIZE];
+        u16_least num_points = VARS_PER_SAMPLE * buffer_GetSamplerInfo(WORKING_DIAGBUF)->num_points;
         u16_least currpoint;
         if(num_points < 2U*VARS_PER_SAMPLE)
         {
@@ -412,16 +434,26 @@ static void diag_ExtSignaturePrepare(s8_least x, test_info_t* bc, pos_least_t st
     MN_ASSERT(equiv((bc->PreparationEndPosition>bc->PreparationStartPosition), bc->bDirectionIncreasing));
 }
 
-
 typedef struct sample_and_step_t
 {
     void (*sample_func)(diag_t data[2]);
     s32 BiasPerStep;
     s32 BiasBoosted;
+#if USE_STEP_ADAPTATION
+    pos_least_t PosStep; //!< per update period
+#endif
+    bool_t PosIncreasing;
+    size_t run_count;
+    u32 pos_atlim_count;
 } sample_and_step_t;
 
 static sample_and_step_t sample_and_step;
 
+static void diag_AccelerateBias(void); //forward
+
+/** \brief A data sampler modified to also control bias (PWM output)
+based on static-duration sample_and_step setting
+*/
 static void dsampler_SampleAndStep(diag_t data[2])
 {
     sample_and_step.BiasBoosted += sample_and_step.BiasPerStep;
@@ -431,8 +463,10 @@ static void dsampler_SampleAndStep(diag_t data[2])
         MN_ASSERT(err == ERR_OK);
         sample_and_step.sample_func(data);
     MN_EXIT_CRITICAL();
+    diag_AccelerateBias();
 }
 
+#if USE_PRESSURE_LIMIT
 static bool_t IsPres1AtLim(bool_t IPIncreasing)
 {
     bool_t atlim;
@@ -447,6 +481,7 @@ static bool_t IsPres1AtLim(bool_t IPIncreasing)
     }
     return atlim;
 }
+#endif //USE_PRESSURE_LIMIT
 
 /** \brief Resumes previously suspended data sampling and, as part of it, bias sweep
 \param bc - a pointer to misc. sweep data
@@ -499,7 +534,7 @@ static procresult_t diag_LaunchBiasSweep(const test_info_t *bc, s32 Speed, u16 s
     BiasPerStep = --------------- * ----------------- * step_length
                       posdiff       MN_MS2TICKS(1000U)
     The first fraction is scaling from position to bias, the second, scaling Speed
-    to %/tick. I (Ark) don't bother to optimize (Yet?)
+    from %/s to %/tick. I (Ark) don't bother to optimize (Yet?)
     */
     if(procresult == PROCRESULT_OK)
     {
@@ -534,11 +569,23 @@ static procresult_t diag_LaunchBiasSweep(const test_info_t *bc, s32 Speed, u16 s
         }
     }
 
-    //Launch open loop ramp
+    //Finish initialization of the modified data sampler
     sample_and_step.BiasPerStep = BiasPerStep;
     bias_t pwm = (bias_t)pwm_GetValue(); //start with what we have really output
     sample_and_step.BiasBoosted = pwm * BIAS_SCALE_FACTOR;
+    sample_and_step.run_count = 0U;
+    sample_and_step.pos_atlim_count = 0U;
+    sample_and_step.PosIncreasing = bc->bDirectionIncreasing;
+#if USE_STEP_ADAPTATION
+    sample_and_step.PosStep = (s32)(((s64)Speed * (s64)BIAS_SCALE_FACTOR * (s64)step_length)/(s64)MN_MS2TICKS(1000U));
+    if(!bc->bDirectionIncreasing)
+    {
+        //Don't
+        sample_and_step.PosStep = -sample_and_step.PosStep;
+    }
+#endif
 
+    //Launch open loop ramp
     if(procresult == PROCRESULT_OK)
     {
         mode_SetControlMode(CONTROL_OFF, 0); //sp don't care
@@ -556,35 +603,108 @@ static u8_least posindex;
 /** \brief Relying on position noise, detect if position is
 not moving in the expected direction
 \param increasing - expected direction
+\param[out] step - a pointer to avg. position step size, !=0 if returns true
 \return true iff deemed at rail
 */
-static bool_t DetectPosAtRail(bool_t increasing)
+static bool_t DetectPosAtRail(bool_t increasing, pos_least_t *step)
 {
     u8_least n = posindex+1U;
     n %= NELEM(poshistory); //New index; it is also the oldest index
     pos_t curpos = vpos_GetScaledPosition();
-    bool_t ret = equiv(increasing, (curpos < poshistory[n]));
+
+    pos_least_t posperstep = (BIAS_SCALE_FACTOR*(curpos - poshistory[n]))/(s32)NELEM(poshistory); //per 60 ms
+
+    bool_t ret = equiv(increasing, (curpos <= poshistory[n]));
+    if(ret)
+    {
+        if(increasing)
+        {
+            posperstep = 1;
+        }
+        else
+        {
+            posperstep = -1;
+        }
+    }
+    *step = posperstep;
+
     poshistory[n] = curpos;
     posindex = n;
     return ret;
 }
+
+#if USE_STEP_ADAPTATION
+#define ADAPT_SCALE_BITS (29-BIAS_SCALE_SHIFT)
+#define ADAPT_SCALE ((s32)(1UL<<ADAPT_SCALE_BITS))
+CONST_ASSERT((BIAS_SCALE_SHIFT + ADAPT_SCALE_BITS)<=29); //max accepted by intscale32
+
+#if defined(NDEBUG) || defined(_lint)
+#define alpha_float (1.0/4096.0)
+#else
+//Make it variable for experimentation in debug
+cdouble_t alpha_float = (1.0/4096);
+#endif
+//lint -esym(960, ALPHA) //Required Rule 10.4, Cast of complex expression from floating point to integer type
+#define ALPHA ((s32)(alpha_float*ADAPT_SCALE))
+#endif //USE_STEP_ADAPTATION
 
 /** \brief Holy sh*t! It appears to work!
 
 The accelerator can only be called after poshistory is filled
 \param increasing - expected direction
 */
-static void diag_AccelerateBias(bool_t increasing)
+static void diag_AccelerateBias(void)
 {
-    bool_t atrail = DetectPosAtRail(increasing);
-    if(atrail)
+    sample_and_step.run_count++;
+    if(sample_and_step.run_count >= NELEM(poshistory)) //let the check array fill
     {
-        sample_and_step.BiasBoosted += 10*sample_and_step.BiasPerStep;
+        sample_and_step.run_count = NELEM(poshistory);
+        //diag_AccelerateBias(bc->bDirectionIncreasing);
+        s32 BoostedPosStep;
+        bool_t atrail = DetectPosAtRail(sample_and_step.PosIncreasing, &BoostedPosStep);
+        if(atrail)
+        {
+            sample_and_step.BiasBoosted += 10*sample_and_step.BiasPerStep;
+            sample_and_step.pos_atlim_count++;
+        }
+        else
+        {
+            //Adapt BiasPerStep
+            //The actual relative speed difference
+#if USE_STEP_ADAPTATION
+            bias_t oldstep = sample_and_step.BiasPerStep;
+            bias_t refposstep = sample_and_step.PosStep;
+            s32 refbiasstep_ratio = (BIAS_SCALE_FACTOR*refposstep)/BoostedPosStep; //boosted by BIAS_SCALE_FACTOR
+            s32 newstep_boosted = (refbiasstep_ratio * oldstep);
+
+            bias_t newstep = intscale32r(ALPHA, newstep_boosted-oldstep*BIAS_SCALE_FACTOR, oldstep, ADAPT_SCALE_BITS+BIAS_SCALE_SHIFT);
+
+            if(oldstep>=0) //i.e., I/P increasing
+            {
+                newstep = CLAMP(newstep, BIAS_PER_MIN, BIAS_PER_MAX);
+            }
+            else
+            {
+                newstep = CLAMP(newstep, -BIAS_PER_MAX, -BIAS_PER_MIN);
+            }
+            sample_and_step.BiasPerStep = newstep;
+#endif
+        }
     }
 }
 
 #define SMALL_WAIT (MN_MS2TICKS(60u))
+#if USE_BIAS_END_LIMIT
 #define POST_SWEEP_MAX_COUNT (MN_MS2TICKS(30000u)/SMALL_WAIT) //extra 30 s wait
+#endif
+#if USE_PRESSURE_LIMIT
+#define PRES_ATLIM_COUNT (MN_MS2TICKS(4000u)/SMALL_WAIT) //4 s wait for pressure at limit
+#endif
+
+#if USE_POS_ATLIMIT_CRITERION
+#define POS_COUNT_LIMIT 40 //wait for no movement in the right direction for 60ms*POS_COUNT_LIMIT
+#endif
+
 /** \brief Waits until bias sweep end conditions are met
 
 This helper requires that the sweep be running. That guarantees termination (on bias)
@@ -595,13 +715,19 @@ This helper requires that the sweep be running. That guarantees termination (on 
 static procresult_t diag_WaitForEndOfSweep(const test_info_t *bc, bias_t BiasEnd)
 {
     procresult_t procresult = PROCRESULT_OK;
-    u8_least run_count = 0U;
+
+#if USE_BIAS_END_LIMIT
     u16_least finish_count = 0U;
+#else
+    UNUSED_OK(BiasEnd);
+#endif
+
+    u16 atlim_count = 0; //for pressure
 
     bool_t arrived;
     do
     {
-        if(process_WaitForTime(MN_MS2TICKS(60u)))
+        if(process_WaitForTime(SMALL_WAIT))
         {
             procresult = PROCRESULT_CANCELED;
             break;
@@ -614,26 +740,36 @@ static procresult_t diag_WaitForEndOfSweep(const test_info_t *bc, bias_t BiasEnd
         pos_least_t pos = vpos_GetScaledPosition();
         arrived = (bc->bDirectionIncreasing && (pos > bc->SpecifiedEndPosition))
                    || (!bc->bDirectionIncreasing && (pos < bc->SpecifiedEndPosition));
+#if USE_PRESSURE_LIMIT
         if(!arrived)
         {
-            //if( (bc->bDirectionIncreasing && (pos > bc->PreparationStartPosition))
-            //       || (!bc->bDirectionIncreasing && (pos < bc->PreparationStartPosition)))
+            bool_t atlim = IsPres1AtLim(bc->bIPIncreasing);
+            //can be momentary and undeserved, esp. on DA
+            if(atlim)
             {
-                //we took off - see if pressure saturated
-                arrived = IsPres1AtLim(bc->bIPIncreasing);
+                atlim_count++;
             }
-            run_count++;
-            if(run_count >= NELEM(poshistory)) //let the check array fill
+            else
             {
-                run_count = NELEM(poshistory);
-                diag_AccelerateBias(bc->bDirectionIncreasing);
+                atlim_count = 0U;
+            }
+            if(atlim_count >= PRES_ATLIM_COUNT)
+            {
+                arrived = true;
             }
         }
+#endif
         if(!arrived)
         {
-            if((bc->bDirectionIncreasing && (pos > bc->PreparationEndPosition))
-                   || (!bc->bDirectionIncreasing && (pos < bc->PreparationEndPosition)))
+            if( (bc->bDirectionIncreasing && (pos < bc->PreparationEndPosition))
+                   || (!bc->bDirectionIncreasing && (pos > bc->PreparationEndPosition)))
             {
+                //keep going
+                sample_and_step.pos_atlim_count = 0U;
+            }
+            else
+            {
+#if USE_BIAS_END_LIMIT // Can be grossly premature because of e.g. a sudden P1 drop on handover to open loop
                 //See if we got the bias
                 if( ((pwm >= BiasEnd) && bc->bIPIncreasing) || ((pwm <= BiasEnd) && !bc->bIPIncreasing) )
                 //if( ((pwm >= BiasEnd) && (biasdiff > 0)) || ((pwm <= BiasEnd) && (biasdiff < 0)) )
@@ -645,6 +781,13 @@ static procresult_t diag_WaitForEndOfSweep(const test_info_t *bc, bias_t BiasEnd
                         arrived = true;
                     }
                 }
+#endif
+#if USE_POS_ATLIMIT_CRITERION
+                if(sample_and_step.pos_atlim_count >= POS_COUNT_LIMIT)
+                {
+                    arrived = true;
+                }
+#endif
             }
         }
         if(!arrived)
@@ -653,7 +796,14 @@ static procresult_t diag_WaitForEndOfSweep(const test_info_t *bc, bias_t BiasEnd
             arrived = !CheckIPLimits(pwm);
         }
     } while(!arrived);
-
+#if 0
+    //Just for kicks, give it 4 s more but stop bias increment
+    sample_and_step.BiasPerStep = 0;
+    if(process_WaitForTime(T4_000))
+    {
+        procresult = PROCRESULT_CANCELED;
+    }
+#endif
     return procresult;
 }
 
@@ -751,6 +901,32 @@ static procresult_t diag_MoveValveToStartPosition(const test_info_t *bc, pos_lea
     return procresult;
 }
 
+static u16 diag_PreConfigSampling(void (*sample_func)(diag_t data[2]), taskid_t TaskContext, procresult_t *procresult, s16 *procdetails)
+{
+    //start and immediately suspend sampling/stepping in x direction
+    u16 skip;
+    ErrorCode_t err;
+    MN_ENTER_CRITICAL();
+        sample_and_step.sample_func = sample_func;
+        //The rest of sample_and_step is set per direction later
+        //That's OK because sampling doesn't actually start until then
+        err = buffer_StartSampling(
+                     DIAGBUF_DEFAULT,
+                     TaskContext, //That's where we are sampling now
+                     dsampler_SampleAndStep,
+                     DIAG_MAX_SAMPLES, //That's how much we can save in a log file, not MAX_NUM_DSAMPLES(EXTDIAG_HEADERSZ),
+                     EXTDIAG_HEADERSZ/2U,
+                     NULL);
+        skip = buffer_SuspendSampling(DIAGBUF_DEFAULT);
+        if(err != ERR_OK)
+        {
+            procfail(procresult);
+            *procdetails += DIAG_INTERNAL_ERROR; //should not get here
+        }
+    MN_EXIT_CRITICAL();
+    return skip;
+}
+
 /** \brief do open loop signature
 
   runs a open loop extended signature test. stores the results in the diagnostic buffer
@@ -765,7 +941,13 @@ static procresult_t diag_MoveValveToStartPosition(const test_info_t *bc, pos_lea
 procresult_t diag_Run_ExtActuatorSignatureOpen_Internal(void (*sample_func)(diag_t data[2]), taskid_t TaskContext,
                      pos_t StartPosition, pos_t EndPosition, pos_least_t Speed, u8_least DiagDirection, s16 *procdetails)
 {
-    procresult_t procresult = PROCRESULT_OK; //for lint
+    procresult_t procresult = PROCRESULT_OK;
+    u16 skip;
+#if USE_AUX_BUFFER
+    skip = diag_PreConfigSampling(sample_func, TaskContext, &procresult, procdetails);
+#endif
+
+
     test_info_t test_info[Xends];
     s8_least xend;
     if(DiagDirection == DIAGDIR_UPDOWN)
@@ -780,82 +962,58 @@ procresult_t diag_Run_ExtActuatorSignatureOpen_Internal(void (*sample_func)(diag
     }
 
     //Prepare for open loop signature by finding bias increment for proper speed
-    //  Must measure the bias speed in the correct direction of movement to
-    //  deal with hysteresis
     for(s8_least x=Xlow; x<xend; x++)
     {
-        diag_ExtSignaturePrepare(x, &test_info[x], StartPosition, EndPosition);
-        procresult = diag_EstimateBiasAtPos(test_info[x].PreparationStartPosition, test_info[x].bDirectionIncreasing, Speed, &test_info[x].crosspoint, procdetails);
-
+        //  Must measure the bias speed in the correct direction of movement to
+        //  deal with hysteresis
         if(procresult != PROCRESULT_OK)
         {
             break;
         }
+
+        diag_ExtSignaturePrepare(x, &test_info[x], StartPosition, EndPosition);
+        procresult = diag_EstimateBiasAtPos(test_info[x].PreparationStartPosition, test_info[x].bDirectionIncreasing, Speed, &test_info[x].crosspoint, procdetails);
     }
 
-    u16 skip = 0;
-    if(procresult == PROCRESULT_OK)
-    {
-        //start and immediately suspend sampling/stepping first direction
-        ErrorCode_t err;
-        MN_ENTER_CRITICAL();
-            sample_and_step.sample_func = sample_func;
-            //The rest of sample_and_step is set per direction later
-            //That's OK because sampling doesn't actually start until then
-            err = buffer_StartSampling(
-                         DIAGBUF_DEFAULT,
-                         TaskContext, //That's where we are sampling now
-                         dsampler_SampleAndStep,
-                         DIAG_MAX_SAMPLES, //That's how much we can save in a log file, not MAX_NUM_DSAMPLES(EXTDIAG_HEADERSZ),
-                         EXTDIAG_HEADERSZ/2U,
-                         NULL);
-            skip = buffer_SuspendSampling(DIAGBUF_DEFAULT);
-            if(err != ERR_OK)
-            {
-                procfail(&procresult);
-                *procdetails += DIAG_INTERNAL_ERROR; //should not get here
-            }
-        MN_EXIT_CRITICAL();
-    }
+#if !USE_AUX_BUFFER
+    skip = diag_PreConfigSampling(sample_func, TaskContext, &procresult, procdetails);
+#endif
 
-    if(procresult == PROCRESULT_OK)
+    for(s8_least x=Xlow; x<xend; x++)
     {
-        for(s8 x=Xlow; x<xend; x++)
+        diag_ExtSignaturePrepare(x, &test_info[x], StartPosition, EndPosition); //do it again, may be needed for Lint
+        if(procresult == PROCRESULT_OK)
         {
             //No, we are not ashamed to repeat initialization
             diag_ExtSignaturePrepare(x, &test_info[x], StartPosition, EndPosition);
 
             procresult = diag_MoveValveToStartPosition(&test_info[x], Speed, procdetails);
+        }
 
+        if(procresult == PROCRESULT_OK)
+        {
+            //Launch open loop ramp until position or bias reach target
+            bias_t BiasEnd;
+            procresult = diag_LaunchBiasSweep(&test_info[x], Speed, skip, TaskContext, &BiasEnd, procdetails);
+
+            //Wait until bias reached its (extended) end
             if(procresult == PROCRESULT_OK)
             {
-                //Launch open loop ramp until position or bias reach target
-                bias_t BiasEnd;
-                procresult = diag_LaunchBiasSweep(&test_info[x], Speed, skip, TaskContext, &BiasEnd, procdetails);
-
-                //Wait until bias reached its (extended) end
-                if(procresult == PROCRESULT_OK)
-                {
-                    procresult = diag_WaitForEndOfSweep(&test_info[x], BiasEnd);
-                }
+                procresult = diag_WaitForEndOfSweep(&test_info[x], BiasEnd);
             }
-            //suspend sampling
-            skip = buffer_SuspendSampling(DIAGBUF_DEFAULT);
-            pos_least_t curpos = vpos_GetScaledPosition();
-            mode_SetControlMode(CONTROL_MANUAL_POS, curpos);
+        }
 
-            if(procresult != PROCRESULT_OK)
-            {
-                break;
-            }
+        //suspend sampling
+        skip = buffer_SuspendSampling(DIAGBUF_DEFAULT);
+        pos_least_t curpos = vpos_GetScaledPosition();
+        mode_SetControlMode(CONTROL_MANUAL_POS, curpos);
 
-            //Save number of points
-            if(x == Xlow)
-            {
-                SetSamplesFirstDirection();  //save the number of points sampled
-                *procdetails *= 256; //move error codes to high byte (1st direction)
-                diag_UpdatePercentComplete(-EXTDIAG_HALFWAY);
-            }
+        //Save number of points
+        if(x == Xlow)
+        {
+            SetSamplesFirstDirection();  //save the number of points sampled
+            *procdetails *= 256; //move error codes to high byte (1st direction)
+            diag_UpdatePercentComplete(-EXTDIAG_HALFWAY);
         }
     }
 
