@@ -75,9 +75,18 @@ unsigned long a = PWM_MSB_BITS, b = PWM_LSB_SHFT, c = PWM_LSB_MASK;
 */
 static void WritePWM(u16_least val)
 {
+#if 1
+    u16 low = (u16)(val >> PWM_LSB_BITS);
+    u16_least high = ~(val << PWM_LSB_SHFT) & PWM_LSB_MASK;
+    MN_ENTER_CRITICAL();
+        TIM3->CCR3  =  low;
+        TIM3->CCR4  = high;
+    MN_EXIT_CRITICAL();
+#else
     TIM3->CCR3  = (u16)(val >> PWM_LSB_BITS);
     val         = val << PWM_LSB_SHFT;
-    TIM3->CCR4  = ~val & PWM_LSB_MASK;                            //
+    TIM3->CCR4  = ~val & PWM_LSB_MASK;
+#endif
 }
 
 
