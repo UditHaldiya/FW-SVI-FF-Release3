@@ -77,7 +77,7 @@ static void WritePWM(u16_least val)
 {
 #if 1
     u16 low = (u16)(val >> PWM_LSB_BITS);
-    u16_least high = ~(val << PWM_LSB_SHFT) & PWM_LSB_MASK;
+    u16 high = (u16)(~(val << PWM_LSB_SHFT) & PWM_LSB_MASK);
     MN_ENTER_CRITICAL();
         TIM3->CCR3  =  low;
         TIM3->CCR4  = high;
