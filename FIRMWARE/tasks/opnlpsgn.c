@@ -40,7 +40,7 @@ demand.
 #include "diagnostics.h"
 
 //Algorithm choices
-#define USE_PRESSURE_LIMIT 1
+#define USE_PRESSURE_LIMIT 0
 #define USE_BIAS_END_LIMIT 0
 #define USE_POS_ATLIMIT_CRITERION 1
 #define USE_STEP_ADAPTATION 1
@@ -111,8 +111,10 @@ typedef struct test_info_t                //! parameters setup by prepare routin
 #define BIAS_PER_MAX ((bias_t)(100*BIAS_SCALE_FACTOR))
 #define BIAS_SCALE_FACTOR ((s32)(1u<<BIAS_SCALE_SHIFT))
 
+#if USE_PRESSURE_LIMIT
 #define PRESSURE_ACT1_LIM_LOW STD_FROM_PSI(1.0) //away from 0
 #define PRESSURE_ACT1_LIM_HIGH STD_FROM_PSI(3.0) //away from supply
+#endif
 
 /* \brief a helper to have a single breakpoint in debugging
 */
@@ -722,7 +724,9 @@ static procresult_t diag_WaitForEndOfSweep(const test_info_t *bc, bias_t BiasEnd
     UNUSED_OK(BiasEnd);
 #endif
 
+#if USE_PRESSURE_LIMIT
     u16 atlim_count = 0; //for pressure
+#endif
 
     bool_t arrived;
     do
