@@ -90,7 +90,7 @@ static u16     m_nSpeed=2;                  //( %/4sec) -  time for step tests
 static pos_t   m_nStartPosition=6554;       //40.0F;
 static pos_t   m_nEndPosition= 9830;        //60.0F;
 static bool_t  m_bParametersAreValid = false;
-static pos_t   m_SetpointRampSpeed = 164u;    //default to 1%
+static pos_t   m_SetpointRampSpeed = INT_PERCENT_OF_RANGE(1.0);    //default to 1%
 static u16     m_SamplesFirstDirection = 0u;  //the number of samples in the first direction
 static u16     m_FirstDirectionPruneScale;    //the prune scale in the first direction
 static u16     m_FinalPruneScale;             //the prune scale in the second direction (or 1st if only one way)
@@ -418,7 +418,7 @@ static ErrorCode_t diag_LaunchProcess(ProcId_t procid)
     ErrorCode_t err = process_SetProcessCommand(procid);
     if(err == ERR_PROCESS_START)
     {
-        /* See if we want to override the guard of a previous leg of composite 
+        /* See if we want to override the guard of a previous leg of composite
            step test driven by the host software
         */
         if(process_IsGuardingDiagBuffer())
@@ -437,7 +437,7 @@ static ErrorCode_t diag_LaunchProcess(ProcId_t procid)
     }
     return err;
 }
-    
+
 
 /** \brief runs a step test
 
@@ -986,7 +986,7 @@ static procresult_t diag_Run_RampTest_Internal(void (*sample_func)(diag_t data[2
     {
         maxpoints = DIAG_MAX_SAMPLES; //That's how much we can save in a log file
     }
-    
+
     //perform the diagnostic
 
     //display "DIAG"
@@ -1103,8 +1103,9 @@ void SetSamplesLastDirection(void)
 
         if(m_FinalPruneScale != m_FirstDirectionPruneScale)
         {
-          u16_least Difference = m_FinalPruneScale / m_FirstDirectionPruneScale;
-          m_SamplesFirstDirection = (u16)(m_SamplesFirstDirection/Difference); //was rounding here, and it was wrong.
+            u16_least Difference = m_FinalPruneScale / m_FirstDirectionPruneScale;
+            m_SamplesFirstDirection = (u16)((m_SamplesFirstDirection + (Difference-1U))/Difference);
+            //EXPLANATION: Rounding is necessary to allow odd number of samples in the first direction
         }
     }
 }
