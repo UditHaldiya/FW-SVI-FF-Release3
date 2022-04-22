@@ -666,7 +666,7 @@ static void diag_AccelerateBias(void)
         bool_t atrail = DetectPosAtRail(sample_and_step.PosIncreasing, &BoostedPosStep);
         if(atrail)
         {
-            sample_and_step.BiasBoosted += 10*sample_and_step.BiasPerStep;
+            sample_and_step.BiasBoosted += 2*((s16)NELEM(poshistory))*sample_and_step.BiasPerStep; //factor of 4 is empirical
             sample_and_step.pos_atlim_count++;
         }
         else
