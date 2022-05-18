@@ -697,7 +697,7 @@ const proctable_t proctable[] =
         {
             [PROCRESULT_OK] =
             {
-                .event = FAULT_NONE,
+                .event = FAULT_PST_NEW_DATA,
                 .UIplace = -1,
                 .termflags = PROCTERMFLAG_CTLMODE|PROCTERMFLAG_KEEPON,
             },
