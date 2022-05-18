@@ -317,7 +317,7 @@ static void process_UpdateProcessIds(ProcId_t thisproc, ProcSource_t thissrc, Pr
 static ErrorCode_t process_UpdateProcessIds1(s8_least id, ProcSource_t thissrc, ProcId_t nextproc, ProcSource_t nextsrc)
 {
     u8 flags = proctable[id].flags.initflags;
-    
+
     ErrorCode_t err;
     if(id < 0)
     {
@@ -385,7 +385,7 @@ void process_ForceProcessCommandEx(ProcId_t ProcessCommand, ProcSource_t source)
         }
         if(ok)
         {
-            
+
             MN_ENTER_CRITICAL();
                 ErrorCode_t err = process_SetProcessCommandEx(ProcessCommand, source);
                 /* If it failed because ProcessCommand is invalid (=cancel request),
@@ -635,6 +635,10 @@ u8 process_GetResourceFlags(void)
     else
     {
         flags = proctable[id].flags.initflags;
+        if(IS_GUARDING_BUFFER())
+        {
+            flags &= ~PROCINIT_CLAIMCTLMODE; //allow process sp through
+        }
     }
     return flags;
 }
