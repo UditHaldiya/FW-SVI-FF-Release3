@@ -249,7 +249,7 @@ static tick_t sp_receipt_time = 0U;
 /** \brief Sets target TB mode and digital setpoint and captures its timestamp.
 Saving to NVMEM (if sp changed noticeably or mode changed) defered to mopup
 
-NEW: We only monitor the fact of receipt of setpoint; the rest is the job of 
+NEW: We only monitor the fact of receipt of setpoint; the rest is the job of
 TB.XD_FSTATE in FFP
 \param xmode - external TB target mode; ignored if IPC_MODE_NO_CHANGE
 \param sp - digital setpoint (ignored if SETPOINT_INVALID)
@@ -265,7 +265,7 @@ ErrorCode_t digsp_SetDigitalSetpointEx(u8 xmode, s32 sp)
     error_ClearFault_External(FAULT_SETPOINT_TIMEOUT);
     digsp.timestamp = DigitalSpConf.ShedTime;
     sp_receipt_time = timer_GetTicks();
-    
+
     if(sp == SETPOINT_INVALID)
     {
         //Do not use the setpoint
@@ -528,14 +528,14 @@ ErrorCode_t digsp_SetData(const digitalsp_t *src)
                     //leave sp = SETPOINT_INVALID to pick up valve position in mode guard;
                 }
                 break;
-                
+
             case SSO_fixed_setpoint:
                 /* NOTE: This should work but has no FF interface to set.
                    For now, debug/development only, using an SA command
                 */
                 sp = DigitalSpConf.FixedSetpoint;
                 break;
-                
+
             case SSO_current_position:
             default: //should not be in default but just in case
                 //pick up the valve position (not yet available) later, in mode guard
@@ -569,6 +569,20 @@ s32 digsp_GetDigitalSetpoint(void)
     return sp;
 }
 
+//doc in the project-independent header
+void process_EndHook(ProcId_t ProcId)
+{
+    //This version unconditionally syncs requested setpoint with
+    // the (deferred) digital setpoint. This may or may not be redundant
+
+    //It may or may not succeed, depending on device mode, but if fails,
+    // FINAL_VALUE_x is subject to reinit, so nothing is lost.
+    UNUSED_OK(ProcId);
+    MN_ENTER_CRITICAL();
+        s32 sp = digsp_GetDigitalPosSetpoint();
+        mode_SetControlMode(CONTROL_MANUAL_POS, sp);
+    MN_EXIT_CRITICAL();
+}
 
 //doc in the project-independent header
 s32 mode_GuardSetpoint(devmode_t mode, ctlmode_t ctlmode, s32 sp)
@@ -580,12 +594,20 @@ s32 mode_GuardSetpoint(devmode_t mode, ctlmode_t ctlmode, s32 sp)
     {
         digsp_Invalidate(digsp_GetConf(NULL));
     }
-    /* No! mode = mode_GetEffectiveMode(mode);
-    We must follow FFP's setpoint in Normal mode == under FFP control.
-    Translations are for access permissions only!
+    /* We must follow FFP's setpoint in Normal mode == under FFP control.
+    In TB MAN mode, FFP setpont is changed by host action, and eventually by
+    hartcmd_WriteDigitalSetpoint (hart_digsp.c). It populates modeguard, so
+    we only need to propagate the FINAL_VALUE_x setpoint in TB AUTO
     */
     if((process_GetResourceFlags() & PROCINIT_CLAIMCTLMODE) == 0U)
     {
+#if 1
+        /*
+        The following will make position setpoint disconnect from
+        PREVIOUSLY WRITTEN FINAL_VALUE_x. It will require another write to sync
+        */
+        mode = mode_GetEffectiveMode(mode);
+#endif
         if(mode == MODE_OPERATE)
         {
             sp = digsp_GetData(NULL)->setpoint;

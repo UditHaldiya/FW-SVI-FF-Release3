@@ -554,6 +554,7 @@ static void process_RunProcedure(void)
     procId = procdata.ProcessCommand[PROC_CURRENT];
 
     (void)process_Exec(procId);
+    process_EndHook(procId);
 
     if(procId != PROC_NONE)
     {

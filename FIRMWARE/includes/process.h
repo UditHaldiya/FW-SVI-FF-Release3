@@ -179,6 +179,13 @@ that started with ProcSourceUI flag has ended
 */
 extern void process_NotifyEndUI(s8 uiplace, s16 procdetails);
 
+/** \brief Performs final cleanup after a process exits (including the buffer
+guard part, if any). Example: Sync control mode and setpoint with deferred input,
+or any such cleanup.
+\param ProcId - Id of the exiting process
+*/
+extern void process_EndHook(ProcId_t ProcId);
+
 #endif //PROCESS_H_
 
 /* This line marks the end of the source */
