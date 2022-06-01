@@ -33,25 +33,22 @@ demand.
 #include "ipcvarids.h"
 #include "ff_devicevars.h"
 #include "param.h"
-#include "mncbdefs_ffap.h"
 #include "nvram.h"
 // -------------------------------- "ipc variables" management section ------------------------
-
+#define FF_DEVICE_ID_DEF FF_TAG_DEF
 static IPC_FFDeviceParams_t IPC_FFDeviceParams =
 {
-    {FF_DEVICE_TAG_DEF},
-    {FF_DEVICE_ID_DEF},
-    0,
-    IPC_TIMESTAMPINVALID,
-    CRC_SEED, //make valid checksum by C init
+    .dev_tag = FF_TAG_DEF,
+    .dev_id = FF_DEVICE_ID_DEF,
+    .dev_addr = 0U,
+    .IPC_TimeStampStatus = IPC_TIMESTAMPINVALID,
+    .CheckWord = CRC_SEED, //make valid checksum by C init
 };
 
 // get the pointer of device variables
-IPC_FFDeviceParams_t* GetDeviceVar(void)
+IPC_FFDeviceParams_t* GetDeviceVar(IPC_FFDeviceParams_t *dst)
 {
-    MN_ENTER_CRITICAL();
-        Struct_Test(IPC_FFDeviceParams_t, &IPC_FFDeviceParams);
-    MN_EXIT_CRITICAL();
+    (void)STRUCT_TESTGET(&IPC_FFDeviceParams, dst);
     return &IPC_FFDeviceParams;
 }
 
@@ -160,38 +157,6 @@ ErrorCode_t  IPC_WriteDeviceAddress(IPC_Variable_IDs_t VarID, IPC_WritePtrs_t co
     util_PutU8(pIPC_ReadPtrs->pVarStatus, ReturnStatus);
     UNUSED_OK(VarID);
     return retval;
-}
-
-ErrorCode_t  IPC_ReadAppFwVer(IPC_Variable_IDs_t VarID, IPC_ReadPtrs_t const *pIPC_ReadPtrs)
-{
-/*
-    typedef union
-    {
-        u32 FullVersion;
-        struct
-        {
-            u8 fwtype;
-            u8 txrev;
-            u8 swrev;
-            u8 hwrev;
-        } SubVersion;
-    } app_version_t;
-
-    app_version_t version;
-
-    version.SubVersion.hwrev = APP_HW_REV;
-    version.SubVersion.swrev = APP_SW_REV;
-    version.SubVersion.txrev = APP_TXSEPC_REV;
-    version.SubVersion.fwtype = APP_FW_TYPE;
-*/
-
-    u32 FullVersion = ((u8)APP_FW_TYPE) | (APP_TXSEPC_REV << 8) | (APP_SW_REV << 16) | (APP_HW_REV << 24);
-
-    util_PutU32(pIPC_ReadPtrs->pIPC_VarBuffer, FullVersion);
-    util_PutU8(pIPC_ReadPtrs->pVarStatus, IPC_QUALITY_GOOD | IPC_NO_ERROR);
-
-    UNUSED_OK(VarID);
-    return ERR_OK;
 }
 
 /** \brief Gets FF data supplied in INTERNAL representation

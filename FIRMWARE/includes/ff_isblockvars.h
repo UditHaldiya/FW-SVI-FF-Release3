@@ -14,10 +14,7 @@ typedef struct IPC_FFISParam_t
     u16 CheckWord;
 } IPC_FFISParams_t;
 
-extern IPC_FFISParams_t* GetIsBlockVar(void);
-extern ErrorCode_t  IPC_WriteISIN1(IPC_Variable_IDs_t VarID, IPC_WritePtrs_t const *pIPC_WritePtrs, IPC_ReadPtrs_t const *pIPC_ReadPtrs);
-extern ErrorCode_t  IPC_WriteISIN2(IPC_Variable_IDs_t VarID, IPC_WritePtrs_t const *pIPC_WritePtrs, IPC_ReadPtrs_t const *pIPC_ReadPtrs);
-extern ErrorCode_t  IPC_WriteISIN3(IPC_Variable_IDs_t VarID, IPC_WritePtrs_t const *pIPC_WritePtrs, IPC_ReadPtrs_t const *pIPC_ReadPtrs);
-extern ErrorCode_t  IPC_WriteISIN4(IPC_Variable_IDs_t VarID, IPC_WritePtrs_t const *pIPC_WritePtrs, IPC_ReadPtrs_t const *pIPC_ReadPtrs);
+extern const IPC_FFISParams_t* GetIsBlockVar(IPC_FFISParams_t *dst);
+extern ErrorCode_t  IPC_WriteISIN(IPC_Variable_IDs_t VarID, IPC_WritePtrs_t const *pIPC_WritePtrs, IPC_ReadPtrs_t const *pIPC_ReadPtrs);
 
 #endif //FF_ISBLOCKVARS_H_

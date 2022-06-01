@@ -11,7 +11,7 @@ typedef struct IPC_FFAIParam_t
     u16 CheckWord;
 } IPC_FFAIParams_t;
 
-extern IPC_FFAIParams_t* GetAiBlockVar(void);
+extern const IPC_FFAIParams_t *GetAiBlockVar(size_t index, IPC_FFAIParams_t *dst);
 extern ErrorCode_t  IPC_WriteAIOUT(IPC_Variable_IDs_t VarID, IPC_WritePtrs_t const *pIPC_WritePtrs, IPC_ReadPtrs_t const *pIPC_ReadPtrs);
 
 #endif //FF_AIBLOCKVARS_H_

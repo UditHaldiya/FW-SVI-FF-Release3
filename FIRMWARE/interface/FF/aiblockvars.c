@@ -37,28 +37,79 @@ demand.
 
 // The initial values should be obtained from FFP every time when APP firmware starts
 // This is just a temp solution
-static IPC_FFAIParams_t IPC_FFAIParams =
+static IPC_FFAIParams_t IPC_FFAIParams[3] = //We have 3 AI FB
 {
-    {{FLOAT_STRING_INIT}, 0},
-    CRC_SEED, //make valid checksum by C init
+    [0] =
+    {
+        .out =
+        {
+            .value = FLOAT_STRING_INIT,
+            .status =0,
+        },
+        .CheckWord = CRC_SEED, //make valid checksum by C init
+    },
+    [1] =
+    {
+        .out =
+        {
+            .value = FLOAT_STRING_INIT,
+            .status =0,
+        },
+        .CheckWord = CRC_SEED, //make valid checksum by C init
+    },
+    [2] =
+    {
+        .out =
+        {
+            .value = FLOAT_STRING_INIT,
+            .status =0,
+        },
+        .CheckWord = CRC_SEED, //make valid checksum by C init
+    },
 };
 
-// get the pointer of AI block variables
-IPC_FFAIParams_t* GetAiBlockVar(void)
+// Implementation of common accessor
+const IPC_FFAIParams_t *GetAiBlockVar(size_t index, IPC_FFAIParams_t *dst)
 {
-     return &IPC_FFAIParams;
+    const IPC_FFAIParams_t *ret;
+    if(index >= NELEM(IPC_FFAIParams))
+    {
+        ret = NULL;
+    }
+    else
+    {
+        ret = STRUCT_GET(&IPC_FFAIParams[index], dst);
+    }
+    return ret;
 }
 
-
-ErrorCode_t  IPC_WriteAIOUT(IPC_Variable_IDs_t VarID, IPC_WritePtrs_t const *pIPC_WritePtrs, IPC_ReadPtrs_t const *pIPC_ReadPtrs)
+ErrorCode_t IPC_WriteAIOUT(IPC_Variable_IDs_t VarID, IPC_WritePtrs_t const *pIPC_WritePtrs, IPC_ReadPtrs_t const *pIPC_ReadPtrs)
 {
-	ErrorCode_t     retval = ERR_OK;
-    
-	util_PutU8Array(IPC_FFAIParams.out.value, FLOAT_STRING_LEN - 1, pIPC_WritePtrs->pIPC_VarBuffer);
-	IPC_FFAIParams.out.status = util_GetU8(((const u8*)(pIPC_WritePtrs->pIPC_VarBuffer)) + FLOAT_STRING_LEN - 1);
+    size_t index = 0;
+    switch(VarID)
+    {
+        case IPC_AI_OUT:
+            //already index = 0;
+            break;
+        case IPC_AI2_OUT:
+            index = 1;
+            break;
+        case IPC_AI3_OUT:
+            index = 2;
+            break;
+        default:
+            index = 20;
+            break;
+    }
+    MN_DBG_ASSERT(index < 3);
+
+    IPC_FFAIParams_t newval;
+    STRUCT_GET(&IPC_FFAIParams[index], &newval);
+	util_PutU8Array(newval.out.value, FLOAT_STRING_LEN - 1, pIPC_WritePtrs->pIPC_VarBuffer);
+	newval.out.status = util_GetU8(((const u8*)(pIPC_WritePtrs->pIPC_VarBuffer)) + FLOAT_STRING_LEN - 1);
     util_PutU8(pIPC_ReadPtrs->pVarStatus, (IPC_QUALITY_GOOD | IPC_NO_ERROR));
-	
-    STRUCT_CLOSE(IPC_FFAIParams_t, &IPC_FFAIParams);
+
+    STRUCT_GET(&newval, &IPC_FFAIParams[index]);
     UNUSED_OK(VarID);
-    return retval;
+    return ERR_OK;
 }

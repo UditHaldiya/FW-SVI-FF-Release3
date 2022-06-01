@@ -5,11 +5,8 @@
 #include "ipcvarids.h"
 #include "ffdefs.h"
 
-#define FF_TB_TAG_MAX_LEN                       FF_TAG_MAX_LEN
 //#define FF_TB_TAG_RD_MAX_BLOCK_NUM              (0u)
 #define FF_TB_TAG_WR_MAX_BLOCK_NUM              FF_TAG_WR_MAX_BLOCK_NUM
-
-#define FF_TB_TAG_DEF   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 
 // the index of variables for LUI custom 1 and custom 2
 #define CYCLEMENUFFVAR_MASK         0xFFu
@@ -35,17 +32,17 @@
 // FF AO variables. May be move to standalone file if necessary
 typedef struct IPC_FFTBParam_t
 {
-    u8              tag[FF_TB_TAG_MAX_LEN];
+    u8              tag[FF_TAG_MAX_LEN];
     u8              ModeActual;
     u16             BlockErr;
-    ffDataFloat_t   working_sp;
-    ffDataFloat_t   working_pos;
+    ffDataFloat_t   final_sp;
+    ffDataFloat_t   final_pos;
     u8              cust_config_0;
     u8              cust_config_1;
     u16             CheckWord;
 } IPC_FFTBParams_t;
 
-extern IPC_FFTBParams_t* GetTbBlockVar(void);
+extern const IPC_FFTBParams_t* GetTbBlockVar(IPC_FFTBParams_t *dst);
 extern ErrorCode_t  IPC_WriteTBTag(IPC_Variable_IDs_t VarID, IPC_WritePtrs_t const *pIPC_WritePtrs, IPC_ReadPtrs_t const *pIPC_ReadPtrs);
 extern ErrorCode_t  IPC_WriteTBMode(IPC_Variable_IDs_t VarID, IPC_WritePtrs_t const *pIPC_WritePtrs, IPC_ReadPtrs_t const *pIPC_ReadPtrs);
 extern ErrorCode_t  IPC_WriteTBError(IPC_Variable_IDs_t VarID, IPC_WritePtrs_t const *pIPC_WritePtrs, IPC_ReadPtrs_t const *pIPC_ReadPtrs);

@@ -8,24 +8,13 @@ demand.
 */
 /**
     \file ui_ffinfo.c
-    \brief UI service functions for "foundation field bus" support (MNCB)
+    \brief UI service functions for "foundation field bus" support
 
      CPU: Any
 
-    OWNER: EJ
-    $Archive: /MNCB/Dev/LCX2AP/FIRMWARE/interface/ui/glue/ui_ffinfo.c $
-    $Date: 1/07/12 3:14p $
-    $Revision: 1 $
-    $Author: EricJ $
+    OWNER: AK
 
     \ingroup UI
-*/
-/* $History: ui_ffInfo.c $
-
- * *****************  Version 1  *****************
- * User: Eric J    Date: 2/07/12    Time: 3:29p
- * Created in $/MNCB/Dev/FIRMWARE/interface/ui/glue
- * First version
 */
 
 #include "mnwrap.h"
@@ -41,8 +30,6 @@ demand.
 #include "ff_doblockvars.h"
 #include "ff_pidblockvars.h"
 #include "ff_tbblockvars.h"
-#include "ff_pid2blockvars.h"
-#include "ff_do2blockvars.h"
 #include "ff_devicevars.h"
 
 #define FFSTR_LENGTH_MODE  (sizeof(FFSTR_MODE_NA)-1) /* 5 */
@@ -113,17 +100,55 @@ static void ff_Err2Str(const u16 err, u8* pbuf)
 */
 bool_t ui_ff_InfoRB(const uistate_t *state)
 {
-    const IPC_FFResourceParams_t* pVar;
     u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
 
-    pVar = GetResBlockVar();
+    u8 ModeActual;
+    u16 BlockErr;
+    MN_ENTER_CRITICAL();
+        const IPC_FFResourceParams_t* pVar = GetResBlockVar(NULL);
+        ModeActual = pVar->ModeActual;
+        BlockErr = pVar->BlockErr;
+    MN_EXIT_CRITICAL();
+
     // display the orignal digits on lcd, and will be replaced by string
-    ff_Mode2Str(pVar->ModeActual, ln2);
-    ff_Err2Str(pVar->BlockErr, &ln2[FFSTR_OFFSET_ERR]);
+    ff_Mode2Str(ModeActual, ln2);
+    ff_Err2Str(BlockErr, &ln2[FFSTR_OFFSET_ERR]);
     ui_setDispmode(DISPMODE_FF_INFO, ln2);
 
     UNUSED_OK(state);
     return false;
+}
+
+/** \brief A helper for any partial substring of a string of 32 characters
+\param str - a partial string (segment) to display
+\param segment - a segment to display
+\param len - length of the segment
+\return false
+*/
+static bool_t ui_ff_Tag_helper(const u8 str[], size_t segment, size_t len)
+{
+    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
+    MN_ENTER_CRITICAL();
+        mn_memcpy(ln2, &str[segment * NUMBER_OF_DIGITS_PER_LINE], len);
+    MN_EXIT_CRITICAL();
+    for(; len<NUMBER_OF_DIGITS_PER_LINE; len++)
+    {
+        ln2[len] = ASCII_SPACE;
+    }
+    ui_setDispmode(DISPMODE_FF_INFO, ln2);
+    return false;
+}
+
+/** \brief A helper for RB tag
+\param segment - a segment to display
+\param len - length of the segment
+\return false
+*/
+static bool_t ui_ff_TagRB_helper(const uistate_t *state, size_t segment, size_t len)
+{
+    UNUSED_OK(state);
+    const u8 *str = GetResBlockVar(NULL)->tag;
+    return ui_ff_Tag_helper(str, segment, len);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to
@@ -131,15 +156,7 @@ bool_t ui_ff_InfoRB(const uistate_t *state)
 */
 bool_t ui_ff_Tag1RB(const uistate_t *state)
 {
-    const IPC_FFResourceParams_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
-
-    pVar = GetResBlockVar();
-    mn_memcpy(ln2, pVar->tag, NUMBER_OF_DIGITS_PER_LINE);
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_TagRB_helper(state, 0U, NUMBER_OF_DIGITS_PER_LINE);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to
@@ -147,15 +164,7 @@ bool_t ui_ff_Tag1RB(const uistate_t *state)
 */
 bool_t ui_ff_Tag2RB(const uistate_t *state)
 {
-    const IPC_FFResourceParams_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
-
-    pVar = GetResBlockVar();
-    mn_memcpy(ln2, pVar->tag + NUMBER_OF_DIGITS_PER_LINE, NUMBER_OF_DIGITS_PER_LINE);
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_TagRB_helper(state, 1U, NUMBER_OF_DIGITS_PER_LINE);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to
@@ -163,15 +172,7 @@ bool_t ui_ff_Tag2RB(const uistate_t *state)
 */
 bool_t ui_ff_Tag3RB(const uistate_t *state)
 {
-    const IPC_FFResourceParams_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
-
-    pVar = GetResBlockVar();
-    mn_memcpy(ln2, pVar->tag + NUMBER_OF_DIGITS_PER_LINE *2, NUMBER_OF_DIGITS_PER_LINE);
-
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_TagRB_helper(state, 2U, NUMBER_OF_DIGITS_PER_LINE);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to
@@ -179,16 +180,21 @@ bool_t ui_ff_Tag3RB(const uistate_t *state)
 */
 bool_t ui_ff_Tag4RB(const uistate_t *state)
 {
-    const IPC_FFResourceParams_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1]  = BLANK_STR_LCD_1LINE;
+    CONST_ASSERT ((FF_TAG_MAX_LEN -NUMBER_OF_DIGITS_PER_LINE *3) <= NUMBER_OF_DIGITS_PER_LINE);
+    return ui_ff_TagRB_helper(state, 3U, FF_TAG_MAX_LEN -NUMBER_OF_DIGITS_PER_LINE *3);
+}
 
-    pVar = GetResBlockVar();
-    CONST_ASSERT ((FF_RB_TAG_MAX_LEN -NUMBER_OF_DIGITS_PER_LINE *3) <= NUMBER_OF_DIGITS_PER_LINE);
-    mn_memcpy(ln2, pVar->tag + NUMBER_OF_DIGITS_PER_LINE *3, FF_RB_TAG_MAX_LEN -NUMBER_OF_DIGITS_PER_LINE *3);
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
+/** \brief A helper to retrieve device id
+\param segment - dev id segment to retrieve
+\param len - length of the segment
+\return false
+*/
+static bool_t ui_ff_devIDhelper(const uistate_t *state, size_t segment, size_t len)
+{
     UNUSED_OK(state);
-    return false;
+    const u8 *str = GetDeviceVar(NULL)->dev_id;
+    CONST_ASSERT(FF_DEVICE_TAG_LEN == FF_DEVICE_ID_LEN);
+    return ui_ff_Tag_helper(str, segment, len);
 }
 
 /** \brief called when display enter a menu cycle of FF info, to
@@ -196,17 +202,7 @@ bool_t ui_ff_Tag4RB(const uistate_t *state)
 */
 bool_t ui_ff_devID1(const uistate_t *state)
 {
-    const IPC_FFDeviceParams_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
-
-    pVar = GetDeviceVar();
-    MN_ENTER_CRITICAL();
-        mn_memcpy(ln2, pVar->dev_id, NUMBER_OF_DIGITS_PER_LINE);
-    MN_EXIT_CRITICAL();
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_devIDhelper(state, 0U, NUMBER_OF_DIGITS_PER_LINE);
 }
 
 /** \brief called when display enter a menu cycle of FF info, to
@@ -214,17 +210,7 @@ bool_t ui_ff_devID1(const uistate_t *state)
 */
 bool_t ui_ff_devID2(const uistate_t *state)
 {
-    const IPC_FFDeviceParams_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
-
-    pVar = GetDeviceVar();
-    MN_ENTER_CRITICAL();
-        mn_memcpy(ln2, pVar->dev_id + NUMBER_OF_DIGITS_PER_LINE, NUMBER_OF_DIGITS_PER_LINE);
-    MN_EXIT_CRITICAL();
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_devIDhelper(state, 1U, NUMBER_OF_DIGITS_PER_LINE);
 }
 
 /** \brief called when display enter a menu cycle of FF info, to
@@ -232,17 +218,7 @@ bool_t ui_ff_devID2(const uistate_t *state)
 */
 bool_t ui_ff_devID3(const uistate_t *state)
 {
-    const IPC_FFDeviceParams_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
-
-    pVar = GetDeviceVar();
-    MN_ENTER_CRITICAL();
-        mn_memcpy(ln2, pVar->dev_id + NUMBER_OF_DIGITS_PER_LINE*2, NUMBER_OF_DIGITS_PER_LINE);
-    MN_EXIT_CRITICAL();
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_devIDhelper(state, 2U, NUMBER_OF_DIGITS_PER_LINE);
 }
 
 /** \brief called when display enter a menu cycle of FF info, to
@@ -250,18 +226,8 @@ bool_t ui_ff_devID3(const uistate_t *state)
 */
 bool_t ui_ff_devID4(const uistate_t *state)
 {
-    const IPC_FFDeviceParams_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1] = BLANK_STR_LCD_1LINE;
-
-    pVar = GetDeviceVar();
     CONST_ASSERT ((FF_DEVICE_ID_LEN -NUMBER_OF_DIGITS_PER_LINE *3) <= NUMBER_OF_DIGITS_PER_LINE);
-    MN_ENTER_CRITICAL();
-        mn_memcpy(ln2, pVar->dev_id + NUMBER_OF_DIGITS_PER_LINE*3, FF_DEVICE_ID_LEN -NUMBER_OF_DIGITS_PER_LINE *3);
-    MN_EXIT_CRITICAL();
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_devIDhelper(state, 3U, FF_DEVICE_ID_LEN -NUMBER_OF_DIGITS_PER_LINE *3);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to
@@ -270,10 +236,10 @@ bool_t ui_ff_devID4(const uistate_t *state)
 bool_t ui_ff_devAddr(const uistate_t *state)
 {
 
-    const IPC_FFDeviceParams_t* pVar;
+    IPC_FFDeviceParams_t* pVar;
     u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1] = BLANK_STR_LCD_1LINE;
 
-    pVar = GetDeviceVar();
+    pVar = GetDeviceVar(NULL);
     ut_bin2asc(pVar->dev_addr, (p8*)ln2, 0);
     ui_setDispmode(DISPMODE_FF_INFO, ln2);
 
@@ -284,22 +250,24 @@ bool_t ui_ff_devAddr(const uistate_t *state)
     return false;
 }
 
+/** \brief A helper to retrieve device tag
+\param segment - dev id segment to retrieve
+\param len - length of the segment
+\return false
+*/
+static bool_t ui_ff_devTag_helper(const uistate_t *state, size_t segment, size_t len)
+{
+    UNUSED_OK(state);
+    const u8 *str = GetDeviceVar(NULL)->dev_tag;
+    return ui_ff_Tag_helper(str, segment, len);
+}
+
 /** \brief called when display exit a menu cycle of FF info, to
         show part 1 of device tag.
 */
 bool_t ui_ff_devTag1(const uistate_t *state)
 {
-    const IPC_FFDeviceParams_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
-
-    pVar = GetDeviceVar();
-    MN_ENTER_CRITICAL();
-        mn_memcpy(ln2, pVar->dev_tag, NUMBER_OF_DIGITS_PER_LINE);
-    MN_EXIT_CRITICAL();
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_devTag_helper(state, 0U, NUMBER_OF_DIGITS_PER_LINE);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to
@@ -307,17 +275,7 @@ bool_t ui_ff_devTag1(const uistate_t *state)
 */
 bool_t ui_ff_devTag2(const uistate_t *state)
 {
-    const IPC_FFDeviceParams_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
-
-    pVar = GetDeviceVar();
-    MN_ENTER_CRITICAL();
-        mn_memcpy(ln2, pVar->dev_tag + NUMBER_OF_DIGITS_PER_LINE, NUMBER_OF_DIGITS_PER_LINE);
-    MN_EXIT_CRITICAL();
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_devTag_helper(state, 1U, NUMBER_OF_DIGITS_PER_LINE);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to
@@ -325,17 +283,7 @@ bool_t ui_ff_devTag2(const uistate_t *state)
 */
 bool_t ui_ff_devTag3(const uistate_t *state)
 {
-    const IPC_FFDeviceParams_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
-
-    pVar = GetDeviceVar();
-    MN_ENTER_CRITICAL();
-        mn_memcpy(ln2, pVar->dev_tag + NUMBER_OF_DIGITS_PER_LINE*2, NUMBER_OF_DIGITS_PER_LINE);
-    MN_EXIT_CRITICAL();
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_devTag_helper(state, 2U, NUMBER_OF_DIGITS_PER_LINE);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to
@@ -343,18 +291,8 @@ bool_t ui_ff_devTag3(const uistate_t *state)
 */
 bool_t ui_ff_devTag4(const uistate_t *state)
 {
-    const IPC_FFDeviceParams_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1] = BLANK_STR_LCD_1LINE;
-
-    pVar = GetDeviceVar();
     CONST_ASSERT ((FF_DEVICE_TAG_LEN -NUMBER_OF_DIGITS_PER_LINE *3) <= NUMBER_OF_DIGITS_PER_LINE);
-    MN_ENTER_CRITICAL();
-        mn_memcpy(ln2, pVar->dev_tag + NUMBER_OF_DIGITS_PER_LINE*3, FF_DEVICE_TAG_LEN -NUMBER_OF_DIGITS_PER_LINE *3);
-    MN_EXIT_CRITICAL();
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_devTag_helper(state, 3U, FF_DEVICE_TAG_LEN -NUMBER_OF_DIGITS_PER_LINE *3);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to clear
@@ -385,30 +323,34 @@ bool_t ui_ff_InfoTB(const uistate_t *state)
     const IPC_FFTBParams_t* pVar;
     u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
 
-    pVar = GetTbBlockVar();
+    pVar = GetTbBlockVar(NULL);
     // display the orignal digits on lcd, and will be replaced by string
-    ff_Mode2Str(pVar->ModeActual, ln2);
-    ff_Err2Str(pVar->BlockErr, &ln2[FFSTR_OFFSET_ERR]);
+    u8 ModeActual;
+    u16 BlockErr;
+    MN_ENTER_CRITICAL();
+        ModeActual = pVar->ModeActual;
+        BlockErr = pVar->BlockErr;
+    MN_EXIT_CRITICAL();
+    ff_Mode2Str(ModeActual, ln2);
+    ff_Err2Str(BlockErr, &ln2[FFSTR_OFFSET_ERR]);
     ui_setDispmode(DISPMODE_FF_INFO, ln2);
 
     UNUSED_OK(state);
     return false;
 }
 
+static bool_t ui_ff_TagTB_helper(const uistate_t *state, size_t segment, size_t len)
+{
+    UNUSED_OK(state);
+    const u8 *str = GetTbBlockVar(NULL)->tag;
+    return ui_ff_Tag_helper(str, segment, len);
+}
 /** \brief called when display exit a menu cycle of FF info, to
         part 1 of TB block.
 */
 bool_t ui_ff_Tag1TB(const uistate_t *state)
 {
-    const IPC_FFTBParams_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
-
-    pVar = GetTbBlockVar();
-    mn_memcpy(ln2, pVar->tag, NUMBER_OF_DIGITS_PER_LINE);
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_TagTB_helper(state, 0U, NUMBER_OF_DIGITS_PER_LINE);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to
@@ -416,15 +358,7 @@ bool_t ui_ff_Tag1TB(const uistate_t *state)
 */
 bool_t ui_ff_Tag2TB(const uistate_t *state)
 {
-    const IPC_FFTBParams_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
-
-    pVar = GetTbBlockVar();
-    mn_memcpy(ln2, pVar->tag + NUMBER_OF_DIGITS_PER_LINE, NUMBER_OF_DIGITS_PER_LINE);
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_TagTB_helper(state, 1U, NUMBER_OF_DIGITS_PER_LINE);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to
@@ -432,15 +366,7 @@ bool_t ui_ff_Tag2TB(const uistate_t *state)
 */
 bool_t ui_ff_Tag3TB(const uistate_t *state)
 {
-    const IPC_FFTBParams_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
-
-    pVar = GetTbBlockVar();
-    mn_memcpy(ln2, pVar->tag + NUMBER_OF_DIGITS_PER_LINE *2, NUMBER_OF_DIGITS_PER_LINE);
-
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_TagTB_helper(state, 2U, NUMBER_OF_DIGITS_PER_LINE);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to
@@ -448,16 +374,8 @@ bool_t ui_ff_Tag3TB(const uistate_t *state)
 */
 bool_t ui_ff_Tag4TB(const uistate_t *state)
 {
-    const IPC_FFTBParams_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1]  = BLANK_STR_LCD_1LINE;
-
-    pVar = GetTbBlockVar();
-    CONST_ASSERT ((FF_RB_TAG_MAX_LEN -NUMBER_OF_DIGITS_PER_LINE *3) <= NUMBER_OF_DIGITS_PER_LINE);
-    mn_memcpy(ln2, pVar->tag + NUMBER_OF_DIGITS_PER_LINE *3, FF_RB_TAG_MAX_LEN -NUMBER_OF_DIGITS_PER_LINE *3);
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
-    UNUSED_OK(state);
-    return false;
+    CONST_ASSERT ((FF_TAG_MAX_LEN -NUMBER_OF_DIGITS_PER_LINE *3) <= NUMBER_OF_DIGITS_PER_LINE);
+    return ui_ff_TagTB_helper(state, 3U, FF_TAG_MAX_LEN -NUMBER_OF_DIGITS_PER_LINE *3);
 }
 /** \brief called when display exit a menu cycle of FF info, to
         infor mation of AO block.
@@ -467,14 +385,33 @@ bool_t ui_ff_InfoAO(const uistate_t *state)
     const IPC_FFAOParams_t* pVar;
     u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
 
-    pVar = GetAoBlockVar();
+    u8 ModeActual;
+    u16 BlockErr;
+    pVar = GetAoBlockVar(NULL);
+    MN_ENTER_CRITICAL();
+        ModeActual = pVar->ModeActual;
+        BlockErr = pVar->BlockErr;
+    MN_EXIT_CRITICAL();
+
     // display the orignal digits on lcd, and will be replaced by string
-    ff_Mode2Str(pVar->ModeActual, ln2);
-    ff_Err2Str(pVar->BlockErr, &ln2[FFSTR_OFFSET_ERR]);
+    ff_Mode2Str(ModeActual, ln2);
+    ff_Err2Str(BlockErr, &ln2[FFSTR_OFFSET_ERR]);
     ui_setDispmode(DISPMODE_FF_INFO, ln2);
 
     UNUSED_OK(state);
     return false;
+}
+
+/** \brief A helper for PID block tag
+\param index - PID number (0-based)
+\param segment - segment of the tag
+\param len - length of the segment
+*/
+static bool_t ui_ff_TagAO_helper(const uistate_t *state, size_t segment, size_t len)
+{
+    UNUSED_OK(state);
+    const u8 *str = GetAoBlockVar(NULL)->tag;
+    return ui_ff_Tag_helper(str, segment, len);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to
@@ -482,15 +419,7 @@ bool_t ui_ff_InfoAO(const uistate_t *state)
 */
 bool_t ui_ff_Tag1AO(const uistate_t *state)
 {
-    const IPC_FFAOParams_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
-
-    pVar = GetAoBlockVar();
-    mn_memcpy(ln2, pVar->tag, NUMBER_OF_DIGITS_PER_LINE);
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_TagAO_helper(state, 0U, NUMBER_OF_DIGITS_PER_LINE);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to
@@ -498,15 +427,7 @@ bool_t ui_ff_Tag1AO(const uistate_t *state)
 */
 bool_t ui_ff_Tag2AO(const uistate_t *state)
 {
-    const IPC_FFAOParams_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
-
-    pVar = GetAoBlockVar();
-    mn_memcpy(ln2, pVar->tag + NUMBER_OF_DIGITS_PER_LINE, NUMBER_OF_DIGITS_PER_LINE);
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_TagAO_helper(state, 1U, NUMBER_OF_DIGITS_PER_LINE);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to
@@ -514,15 +435,7 @@ bool_t ui_ff_Tag2AO(const uistate_t *state)
 */
 bool_t ui_ff_Tag3AO(const uistate_t *state)
 {
-    const IPC_FFAOParams_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
-
-    pVar = GetAoBlockVar();
-    mn_memcpy(ln2, pVar->tag + NUMBER_OF_DIGITS_PER_LINE *2, NUMBER_OF_DIGITS_PER_LINE);
-
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_TagAO_helper(state, 2U, NUMBER_OF_DIGITS_PER_LINE);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to
@@ -530,33 +443,51 @@ bool_t ui_ff_Tag3AO(const uistate_t *state)
 */
 bool_t ui_ff_Tag4AO(const uistate_t *state)
 {
-    const IPC_FFAOParams_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1]  = BLANK_STR_LCD_1LINE;
+    CONST_ASSERT ((FF_TAG_MAX_LEN -NUMBER_OF_DIGITS_PER_LINE *3) <= NUMBER_OF_DIGITS_PER_LINE);
+    return ui_ff_TagAO_helper(state, 3U, FF_TAG_MAX_LEN -NUMBER_OF_DIGITS_PER_LINE *3);
+}
 
-    pVar = GetAoBlockVar();
-    CONST_ASSERT ((FF_RB_TAG_MAX_LEN -NUMBER_OF_DIGITS_PER_LINE *3) <= NUMBER_OF_DIGITS_PER_LINE);
-    mn_memcpy(ln2, pVar->tag + NUMBER_OF_DIGITS_PER_LINE *3, FF_RB_TAG_MAX_LEN -NUMBER_OF_DIGITS_PER_LINE *3);
+/** \brief A helper for PID block info.
+\param index - PID block number (0-based)
+*/
+static bool_t ui_ff_InfoPID_helper(const uistate_t *state, size_t index)
+{
+    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
+    const IPC_FFPIDParams_t *pVar = GetPidBlockVar(index, NULL);
+    u8 ModeActual;
+    u16 BlockErr;
+    // display the orignal digits on lcd, and will be replaced by string
+    MN_ENTER_CRITICAL();
+        ModeActual = pVar->ModeActual;
+        BlockErr = pVar->BlockErr;
+    MN_EXIT_CRITICAL();
+
+    ff_Mode2Str(ModeActual, ln2);
+    ff_Err2Str(BlockErr, &ln2[FFSTR_OFFSET_ERR]);
     ui_setDispmode(DISPMODE_FF_INFO, ln2);
 
     UNUSED_OK(state);
     return false;
 }
+
 /** \brief called when display exit a menu cycle of FF info, to
         infor mation of PID block.
 */
 bool_t ui_ff_InfoPID(const uistate_t *state)
 {
-    const IPC_FFPIDParams_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
+    return ui_ff_InfoPID_helper(state, 0U);
+}
 
-    pVar = GetPidBlockVar();
-    // display the orignal digits on lcd, and will be replaced by string
-    ff_Mode2Str(pVar->ModeActual, ln2);
-    ff_Err2Str(pVar->BlockErr, &ln2[FFSTR_OFFSET_ERR]);
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
+/** \brief A helper for PID block tag
+\param index - PID number (0-based)
+\param segment - segment of the tag
+\param len - length of the segment
+*/
+static bool_t ui_ff_TagPID_helper(const uistate_t *state, size_t index, size_t segment, size_t len)
+{
     UNUSED_OK(state);
-    return false;
+    const u8 *str = GetPidBlockVar(index, NULL)->tag;
+    return ui_ff_Tag_helper(str, segment, len);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to
@@ -564,15 +495,7 @@ bool_t ui_ff_InfoPID(const uistate_t *state)
 */
 bool_t ui_ff_Tag1PID(const uistate_t *state)
 {
-    const IPC_FFPIDParams_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
-
-    pVar = GetPidBlockVar();
-    mn_memcpy(ln2, pVar->tag, NUMBER_OF_DIGITS_PER_LINE);
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_TagPID_helper(state, 0U, 0U, NUMBER_OF_DIGITS_PER_LINE);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to
@@ -580,15 +503,7 @@ bool_t ui_ff_Tag1PID(const uistate_t *state)
 */
 bool_t ui_ff_Tag2PID(const uistate_t *state)
 {
-    const IPC_FFPIDParams_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
-
-    pVar = GetPidBlockVar();
-    mn_memcpy(ln2, pVar->tag + NUMBER_OF_DIGITS_PER_LINE, NUMBER_OF_DIGITS_PER_LINE);
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_TagPID_helper(state, 0U, 1U, NUMBER_OF_DIGITS_PER_LINE);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to
@@ -596,15 +511,7 @@ bool_t ui_ff_Tag2PID(const uistate_t *state)
 */
 bool_t ui_ff_Tag3PID(const uistate_t *state)
 {
-    const IPC_FFPIDParams_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
-
-    pVar = GetPidBlockVar();
-    mn_memcpy(ln2, pVar->tag + NUMBER_OF_DIGITS_PER_LINE *2, NUMBER_OF_DIGITS_PER_LINE);
-
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_TagPID_helper(state, 0U, 2U, NUMBER_OF_DIGITS_PER_LINE);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to
@@ -612,49 +519,60 @@ bool_t ui_ff_Tag3PID(const uistate_t *state)
 */
 bool_t ui_ff_Tag4PID(const uistate_t *state)
 {
-    const IPC_FFPIDParams_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1]  = BLANK_STR_LCD_1LINE;
+    CONST_ASSERT ((FF_TAG_MAX_LEN -NUMBER_OF_DIGITS_PER_LINE *3) <= NUMBER_OF_DIGITS_PER_LINE);
+    return ui_ff_TagPID_helper(state, 0U, 3U, FF_TAG_MAX_LEN -NUMBER_OF_DIGITS_PER_LINE *3);
+}
 
-    pVar = GetPidBlockVar();
-    CONST_ASSERT ((FF_RB_TAG_MAX_LEN -NUMBER_OF_DIGITS_PER_LINE *3) <= NUMBER_OF_DIGITS_PER_LINE);
-    mn_memcpy(ln2, pVar->tag + NUMBER_OF_DIGITS_PER_LINE *3, FF_RB_TAG_MAX_LEN -NUMBER_OF_DIGITS_PER_LINE *3);
+/** \brief called when display exit a menu cycle of FF info, to
+        infor mation of DO block.
+*/
+static bool_t ui_ff_InfoDO_helper(const uistate_t *state, size_t index)
+{
+    const IPC_FFDOParams_t* pVar;
+    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
+
+    u8 ModeActual;
+    u16 BlockErr;
+    MN_ENTER_CRITICAL();
+        pVar = GetDoBlockVar(index, NULL);
+        // display the orignal digits on lcd, and will be replaced by string
+        ModeActual = pVar->ModeActual;
+        BlockErr = pVar->BlockErr;
+    MN_EXIT_CRITICAL();
+
+    ff_Mode2Str(ModeActual, ln2);
+    ff_Err2Str(BlockErr, &ln2[FFSTR_OFFSET_ERR]);
     ui_setDispmode(DISPMODE_FF_INFO, ln2);
 
     UNUSED_OK(state);
     return false;
 }
+
 /** \brief called when display exit a menu cycle of FF info, to
         infor mation of DO block.
 */
 bool_t ui_ff_InfoDO(const uistate_t *state)
 {
-    const IPC_FFDOParams_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
-
-    pVar = GetDoBlockVar();
-    // display the orignal digits on lcd, and will be replaced by string
-    ff_Mode2Str(pVar->ModeActual, ln2);
-    ff_Err2Str(pVar->BlockErr, &ln2[FFSTR_OFFSET_ERR]);
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_InfoDO_helper(state, 0U);
 }
+
+/** \brief called when display exit a menu cycle of FF info, to
+        part 1 of DO block.
+*/
+static bool_t ui_ff_TagDO_helper(const uistate_t *state, size_t index, size_t segment, size_t len)
+{
+    UNUSED_OK(state);
+    const u8 *str = GetDoBlockVar(index, NULL)->tag;
+    return ui_ff_Tag_helper(str, segment, len);
+}
+
 
 /** \brief called when display exit a menu cycle of FF info, to
         part 1 of DO block.
 */
 bool_t ui_ff_Tag1DO(const uistate_t *state)
 {
-    const IPC_FFDOParams_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
-
-    pVar = GetDoBlockVar();
-    mn_memcpy(ln2, pVar->tag, NUMBER_OF_DIGITS_PER_LINE);
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_TagDO_helper(state, 0U, 0U, NUMBER_OF_DIGITS_PER_LINE);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to
@@ -662,15 +580,7 @@ bool_t ui_ff_Tag1DO(const uistate_t *state)
 */
 bool_t ui_ff_Tag2DO(const uistate_t *state)
 {
-    const IPC_FFDOParams_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
-
-    pVar = GetDoBlockVar();
-    mn_memcpy(ln2, pVar->tag + NUMBER_OF_DIGITS_PER_LINE, NUMBER_OF_DIGITS_PER_LINE);
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_TagDO_helper(state, 0U, 1U, NUMBER_OF_DIGITS_PER_LINE);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to
@@ -678,15 +588,7 @@ bool_t ui_ff_Tag2DO(const uistate_t *state)
 */
 bool_t ui_ff_Tag3DO(const uistate_t *state)
 {
-    const IPC_FFDOParams_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
-
-    pVar = GetDoBlockVar();
-    mn_memcpy(ln2, pVar->tag + NUMBER_OF_DIGITS_PER_LINE *2, NUMBER_OF_DIGITS_PER_LINE);
-
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_TagDO_helper(state, 0U, 2U, NUMBER_OF_DIGITS_PER_LINE);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to
@@ -694,33 +596,15 @@ bool_t ui_ff_Tag3DO(const uistate_t *state)
 */
 bool_t ui_ff_Tag4DO(const uistate_t *state)
 {
-    const IPC_FFDOParams_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1]  = BLANK_STR_LCD_1LINE;
-
-    pVar = GetDoBlockVar();
-    CONST_ASSERT ((FF_RB_TAG_MAX_LEN -NUMBER_OF_DIGITS_PER_LINE *3) <= NUMBER_OF_DIGITS_PER_LINE);
-    mn_memcpy(ln2, pVar->tag + NUMBER_OF_DIGITS_PER_LINE *3, FF_RB_TAG_MAX_LEN -NUMBER_OF_DIGITS_PER_LINE *3);
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
-    UNUSED_OK(state);
-    return false;
+    CONST_ASSERT ((FF_TAG_MAX_LEN -NUMBER_OF_DIGITS_PER_LINE *3) <= NUMBER_OF_DIGITS_PER_LINE);
+    return ui_ff_TagDO_helper(state, 0U, 3U, FF_TAG_MAX_LEN -NUMBER_OF_DIGITS_PER_LINE *3);
 }
 /** \brief called when display exit a menu cycle of FF info, to
         infor mation of PID2 block.
 */
 bool_t ui_ff_InfoPID2(const uistate_t *state)
 {
-    const IPC_FFPID2Params_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
-
-    pVar = GetPid2BlockVar();
-    // display the orignal digits on lcd, and will be replaced by string
-    ff_Mode2Str(pVar->ModeActual, ln2);
-    ff_Err2Str(pVar->BlockErr, &ln2[FFSTR_OFFSET_ERR]);
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_InfoPID_helper(state, 1U);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to
@@ -728,15 +612,7 @@ bool_t ui_ff_InfoPID2(const uistate_t *state)
 */
 bool_t ui_ff_Tag1PID2(const uistate_t *state)
 {
-    const IPC_FFPID2Params_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
-
-    pVar = GetPid2BlockVar();
-    mn_memcpy(ln2, pVar->tag, NUMBER_OF_DIGITS_PER_LINE);
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_TagPID_helper(state, 1U, 0U, NUMBER_OF_DIGITS_PER_LINE);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to
@@ -744,15 +620,7 @@ bool_t ui_ff_Tag1PID2(const uistate_t *state)
 */
 bool_t ui_ff_Tag2PID2(const uistate_t *state)
 {
-    const IPC_FFPID2Params_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
-
-    pVar = GetPid2BlockVar();
-    mn_memcpy(ln2, pVar->tag + NUMBER_OF_DIGITS_PER_LINE, NUMBER_OF_DIGITS_PER_LINE);
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_TagPID_helper(state, 1U, 1U, NUMBER_OF_DIGITS_PER_LINE);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to
@@ -760,15 +628,7 @@ bool_t ui_ff_Tag2PID2(const uistate_t *state)
 */
 bool_t ui_ff_Tag3PID2(const uistate_t *state)
 {
-    const IPC_FFPID2Params_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
-
-    pVar = GetPid2BlockVar();
-    mn_memcpy(ln2, pVar->tag + NUMBER_OF_DIGITS_PER_LINE *2, NUMBER_OF_DIGITS_PER_LINE);
-
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_TagPID_helper(state, 1U, 2U, NUMBER_OF_DIGITS_PER_LINE);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to
@@ -776,33 +636,15 @@ bool_t ui_ff_Tag3PID2(const uistate_t *state)
 */
 bool_t ui_ff_Tag4PID2(const uistate_t *state)
 {
-    const IPC_FFPID2Params_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1]  = BLANK_STR_LCD_1LINE;
-
-    pVar = GetPid2BlockVar();
-    CONST_ASSERT ((FF_PID2_TAG_MAX_LEN -NUMBER_OF_DIGITS_PER_LINE *3) <= NUMBER_OF_DIGITS_PER_LINE);
-    mn_memcpy(ln2, pVar->tag + NUMBER_OF_DIGITS_PER_LINE *3, FF_PID2_TAG_MAX_LEN -NUMBER_OF_DIGITS_PER_LINE *3);
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
-    UNUSED_OK(state);
-    return false;
+    CONST_ASSERT ((FF_TAG_MAX_LEN -NUMBER_OF_DIGITS_PER_LINE *3) <= NUMBER_OF_DIGITS_PER_LINE);
+    return ui_ff_TagPID_helper(state, 1U, 3U, FF_TAG_MAX_LEN -NUMBER_OF_DIGITS_PER_LINE *3);
 }
 /** \brief called when display exit a menu cycle of FF info, to
         infor mation of DO2 block.
 */
 bool_t ui_ff_InfoDO2(const uistate_t *state)
 {
-    const IPC_FFDO2Params_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
-
-    pVar = GetDo2BlockVar();
-    // display the orignal digits on lcd, and will be replaced by string
-    ff_Mode2Str(pVar->ModeActual, ln2);
-    ff_Err2Str(pVar->BlockErr, &ln2[FFSTR_OFFSET_ERR]);
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_InfoDO_helper(state, 1U);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to
@@ -810,15 +652,7 @@ bool_t ui_ff_InfoDO2(const uistate_t *state)
 */
 bool_t ui_ff_Tag1DO2(const uistate_t *state)
 {
-    const IPC_FFDO2Params_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
-
-    pVar = GetDo2BlockVar();
-    mn_memcpy(ln2, pVar->tag, NUMBER_OF_DIGITS_PER_LINE);
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_TagDO_helper(state, 1U, 0U, NUMBER_OF_DIGITS_PER_LINE);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to
@@ -826,15 +660,7 @@ bool_t ui_ff_Tag1DO2(const uistate_t *state)
 */
 bool_t ui_ff_Tag2DO2(const uistate_t *state)
 {
-    const IPC_FFDO2Params_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
-
-    pVar = GetDo2BlockVar();
-    mn_memcpy(ln2, pVar->tag + NUMBER_OF_DIGITS_PER_LINE, NUMBER_OF_DIGITS_PER_LINE);
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_TagDO_helper(state, 1U, 1U, NUMBER_OF_DIGITS_PER_LINE);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to
@@ -842,15 +668,7 @@ bool_t ui_ff_Tag2DO2(const uistate_t *state)
 */
 bool_t ui_ff_Tag3DO2(const uistate_t *state)
 {
-    const IPC_FFDO2Params_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1];
-
-    pVar = GetDo2BlockVar();
-    mn_memcpy(ln2, pVar->tag + NUMBER_OF_DIGITS_PER_LINE *2, NUMBER_OF_DIGITS_PER_LINE);
-
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-    UNUSED_OK(state);
-    return false;
+    return ui_ff_TagDO_helper(state, 1U, 2U, NUMBER_OF_DIGITS_PER_LINE);
 }
 
 /** \brief called when display exit a menu cycle of FF info, to
@@ -858,16 +676,8 @@ bool_t ui_ff_Tag3DO2(const uistate_t *state)
 */
 bool_t ui_ff_Tag4DO2(const uistate_t *state)
 {
-    const IPC_FFDO2Params_t* pVar;
-    u8 ln2[NUMBER_OF_DIGITS_PER_LINE + 1]  = BLANK_STR_LCD_1LINE;
-
-    pVar = GetDo2BlockVar();
-    CONST_ASSERT ((FF_DO2_TAG_MAX_LEN -NUMBER_OF_DIGITS_PER_LINE *3) <= NUMBER_OF_DIGITS_PER_LINE);
-    mn_memcpy(ln2, pVar->tag + NUMBER_OF_DIGITS_PER_LINE *3, FF_DO2_TAG_MAX_LEN -NUMBER_OF_DIGITS_PER_LINE *3);
-    ui_setDispmode(DISPMODE_FF_INFO, ln2);
-
-    UNUSED_OK(state);
-    return false;
+    CONST_ASSERT ((FF_TAG_MAX_LEN - NUMBER_OF_DIGITS_PER_LINE *3) <= NUMBER_OF_DIGITS_PER_LINE);
+    return ui_ff_TagDO_helper(state, 1U, 3U, FF_TAG_MAX_LEN - NUMBER_OF_DIGITS_PER_LINE *3);
 }
 
 // ------- helpers for UI "simulation jumper" --------
@@ -903,9 +713,9 @@ bool_t ui_SimulationSet(const uistate_t *state)
 */
 const void *ui_GetIpcTimeStampStatus(void)
 {
-    const IPC_FFDeviceParams_t* pVar;
+    IPC_FFDeviceParams_t* pVar;
 
-    pVar = GetDeviceVar();
+    pVar = GetDeviceVar(NULL);
     return &(pVar->IPC_TimeStampStatus);
 }
 

@@ -26,15 +26,12 @@ demand.
 #include "ff_resblockvars.h"
 #include "ff_aoblockvars.h"
 #include "ff_doblockvars.h"
-#include "ff_do2blockvars.h"
 #include "ff_pidblockvars.h"
-#include "ff_pid2blockvars.h"
 #include "ff_tbblockvars.h"
 #include "ff_aiblockvars.h"
-#include "ff_ai2blockvars.h"
-#include "ff_ai3blockvars.h"
 #include "ff_isblockvars.h"
 #include "bufutils.h"
+#include "mnassert.h"
 
 /**\brief show NULL for string initial value
 */
@@ -42,8 +39,7 @@ static void check_initial_string(u8* str, u8 len)
 {
 	if(0 == str[0])
 	{
-		p8 null_buf[] = "    NULL";
-		util_GetU8Array((u8*)null_buf, len, str);
+		util_GetU8Array((const u8*)"    NULL", len, str);
 	}
 }
 
@@ -54,7 +50,7 @@ const void *ui_CycleMenuGetFfCustom1(void)
 {
     const IPC_FFTBParams_t* pVar;
 
-    pVar = GetTbBlockVar();
+    pVar = GetTbBlockVar(NULL);
     return &(pVar->cust_config_0);
 }
 
@@ -65,7 +61,7 @@ const void *ui_CycleMenuGetFfCustom2(void)
 {
     const IPC_FFTBParams_t* pVar;
 
-    pVar = GetTbBlockVar();
+    pVar = GetTbBlockVar(NULL);
     return &(pVar->cust_config_1);
 }
 
@@ -110,9 +106,11 @@ u8 ui_ffGetWorkingSP(u8 * str, u8 maxlen)
 {
     const IPC_FFTBParams_t* pvar;
 
-    pvar = GetTbBlockVar();
-    ui_dispFfVarStatus(pvar->working_sp.status);
-	util_GetU8Array(pvar->working_sp.value, maxlen, str);
+    pvar = GetTbBlockVar(NULL);
+    MN_ENTER_CRITICAL();
+        ui_dispFfVarStatus(pvar->final_sp.status);
+        util_GetU8Array(pvar->final_sp.value, maxlen, str);
+    MN_EXIT_CRITICAL();
 	check_initial_string(str, maxlen);
 	return maxlen;
 }
@@ -124,25 +122,58 @@ u8 ui_ffGetWorkingPos(u8 * str, u8 maxlen)
 {
     const IPC_FFTBParams_t* pvar;
 
-    pvar = GetTbBlockVar();
-    ui_dispFfVarStatus(pvar->working_pos.status);
-	util_GetU8Array(pvar->working_pos.value, maxlen, str);
+    pvar = GetTbBlockVar(NULL);
+    MN_ENTER_CRITICAL();
+        ui_dispFfVarStatus(pvar->final_pos.status);
+        util_GetU8Array(pvar->final_pos.value, maxlen, str);
+    MN_EXIT_CRITICAL();
 	check_initial_string(str, maxlen);
 	return maxlen;
 }
 
+typedef enum pidvartype_t
+{
+    pidvartype_invalid,
+    pidvartype_sp,
+    pidvartype_pv,
+    pidvartype_out
+} pidvartype_t;
+
+static u8 ui_ffGetPidVar_helper(u8 *str, u8 maxlen, size_t index, pidvartype_t pidvartype)
+{
+    const IPC_FFPIDParams_t* pparam = GetPidBlockVar(index, NULL);
+    const ffDataFloat_t *pvar;
+    switch(pidvartype)
+    {
+        case pidvartype_sp:
+            pvar = &pparam->sp;
+            break;
+        case pidvartype_pv:
+            pvar = &pparam->pv;
+            break;
+        case pidvartype_out:
+            pvar = &pparam->out;
+            break;
+        case pidvartype_invalid:
+        default:
+            pvar = NULL;
+            break;
+    }
+    MN_DBG_ASSERT(pvar != NULL);
+    MN_ENTER_CRITICAL();
+        ui_dispFfVarStatus(pvar->status);
+        util_GetU8Array(pvar->value, maxlen, str);
+    MN_EXIT_CRITICAL();
+	check_initial_string(str, maxlen);
+
+	return maxlen;
+}
 /** \brief called by ui variable node
         to get the value for display, index 3
 */
 u8 ui_ffGetPidSp(u8 * str, u8 maxlen)
 {
-    const IPC_FFPIDParams_t* pvar;
-
-    pvar = GetPidBlockVar();
-    ui_dispFfVarStatus(pvar->sp.status);
-	util_GetU8Array(pvar->sp.value, maxlen, str);
-	check_initial_string(str, maxlen);
-	return maxlen;
+    return ui_ffGetPidVar_helper(str, maxlen, 0U, pidvartype_sp);
 }
 
 /** \brief called by ui variable node
@@ -150,13 +181,7 @@ u8 ui_ffGetPidSp(u8 * str, u8 maxlen)
 */
 u8 ui_ffGetPidPv(u8 * str, u8 maxlen)
 {
-    const IPC_FFPIDParams_t* pvar;
-
-    pvar = GetPidBlockVar();
-    ui_dispFfVarStatus(pvar->pv.status);
-	util_GetU8Array(pvar->pv.value, maxlen, str);
-	check_initial_string(str, maxlen);
-	return maxlen;
+    return ui_ffGetPidVar_helper(str, maxlen, 0U, pidvartype_pv);
 }
 
 /** \brief called by ui variable node
@@ -164,13 +189,7 @@ u8 ui_ffGetPidPv(u8 * str, u8 maxlen)
 */
 u8 ui_ffGetPidOut(u8 * str, u8 maxlen)
 {
-    const IPC_FFPIDParams_t* pvar;
-
-    pvar = GetPidBlockVar();
-    ui_dispFfVarStatus(pvar->out.status);
-	util_GetU8Array(pvar->out.value, maxlen, str);
-	check_initial_string(str, maxlen);
-	return maxlen;
+    return ui_ffGetPidVar_helper(str, maxlen, 0U, pidvartype_out);
 }
 
 /** \brief called by ui variable node
@@ -178,13 +197,7 @@ u8 ui_ffGetPidOut(u8 * str, u8 maxlen)
 */
 u8 ui_ffGetPid2Sp(u8 * str, u8 maxlen)
 {
-    const IPC_FFPID2Params_t* pvar;
-
-    pvar = GetPid2BlockVar();
-    ui_dispFfVarStatus(pvar->sp.status);
-	util_GetU8Array(pvar->sp.value, maxlen, str);
-	check_initial_string(str, maxlen);
-	return maxlen;
+    return ui_ffGetPidVar_helper(str, maxlen, 1U, pidvartype_sp);
 }
 
 /** \brief called by ui variable node
@@ -192,13 +205,7 @@ u8 ui_ffGetPid2Sp(u8 * str, u8 maxlen)
 */
 u8 ui_ffGetPid2Pv(u8 * str, u8 maxlen)
 {
-    const IPC_FFPID2Params_t* pvar;
-
-    pvar = GetPid2BlockVar();
-    ui_dispFfVarStatus(pvar->pv.status);
-	util_GetU8Array(pvar->pv.value, maxlen, str);
-	check_initial_string(str, maxlen);
-	return maxlen;
+    return ui_ffGetPidVar_helper(str, maxlen, 1U, pidvartype_pv);
 }
 
 /** \brief called by ui variable node
@@ -206,55 +213,57 @@ u8 ui_ffGetPid2Pv(u8 * str, u8 maxlen)
 */
 u8 ui_ffGetPid2Out(u8 * str, u8 maxlen)
 {
-    const IPC_FFPID2Params_t* pvar;
+    return ui_ffGetPidVar_helper(str, maxlen, 1U, pidvartype_out);
+}
 
-    pvar = GetPid2BlockVar();
-    ui_dispFfVarStatus(pvar->out.status);
-	util_GetU8Array(pvar->out.value, maxlen, str);
+/** \brief A common helper for AI OUT parameter display
+\param str - destination string
+\param maxlen - max display length
+\param index - which AI (0-based)
+\return maxlen
+*/
+static u8 ui_ffGetAiOut(u8 * str, u8 maxlen, size_t index)
+{
+    IPC_FFAIParams_t aidata;
+    const IPC_FFAIParams_t *pvar = GetAiBlockVar(index, &aidata);
+    MN_DBG_ASSERT(pvar != NULL);
+    ui_dispFfVarStatus(aidata.out.status);
+	util_GetU8Array(aidata.out.value, maxlen, str);
 	check_initial_string(str, maxlen);
 	return maxlen;
 }
 
 /** \brief called by ui variable node
-        to get the value for display, index 9
+        to get the value for display AI 1 display
+\param str - destination string
+\param maxlen - max display length
+\return maxlen
 */
 u8 ui_ffGetAi1Out(u8 * str, u8 maxlen)
 {
-    const IPC_FFAIParams_t* pvar;
-
-    pvar = GetAiBlockVar();
-    ui_dispFfVarStatus(pvar->out.status);
-	util_GetU8Array(pvar->out.value, maxlen, str);
-	check_initial_string(str, maxlen);
-	return maxlen;
+    return ui_ffGetAiOut(str, maxlen, 0);
 }
 
 /** \brief called by ui variable node
-        to get the value for display, index 10
+        to get the value for display AI 2 display
+\param str - destination string
+\param maxlen - max display length
+\return maxlen
 */
 u8 ui_ffGetAi2Out(u8 * str, u8 maxlen)
 {
-    const IPC_FFAI2Params_t* pvar;
-
-    pvar = GetAi2BlockVar();
-    ui_dispFfVarStatus(pvar->out.status);
-	util_GetU8Array(pvar->out.value, maxlen, str);
-	check_initial_string(str, maxlen);
-	return maxlen;
+    return ui_ffGetAiOut(str, maxlen, 1);
 }
 
 /** \brief called by ui variable node
-        to get the value for display, index 11
+        to get the value for display AI 3 display
+\param str - destination string
+\param maxlen - max display length
+\return maxlen
 */
 u8 ui_ffGetAi3Out(u8 * str, u8 maxlen)
 {
-    const IPC_FFAI3Params_t* pvar;
-
-    pvar = GetAi3BlockVar();
-    ui_dispFfVarStatus(pvar->out.status);
-	util_GetU8Array(pvar->out.value, maxlen, str);
-	check_initial_string(str, maxlen);
-	return maxlen;
+    return ui_ffGetAiOut(str, maxlen, 2);
 }
 
 /** \brief called by ui variable node
@@ -262,25 +271,38 @@ u8 ui_ffGetAi3Out(u8 * str, u8 maxlen)
 */
 u8 ui_ffGetAoSp(u8 * str, u8 maxlen)
 {
-    const IPC_FFAOParams_t* pvar;
-
-    pvar = GetAoBlockVar();
-    ui_dispFfVarStatus(pvar->sp.status);
-	util_GetU8Array(pvar->sp.value, maxlen, str);
+    const IPC_FFAOParams_t* pvar = GetAoBlockVar(NULL);
+    u8 status;
+    MN_ENTER_CRITICAL();
+        status =(pvar->sp.status);
+        util_GetU8Array(pvar->sp.value, maxlen, str);
+    MN_EXIT_CRITICAL();
+    ui_dispFfVarStatus(status);
 	check_initial_string(str, maxlen);
 	return maxlen;
 }
 
+static uivalvar_t DOx_value;
+/** \brief A helper for DO1 and DO2 setpoint
+*/
+static uivalvar_t *ui_ffGetDoSp_helper(size_t index)
+{
+    const IPC_FFDOParams_t* pvar;
+
+    MN_ENTER_CRITICAL();
+        pvar = GetDoBlockVar(index, NULL);
+        ui_dispFfVarStatus(pvar->sp_d.status);
+        DOx_value = (pvar->sp_d.value);
+    MN_EXIT_CRITICAL();
+    return &DOx_value;
+}
+
 /** \brief called by ui variable node
-        to get the value for display, index 13
+        to get the value for display, index 14
 */
 uivalvar_t *ui_ffGetDoSp(void)
 {
-    IPC_FFDOParams_t* pvar;
-
-    pvar = GetDoBlockVar();
-    ui_dispFfVarStatus(pvar->sp_d.status);
-    return &(pvar->sp_d.value);
+    return ui_ffGetDoSp_helper(0U);
 }
 
 /** \brief called by ui variable node
@@ -288,38 +310,57 @@ uivalvar_t *ui_ffGetDoSp(void)
 */
 uivalvar_t *ui_ffGetDo2Sp(void)
 {
-    IPC_FFDO2Params_t* pvar;
-
-    pvar = GetDo2BlockVar();
-    ui_dispFfVarStatus(pvar->sp_d.status);
-    return &(pvar->sp_d.value);
+    return ui_ffGetDoSp_helper(1U);
 }
+/** \brief called by ui variable node
+        to get the value for display, index 15
+*/
+static u8 ui_ffGetIsIn_helper(u8 * str, u8 maxlen, size_t index)
+{
+    IPC_FFISParams_t var;
+    const IPC_FFISParams_t* pvar = GetIsBlockVar(&var);
+    MN_DBG_ASSERT(pvar != NULL);
 
+
+    ffDataFloat_t *p_in;
+    switch(index)
+    {
+        case 1:
+            p_in = &var.in1;
+            break;
+        case 2:
+            p_in = &var.in2;
+            break;
+        case 3:
+            p_in = &var.in3;
+            break;
+        case 4:
+            p_in = &var.in4;
+            break;
+        default:
+            p_in = NULL;
+            break;
+    }
+    MN_DBG_ASSERT(p_in != NULL);
+
+    ui_dispFfVarStatus(p_in->status);
+    util_GetU8Array(p_in->value, maxlen, str);
+	check_initial_string(str, maxlen);
+	return maxlen;
+}
 /** \brief called by ui variable node
         to get the value for display, index 15
 */
 u8 ui_ffGetIsIn1(u8 * str, u8 maxlen)
 {
-    const IPC_FFISParams_t* pvar;
-
-    pvar = GetIsBlockVar();
-    ui_dispFfVarStatus(pvar->in1.status);
-	util_GetU8Array(pvar->in1.value, maxlen, str);
-	check_initial_string(str, maxlen);
-	return maxlen;
+    return ui_ffGetIsIn_helper(str, maxlen, 1U);
 }
 /** \brief called by ui variable node
         to get the value for display, index 16
 */
 u8 ui_ffGetIsIn2(u8 * str, u8 maxlen)
 {
-    const IPC_FFISParams_t* pvar;
-
-    pvar = GetIsBlockVar();
-    ui_dispFfVarStatus(pvar->in2.status);
-	util_GetU8Array(pvar->in2.value, maxlen, str);
-	check_initial_string(str, maxlen);
-	return maxlen;
+    return ui_ffGetIsIn_helper(str, maxlen, 2U);
 }
 
 /** \brief called by ui variable node
@@ -327,13 +368,7 @@ u8 ui_ffGetIsIn2(u8 * str, u8 maxlen)
 */
 u8 ui_ffGetIsIn3(u8 * str, u8 maxlen)
 {
-    const IPC_FFISParams_t* pvar;
-
-    pvar = GetIsBlockVar();
-    ui_dispFfVarStatus(pvar->in3.status);
-	util_GetU8Array(pvar->in3.value, maxlen, str);
-	check_initial_string(str, maxlen);
-	return maxlen;
+    return ui_ffGetIsIn_helper(str, maxlen, 3U);
 }
 
 /** \brief called by ui variable node
@@ -341,13 +376,7 @@ u8 ui_ffGetIsIn3(u8 * str, u8 maxlen)
 */
 u8 ui_ffGetIsIn4(u8 * str, u8 maxlen)
 {
-    const IPC_FFISParams_t* pvar;
-
-    pvar = GetIsBlockVar();
-    ui_dispFfVarStatus(pvar->in4.status);
-    util_GetU8Array(pvar->in4.value, maxlen, str);
-    check_initial_string(str, maxlen);
-    return maxlen;
+    return ui_ffGetIsIn_helper(str, maxlen, 4U);
 }
 
 /** \brief called by ui variable node

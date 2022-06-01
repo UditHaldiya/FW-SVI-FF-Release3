@@ -2,7 +2,7 @@
 UFILES_C:=
 #SOURCE, if defined, is a space-separated list of the sources in this directory
 ifeq ($(PROJ),FFAP)
-SOURCE:=resblockvars.c aoblockvars.c pidblockvars.c doblockvars.c tbblockvars.c aiblockvars.c ai2blockvars.c ai3blockvars.c do2blockvars.c isblockvars.c pid2blockvars.c devicevars.c
+SOURCE:=resblockvars.c aoblockvars.c pidblockvars.c doblockvars.c tbblockvars.c aiblockvars.c isblockvars.c devicevars.c
 endif
 
 #SUBDIR, if defined,  is a space-separated list of subdirectories with sources

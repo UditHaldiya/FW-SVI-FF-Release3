@@ -13,10 +13,6 @@ demand.
     CPU: Any
 
     OWNER: AK
-    $Archive: /MNCB/Dev/LCX2AP/FIRMWARE/interface/hart/glue/hart_posctl.c $
-    $Date: 1/20/12 10:48a $
-    $Revision: 10 $
-    $Author: Arkkhasin $
 
     \ingroup HARTapp
 */
@@ -51,11 +47,7 @@ demand.
 #include "ff_pidblockvars.h"
 #include "ff_tbblockvars.h"
 #include "ff_aiblockvars.h"
-#include "ff_ai2blockvars.h"
-#include "ff_ai3blockvars.h"
-#include "ff_do2blockvars.h"
 #include "ff_isblockvars.h"
-#include "ff_pid2blockvars.h"
 #include "ff_devicevars.h"
 
 // Characterization
@@ -291,36 +283,6 @@ static ErrorCode_t  IPC_ReadCompleteStatus(IPC_Variable_IDs_t VarID, IPC_ReadPtr
     util_PutU32(pIPC_ReadPtrs->pIPC_VarBuffer, DataToSend);
     util_PutU8(pIPC_ReadPtrs->pVarStatus, RetStatus);
 
-    return ERR_OK;
-}
-
-static u32  IPC_TestVariable = 0u;
-
-static ErrorCode_t  IPC_ReadTest(IPC_Variable_IDs_t VarID, IPC_ReadPtrs_t const *pIPC_ReadPtrs)
-{
-    util_PutU32(pIPC_ReadPtrs->pIPC_VarBuffer, IPC_TestVariable);
-    util_PutU8(pIPC_ReadPtrs->pVarStatus, (IPC_QUALITY_GOOD | IPC_NO_ERROR));
-    UNUSED_OK(VarID);
-    return ERR_OK;
-}
-
-static ErrorCode_t  IPC_WriteTest(IPC_Variable_IDs_t VarID, IPC_WritePtrs_t const *pIPC_WritePtrs, IPC_ReadPtrs_t const *pIPC_ReadPtrs)
-{
-    u8          ReturnStatus = IPC_QUALITY_GOOD | IPC_NO_ERROR;
-
-    if (IsQuality_ACCEPT(*(pIPC_WritePtrs->pVarStatus)))
-    {
-        IPC_TestVariable = util_GetU32(pIPC_WritePtrs->pIPC_VarBuffer);
-    }
-    else
-    {
-        ReturnStatus = *pIPC_WritePtrs->pVarStatus;
-        IPC_TestVariable = 0u;
-    }
-
-    util_PutU32(pIPC_ReadPtrs->pIPC_VarBuffer, IPC_TestVariable);
-    util_PutU8(pIPC_ReadPtrs->pVarStatus, ReturnStatus);
-    UNUSED_OK(VarID);
     return ERR_OK;
 }
 
@@ -714,14 +676,14 @@ static const IPC_TranslationTable_t IPC_TranslationTable[IPC_TRANSLATION_TABLE_S
     [IPC_RB_BLOCK_TAG]              = {IPC_LONG_VAR,    NULL,                       IPC_WriteRbTag},
     [IPC_RB_BLOCK_ACTUAL_MODE]      = {IPC_SHORT_VAR,   NULL,                       IPC_WriteRbModeActual},
     [IPC_RB_BLOCK_ERROR]            = {IPC_SHORT_VAR,   NULL,                       IPC_WriteRbError},
-    [IPC_RB_RESTART]                = {IPC_SHORT_VAR,   IPC_ReadRbRestart,          IPC_WriteRbRestart},
+    [IPC_RB_RESTART]                = {IPC_SHORT_VAR,   NULL,          NULL}, //Thankfully! FFP doesn't send it because the implementation was wrong!
     [IPC_RB_NV_CYCLE_T]             = {IPC_SHORT_VAR,   NULL,                       NULL},
-    [IPC_RB_BLOCK_ERR_DESC_1]       = {IPC_SHORT_VAR,   IPC_ReadRbBlockErrDesc1,    NULL},
-    [IPC_RB_WRONG_CFG]              = {IPC_SHORT_VAR,   IPC_ReadRbWrongCfg,         NULL},
+    [IPC_RB_BLOCK_ERR_DESC_1]       = {IPC_SHORT_VAR,   NULL,    NULL}, //There was a dummy read
+    [IPC_RB_WRONG_CFG]              = {IPC_SHORT_VAR,   NULL,         NULL}, //There was a dummy read
 
-    [IPC_RB_FAULT_STATE]            = {IPC_SHORT_VAR,   IPC_ReadFaultState,         NULL},
-    [IPC_RB_SET_FSTATE]             = {IPC_SHORT_VAR,   IPC_ReadSetFaultState,      IPC_WriteSetFaultState},
-    [IPC_RB_CLR_FSTATE]             = {IPC_SHORT_VAR,   IPC_ReadClearFaultState,    IPC_WriteClearFaultState},
+    [IPC_RB_FAULT_STATE]            = {IPC_SHORT_VAR,   NULL,         NULL}, //There was a dummy read
+    [IPC_RB_SET_FSTATE]             = {IPC_SHORT_VAR,   NULL,      NULL}, //There was a dummy read and write
+    [IPC_RB_CLR_FSTATE]             = {IPC_SHORT_VAR,   NULL,    NULL}, //There was a dummy read and write
 
     //--------------------------------------------------------------
     [IPC_TB_BLOCK_TAG]              = {IPC_LONG_VAR,    NULL,                       IPC_WriteTBTag},
@@ -745,7 +707,7 @@ static const IPC_TranslationTable_t IPC_TranslationTable[IPC_TRANSLATION_TABLE_S
 
     //--------------------------------------------------------------
     [IPC_AI_OUT]                    = {IPC_LONG_VAR,   NULL,                       IPC_WriteAIOUT},
-    [IPC_AI2_OUT]                   = {IPC_LONG_VAR,   NULL,                       IPC_WriteAI2OUT},
+    [IPC_AI2_OUT]                   = {IPC_LONG_VAR,   NULL,                       IPC_WriteAIOUT},
 
     //--------------------------------------------------------------
     [IPC_DO_BLOCK_TAG]              = {IPC_LONG_VAR,    NULL,                       IPC_WriteDOTag},
@@ -906,27 +868,27 @@ static const IPC_TranslationTable_t IPC_TranslationTable[IPC_TRANSLATION_TABLE_S
     // [SERVO_WARN_COUNT]              = {IPC_SHORT_VAR,   NULL,                       NULL},
 
     //-------------------------------------------------------------------------
-    [IPC_PID2_PV]                   = {IPC_LONG_VAR,   NULL,                       IPC_WritePID2PV},
-    [IPC_PID2_SP]                   = {IPC_LONG_VAR,   NULL,                       IPC_WritePID2SP},
-    [IPC_PID2_OUT]                  = {IPC_LONG_VAR,   NULL,                       IPC_WritePID2OUT},
+    [IPC_PID2_PV]                   = {IPC_LONG_VAR,   NULL,                       IPC_WritePIDPV},
+    [IPC_PID2_SP]                   = {IPC_LONG_VAR,   NULL,                       IPC_WritePIDSP},
+    [IPC_PID2_OUT]                  = {IPC_LONG_VAR,   NULL,                       IPC_WritePIDOUT},
 
-    [IPC_AI3_OUT]                   = {IPC_LONG_VAR,   NULL,                       IPC_WriteAI3OUT},
+    [IPC_AI3_OUT]                   = {IPC_LONG_VAR,   NULL,                       IPC_WriteAIOUT},
 
-    [IPC_DO2_SP_D]                  = {IPC_SHORT_VAR,   NULL,                       IPC_WriteDO2SPD},
+    [IPC_DO2_SP_D]                  = {IPC_SHORT_VAR,   NULL,                       IPC_WriteDOSPD},
 
-    [IPC_IS_IN1]                    = {IPC_LONG_VAR,   NULL,                       IPC_WriteISIN1},
-    [IPC_IS_IN2]                    = {IPC_LONG_VAR,   NULL,                       IPC_WriteISIN2},
-    [IPC_IS_IN3]                    = {IPC_LONG_VAR,   NULL,                       IPC_WriteISIN3},
-    [IPC_IS_IN4]                    = {IPC_LONG_VAR,   NULL,                       IPC_WriteISIN4},
+    [IPC_IS_IN1]                    = {IPC_LONG_VAR,   NULL,                       IPC_WriteISIN},
+    [IPC_IS_IN2]                    = {IPC_LONG_VAR,   NULL,                       IPC_WriteISIN},
+    [IPC_IS_IN3]                    = {IPC_LONG_VAR,   NULL,                       IPC_WriteISIN},
+    [IPC_IS_IN4]                    = {IPC_LONG_VAR,   NULL,                       IPC_WriteISIN},
     //-------------------------------------------------------------------------
-    [IPC_DO2_BLOCK_TAG]              = {IPC_LONG_VAR,    NULL,                       IPC_WriteDO2Tag},
-    [IPC_DO2_BLOCK_ACTUAL_MODE]      = {IPC_SHORT_VAR,   NULL,                       IPC_WriteDO2Mode},
-    [IPC_DO2_BLOCK_ERROR]            = {IPC_SHORT_VAR,   NULL,                       IPC_WriteDO2Error},
+    [IPC_DO2_BLOCK_TAG]              = {IPC_LONG_VAR,    NULL,                       IPC_WriteDOTag},
+    [IPC_DO2_BLOCK_ACTUAL_MODE]      = {IPC_SHORT_VAR,   NULL,                       IPC_WriteDOMode},
+    [IPC_DO2_BLOCK_ERROR]            = {IPC_SHORT_VAR,   NULL,                       IPC_WriteDOError},
 
     //-------------------------------------------------------------------------
-    [IPC_PID2_BLOCK_TAG]             = {IPC_LONG_VAR,    NULL,                       IPC_WritePID2Tag},
-    [IPC_PID2_BLOCK_ACTUAL_MODE]     = {IPC_SHORT_VAR,   NULL,                       IPC_WritePID2Mode},
-    [IPC_PID2_BLOCK_ERROR]           = {IPC_SHORT_VAR,   NULL,                       IPC_WritePID2Error},
+    [IPC_PID2_BLOCK_TAG]             = {IPC_LONG_VAR,    NULL,                       IPC_WritePIDTag},
+    [IPC_PID2_BLOCK_ACTUAL_MODE]     = {IPC_SHORT_VAR,   NULL,                       IPC_WritePIDMode},
+    [IPC_PID2_BLOCK_ERROR]           = {IPC_SHORT_VAR,   NULL,                       IPC_WritePIDError},
 
     //-------------------------------------------------------------------------
     [IPC_DISCRETE_INPUT]            = {IPC_SHORT_VAR,   IPC_ReadDiscreteInput,      NULL},
@@ -936,9 +898,9 @@ static const IPC_TranslationTable_t IPC_TranslationTable[IPC_TRANSLATION_TABLE_S
     [IPC_LUI_SIMULATION]            = {IPC_SHORT_VAR,   IPC_ReadLuiSimulation,      NULL},
 
     //-------------------------------------------------------------------------
-    [IPC_VARID_TEST]                = {IPC_SHORT_VAR,   IPC_ReadTest,               IPC_WriteTest},
+    [IPC_VARID_TEST]                = {IPC_SHORT_VAR,   NULL,               NULL}, //no longer used; was read and write with no support in FFP
     //-------------------------------------------------------------------------
-    [IPC_APP_FWVERSION]             = {IPC_SHORT_VAR,   IPC_ReadAppFwVer,           NULL},
+    [IPC_APP_FWVERSION]             = {IPC_SHORT_VAR,   NULL,           NULL}, //was unused and wrong (HART rev.) read here
 };
 
 //--------------------------------------------------------------
@@ -1456,7 +1418,7 @@ void  IPC_IpcMonitor(void)
         thresh = IPC_LOST_TIMER_SEC_DBG; // 180 seconds
     }
     thresh *= T1_000; //to ticks
-        
+
     MN_ENTER_CRITICAL();
         // How long time elasped
         tick_t span = timer_GetTicksSince(ipc_TimeStamp);
@@ -1464,11 +1426,11 @@ void  IPC_IpcMonitor(void)
         {
             //ipc_TimeStamp = timer_GetTicks() - thresh; //aviod overlap
             tick_t now = span + ipc_TimeStamp; //wraparound OK here
-            ipc_TimeStamp = now - thresh; //so we come back here if no comm. regardless of wraparound 
+            ipc_TimeStamp = now - thresh; //so we come back here if no comm. regardless of wraparound
             error_SetFault(FAULT_IPC_LOST);
         }
-                              
-        IPC_FFDeviceParams_t* pFFdevParam = GetDeviceVar();
+
+        IPC_FFDeviceParams_t* pFFdevParam = GetDeviceVar(NULL);
         storeMemberU8(pFFdevParam, IPC_TimeStampStatus, (span >= T20_000) ? IPC_TIMESTAMPINVALID : IPC_TIMESTAMPVALID);
     MN_EXIT_CRITICAL();
 }

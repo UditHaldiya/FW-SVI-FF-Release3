@@ -35,34 +35,74 @@ demand.
 #include "param.h"
 // -------------------------------- "ipc variables" management section ------------------------
 
-/** Default data */
-//static const u8 def_PIDBlockTag[FF_PID_TAG_MAX_LEN] = {FF_PID_TAG_DEF};
-
-
 // The initial values should be obtained from FFP every time when APP firmware starts
 // This is just a temp solution
-static IPC_FFPIDParams_t IPC_FFPIDParams =
+static IPC_FFPIDParams_t IPC_FFPIDParams[2] = //2 PID blocks
 {
-    {FF_PID_TAG_DEF},
-    0,
-    0,
-    {{FLOAT_STRING_INIT}, 0},
-    {{FLOAT_STRING_INIT}, 0},
-    {{FLOAT_STRING_INIT}, 0},
-    CRC_SEED, //make valid checksum by C init
+    [0] =
+    {
+        .tag = FF_TAG_DEF,
+        .ModeActual = 0,
+        .BlockErr = 0,
+        .pv =
+        {
+            .value = FLOAT_STRING_INIT,
+            .status = 0
+        },
+        .sp =
+        {
+            .value = FLOAT_STRING_INIT,
+            .status = 0
+        },
+        .out =
+        {
+            .value = FLOAT_STRING_INIT,
+            .status = 0
+        },
+        .CheckWord = CRC_SEED, //make valid checksum by C init
+    },
+    [1] =
+    {
+        .tag = FF_TAG_DEF,
+        .ModeActual = 0,
+        .BlockErr = 0,
+        .pv =
+        {
+            .value = FLOAT_STRING_INIT,
+            .status = 0
+        },
+        .sp =
+        {
+            .value = FLOAT_STRING_INIT,
+            .status = 0
+        },
+        .out =
+        {
+            .value = FLOAT_STRING_INIT,
+            .status = 0
+        },
+        .CheckWord = CRC_SEED, //make valid checksum by C init
+    },
 };
 
 // get the pointer of PID block variables
-IPC_FFPIDParams_t* GetPidBlockVar(void)
+const IPC_FFPIDParams_t* GetPidBlockVar(size_t index, IPC_FFPIDParams_t *dst)
 {
-     return &IPC_FFPIDParams;
+     return STRUCT_GET(&IPC_FFPIDParams[index], dst);
 }
 
 ErrorCode_t  IPC_WritePIDTag(IPC_Variable_IDs_t VarID, IPC_WritePtrs_t const *pIPC_WritePtrs, IPC_ReadPtrs_t const *pIPC_ReadPtrs)
 {
-    ErrorCode_t     retval = ERR_OK;
+    size_t index;
+    if(VarID == IPC_PID_BLOCK_TAG)
+    {
+        index = 0U;
+    }
+    else //must be IPC_PID2_BLOCK_TAG
+    {
+        index = 1U;
+    }
     u8              DataBlockNumber = pIPC_WritePtrs->IPC_DataBlockNum;
-    u8*             pPIDTagSegment = IPC_FFPIDParams.tag;
     const u8*       pData = (const u8*)pIPC_WritePtrs->pIPC_VarBuffer;
 
     if (DataBlockNumber > FF_PID_TAG_WR_MAX_BLOCK_NUM)
@@ -71,37 +111,47 @@ ErrorCode_t  IPC_WritePIDTag(IPC_Variable_IDs_t VarID, IPC_WritePtrs_t const *pI
     }
     else
     {
-         pPIDTagSegment += DataBlockNumber * IPC_WRITE_ARRAY_DATASIZE;
-         if (DataBlockNumber < FF_PID_TAG_WR_MAX_BLOCK_NUM)
-         {
-            util_PutU8Array(pPIDTagSegment, IPC_WRITE_ARRAY_DATASIZE, pData);
-         }
-         else
-         {
-            // block number = 2, write 10 characters
-            util_PutU8Array(pPIDTagSegment, FF_PID_TAG_MAX_LEN - IPC_WRITE_ARRAY_DATASIZE * FF_PID_TAG_WR_MAX_BLOCK_NUM, pData);
-         }
+        MN_ENTER_CRITICAL();
+            u8 *pPIDTagSegment = &IPC_FFPIDParams[index].tag[DataBlockNumber * IPC_WRITE_ARRAY_DATASIZE];
+            if (DataBlockNumber < FF_PID_TAG_WR_MAX_BLOCK_NUM)
+            {
+                util_PutU8Array(pPIDTagSegment, IPC_WRITE_ARRAY_DATASIZE, pData);
+            }
+            else
+            {
+                // block number = 2, write 10 characters
+                util_PutU8Array(pPIDTagSegment, FF_TAG_MAX_LEN - IPC_WRITE_ARRAY_DATASIZE * FF_PID_TAG_WR_MAX_BLOCK_NUM, pData);
+            }
 
-         STRUCT_CLOSE(IPC_FFPIDParams_t, &IPC_FFPIDParams);
+            STRUCT_CLOSE(IPC_FFPIDParams_t, &IPC_FFPIDParams[index]);
+         MN_EXIT_CRITICAL();
          util_PutU8(pIPC_ReadPtrs->pVarStatus, (IPC_QUALITY_GOOD | IPC_NO_ERROR));
     }
 
-    UNUSED_OK(VarID);
-
-    return retval;
+    return ERR_OK;
 }
 
 ErrorCode_t  IPC_WritePIDMode(IPC_Variable_IDs_t VarID, IPC_WritePtrs_t const *pIPC_WritePtrs, IPC_ReadPtrs_t const *pIPC_ReadPtrs)
 {
-    ErrorCode_t     retval = ERR_OK;
+    size_t index;
+    if(VarID == IPC_PID_BLOCK_ACTUAL_MODE)
+    {
+        index = 0U;
+    }
+    else //must be IPC_PID2_BLOCK_ACTUAL_MODE
+    {
+        index = 1U;
+    }
     u8              ReturnStatus = IPC_QUALITY_GOOD | IPC_NO_ERROR;
 
     u8 varStatus = util_GetU8(pIPC_WritePtrs->pVarStatus);
     if (IsQuality_ACCEPT(varStatus))
     {
-        IPC_FFPIDParams.ModeActual = (u8)util_GetU32(pIPC_WritePtrs->pIPC_VarBuffer);
-        STRUCT_CLOSE(IPC_FFPIDParams_t, &IPC_FFPIDParams);
-        util_PutU32(pIPC_ReadPtrs->pIPC_VarBuffer, IPC_FFPIDParams.ModeActual);
+        MN_ENTER_CRITICAL();
+            IPC_FFPIDParams[index].ModeActual = (u8)util_GetU32(pIPC_WritePtrs->pIPC_VarBuffer);
+            STRUCT_CLOSE(IPC_FFPIDParams_t, &IPC_FFPIDParams[index]);
+        MN_EXIT_CRITICAL();
+        util_PutU32(pIPC_ReadPtrs->pIPC_VarBuffer, IPC_FFPIDParams[index].ModeActual);
     }
     else
     {
@@ -110,21 +160,30 @@ ErrorCode_t  IPC_WritePIDMode(IPC_Variable_IDs_t VarID, IPC_WritePtrs_t const *p
     }
 
     util_PutU8(pIPC_ReadPtrs->pVarStatus, ReturnStatus);
-    UNUSED_OK(VarID);
-    return retval;
+    return ERR_OK;
 }
 
 ErrorCode_t  IPC_WritePIDError(IPC_Variable_IDs_t VarID, IPC_WritePtrs_t const *pIPC_WritePtrs, IPC_ReadPtrs_t const *pIPC_ReadPtrs)
 {
-    ErrorCode_t     retval = ERR_OK;
+    size_t index;
+    if(VarID == IPC_PID_BLOCK_ERROR)
+    {
+        index = 0U;
+    }
+    else //must be IPC_PID2_BLOCK_ERROR
+    {
+        index = 1U;
+    }
     u8              ReturnStatus = IPC_QUALITY_GOOD | IPC_NO_ERROR;
 
     u8 varStatus = util_GetU8(pIPC_WritePtrs->pVarStatus);
     if (IsQuality_ACCEPT(varStatus))
     {
-        IPC_FFPIDParams.BlockErr = (u16)util_GetU32(pIPC_WritePtrs->pIPC_VarBuffer);
-        STRUCT_CLOSE(IPC_FFPIDParams_t, &IPC_FFPIDParams);
-        util_PutU32(pIPC_ReadPtrs->pIPC_VarBuffer, IPC_FFPIDParams.BlockErr);
+        MN_ENTER_CRITICAL();
+            IPC_FFPIDParams[index].BlockErr = (u16)util_GetU32(pIPC_WritePtrs->pIPC_VarBuffer);
+            STRUCT_CLOSE(IPC_FFPIDParams_t, &IPC_FFPIDParams[index]);
+        MN_EXIT_CRITICAL();
+        util_PutU32(pIPC_ReadPtrs->pIPC_VarBuffer, IPC_FFPIDParams[index].BlockErr);
     }
     else
     {
@@ -134,46 +193,73 @@ ErrorCode_t  IPC_WritePIDError(IPC_Variable_IDs_t VarID, IPC_WritePtrs_t const *
 
     util_PutU8(pIPC_ReadPtrs->pVarStatus, ReturnStatus);
 
-    UNUSED_OK(VarID);
-    return retval;
+    return ERR_OK;
 }
 
 ErrorCode_t  IPC_WritePIDPV(IPC_Variable_IDs_t VarID, IPC_WritePtrs_t const *pIPC_WritePtrs, IPC_ReadPtrs_t const *pIPC_ReadPtrs)
 {
-    ErrorCode_t     retval = ERR_OK;
+    size_t index;
+    if(VarID == IPC_PID_PV)
+    {
+        index = 0U;
+    }
+    else //must be IPC_PID2_PV
+    {
+        index = 1U;
+    }
 
-	util_PutU8Array(IPC_FFPIDParams.pv.value, FLOAT_STRING_LEN - 1, pIPC_WritePtrs->pIPC_VarBuffer);
-	IPC_FFPIDParams.pv.status = util_GetU8(((const u8*)(pIPC_WritePtrs->pIPC_VarBuffer)) + FLOAT_STRING_LEN - 1);
+    MN_ENTER_CRITICAL();
+        util_PutU8Array(IPC_FFPIDParams[index].pv.value, FLOAT_STRING_LEN - 1, pIPC_WritePtrs->pIPC_VarBuffer);
+        IPC_FFPIDParams[index].pv.status = util_GetU8(((const u8*)(pIPC_WritePtrs->pIPC_VarBuffer)) + FLOAT_STRING_LEN - 1);
+        STRUCT_CLOSE(IPC_FFPIDParams_t, &IPC_FFPIDParams[index]);
+    MN_EXIT_CRITICAL();
     util_PutU8(pIPC_ReadPtrs->pVarStatus, (IPC_QUALITY_GOOD | IPC_NO_ERROR));
 
-    STRUCT_CLOSE(IPC_FFPIDParams_t, &IPC_FFPIDParams);
-    UNUSED_OK(VarID);
-    return retval;
+    return ERR_OK;
 }
 
 ErrorCode_t  IPC_WritePIDSP(IPC_Variable_IDs_t VarID, IPC_WritePtrs_t const *pIPC_WritePtrs, IPC_ReadPtrs_t const *pIPC_ReadPtrs)
 {
-	ErrorCode_t     retval = ERR_OK;
+    size_t index;
+    if(VarID == IPC_PID_SP)
+    {
+        index = 0U;
+    }
+    else //must be IPC_PID2_SP
+    {
+        index = 1U;
+    }
 
-	util_PutU8Array(IPC_FFPIDParams.sp.value, FLOAT_STRING_LEN - 1, pIPC_WritePtrs->pIPC_VarBuffer);
-	IPC_FFPIDParams.sp.status = util_GetU8(((const u8*)(pIPC_WritePtrs->pIPC_VarBuffer)) + FLOAT_STRING_LEN - 1);
+    MN_ENTER_CRITICAL();
+        util_PutU8Array(IPC_FFPIDParams[index].sp.value, FLOAT_STRING_LEN - 1, pIPC_WritePtrs->pIPC_VarBuffer);
+        IPC_FFPIDParams[index].sp.status = util_GetU8(((const u8*)(pIPC_WritePtrs->pIPC_VarBuffer)) + FLOAT_STRING_LEN - 1);
+        STRUCT_CLOSE(IPC_FFPIDParams_t, &IPC_FFPIDParams[index]);
+    MN_EXIT_CRITICAL();
     util_PutU8(pIPC_ReadPtrs->pVarStatus, (IPC_QUALITY_GOOD | IPC_NO_ERROR));
 
-    STRUCT_CLOSE(IPC_FFPIDParams_t, &IPC_FFPIDParams);
-    UNUSED_OK(VarID);
-    return retval;
+    return ERR_OK;
 }
 
 ErrorCode_t  IPC_WritePIDOUT(IPC_Variable_IDs_t VarID, IPC_WritePtrs_t const *pIPC_WritePtrs, IPC_ReadPtrs_t const *pIPC_ReadPtrs)
 {
-	ErrorCode_t     retval = ERR_OK;
+    size_t index;
+    if(VarID == IPC_PID_OUT)
+    {
+        index = 0U;
+    }
+    else //must be IPC_PID2_OUT
+    {
+        index = 1U;
+    }
 
-	util_PutU8Array(IPC_FFPIDParams.out.value, FLOAT_STRING_LEN - 1, pIPC_WritePtrs->pIPC_VarBuffer);
-	IPC_FFPIDParams.out.status = util_GetU8(((const u8*)(pIPC_WritePtrs->pIPC_VarBuffer)) + FLOAT_STRING_LEN - 1);
+    MN_ENTER_CRITICAL();
+        util_PutU8Array(IPC_FFPIDParams[index].out.value, FLOAT_STRING_LEN - 1, pIPC_WritePtrs->pIPC_VarBuffer);
+        IPC_FFPIDParams[index].out.status = util_GetU8(((const u8*)(pIPC_WritePtrs->pIPC_VarBuffer)) + FLOAT_STRING_LEN - 1);
+        STRUCT_CLOSE(IPC_FFPIDParams_t, &IPC_FFPIDParams[index]);
+    MN_EXIT_CRITICAL();
+
     util_PutU8(pIPC_ReadPtrs->pVarStatus, (IPC_QUALITY_GOOD | IPC_NO_ERROR));
 
-    STRUCT_CLOSE(IPC_FFPIDParams_t, &IPC_FFPIDParams);
-    UNUSED_OK(VarID);
-    return retval;
+    return ERR_OK;
 }
 
