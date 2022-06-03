@@ -26,12 +26,13 @@
     </SubCmdOnly>
   </Commands>
   <Variables>
-    <Variable Name="Tune Options Bitmap" DataType="H_INT4" Description="Tune Options Bitmap" EnRangeCheck="0"></Variable>
+    <Variable Name="Tune Options Bitmap" DataType="H_INT4" Description="Tune Options to turn on and off intended changes to AP" EnRangeCheck="0"></Variable>
     <Variable Name="Min Number Of Ramp Points" DataType="H_UCHAR" Description="7 in AP, 10 in ESD" EnRangeCheck="1">
       <Range Model="TypeRange" />
     </Variable>
     <Variable Name="Low Overshoot Threshold" DataType="H_UCHAR" Description="4 in AP, OVERSHOOT_LOW=3 in ESD" />
     <Variable Name="PAdjust Recalc Scale" DataType="H_UCHAR" Description="inconsistent 20 in AP, PADJ_INC_RATIO=16 in ESD" />
+    <Variable Name="PAdjust Recalc Scale2" DataType="H_UCHAR" Description="inconsistent 16 in AP, PADJ_INC_RATIO=16 in ESD" />
   </Variables>
   <Structs>
     <Struct Name="Tune Options Study">
@@ -39,6 +40,7 @@
       <Param>Min Number Of Ramp Points</Param>
       <Param>Low Overshoot Threshold</Param>
       <Param>PAdjust Recalc Scale</Param>
+      <Param>PAdjust Recalc Scale2</Param>
     </Struct>
   </Structs>
 </HART>

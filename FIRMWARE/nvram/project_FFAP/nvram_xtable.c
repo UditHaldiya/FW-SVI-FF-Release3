@@ -26,6 +26,7 @@ demand.
 #include "FFAP_xlate_9_10.h"
 #include "FFAP_xlate_10_11.h"
 #include "FFAP_xlate_11_12.h"
+#include "FFAP_xlate_12_13.h"
 
 const xlatef_t xTable[] =
 {
@@ -115,10 +116,17 @@ const xlatef_t xTable[] =
     },
     [12] =
     {
-        .xup = NULL, //supported up but no "up" version yet
+        .xup = FFAP_xlateup_12_13,
         .xdown = FFAP_xlatedn_12_11,
         .num_entries = FFAP_NVRAM_ENTRIES_VER_12,
         .map = FFAP_nvram_map_12,
+    },
+    [13] =
+    {
+        .xup = NULL, //supported up but no "up" version yet
+        .xdown = FFAP_xlatedn_13_12,
+        .num_entries = FFAP_NVRAM_ENTRIES_VER_13,
+        .map = FFAP_nvram_map_13,
     },
 };
 

@@ -28,7 +28,7 @@ demand.
 enum
 {
      OvershootCountUse = 0, //UNDO_59585[1] overshoot count use, 1=like ESD, 0=like AP
-     AllowOutOfRangeInterimPID = 1, //UNDO_59585[2] pid limiting before setting
+     DisAllowOutOfRangeInterimPID = 1, //UNDO_59585[2] pid limiting before setting
      AllowExtraStabilityWait = 2, //UNDO_59585[3] 0 // *0 extra stability #1 didn't help
      UseActualPosDiffForPoscomp = 3, // UNDO_59661 0 // **poscomp calc
      UseTimeForTauCalc = 4, // UNDO_59594 0 // *tau calc
@@ -39,7 +39,10 @@ enum
      StartWithNominalPosComp = 9, //Begin tuning with PosComp=COMP_BASE for uniformity - looks pretty bad
      UseSmoothedPositionForPosComp = 10, // (1 doesn't do much good.) Use smoothed (1st-order filtered) position
 	 UseSmoothedPositionForStep = 11, //Use smoothed (1st-order filtered) position
-	 UsePrelimPosComp = 12 //Use interim poscomp calc
+	 UseSmoothedPositionForRamp = 12, //Use smoothed (1st-order filtered) position
+	 UsePrelimPosComp = 13, //Use interim poscomp calc
+     Apply_nY_min_fix = 14, //Fix like in ESD. AP will always go to the end
+     Include_P_and_D_in_bias = 15 //AP doesn't have it, contrary to Ernie's caution of ESD time
 } ;
 
 typedef struct TuneOptions_t
@@ -48,17 +51,15 @@ typedef struct TuneOptions_t
     u8 min_number_of_ramp_points; //!< 7 in AP, 10 in ESD
     s8 low_overshoot_thresh; //!< 4 in AP, OVERSHOOT_LOW=3 in ESD
     s8 PAdjust_recalc_scale; //!< inconsistent 20 in AP, PADJ_INC_RATIO=16 in ESD
-    u16 CheckWord;
+    s8 PAdjust_recalc_scale2; //!< inconsistent 20 in AP, PADJ_INC_RATIO=16 in ESD
 } TuneOptions_t;
-
-extern const TuneOptions_t *tune_GetTOptions(TuneOptions_t *dst);
-extern ErrorCode_t tune_SetTOptions(const TuneOptions_t *src);
 
 typedef struct TuneData_t
 {
     pres_t SupplyPres_User;
     u8  n1TunePara1;
     s8  n1Level;
+    TuneOptions_t TuneOptions;
     CHECKFIELD;
 } TuneData_t;
 

@@ -31,29 +31,32 @@ s8_least hartcmd_WriteTuneOptions(const u8 *src, u8 *dst)
     UNUSED_OK(d);
     const Req_WriteTuneOptions_t *s1 = (const void *)src;
     const TuneOptionsStudy_t *s = (const void *)s1->TuneOptionsStudy[0];
-    TuneOptions_t t;
-    t.toption = util_GetU32(s->TuneOptionsBitmap[0]);
-    t.low_overshoot_thresh = (s8)util_GetU8(s->LowOvershootThreshold[0]);
-    t.min_number_of_ramp_points = util_GetU8(s->MinNumberOfRampPoints[0]);
-    t.PAdjust_recalc_scale = (s8)util_GetU8(s->PAdjustRecalcScale[0]);
-    ErrorCode_t err = tune_SetTOptions(&t);
+    TuneData_t t;
+    (void)tune_GetTuneData(&t);
+    t.TuneOptions.toption = util_GetU32(s->TuneOptionsBitmap[0]);
+    t.TuneOptions.low_overshoot_thresh = (s8)util_GetU8(s->LowOvershootThreshold[0]);
+    t.TuneOptions.min_number_of_ramp_points = util_GetU8(s->MinNumberOfRampPoints[0]);
+    t.TuneOptions.PAdjust_recalc_scale = (s8)util_GetU8(s->PAdjustRecalcScale[0]);
+    t.TuneOptions.PAdjust_recalc_scale2 = (s8)util_GetU8(s->PAdjustRecalcScale2[0]);
+    ErrorCode_t err = tune_SetTuneData(&t);
     return err2hart(err); //output buffer filled automatically but we don't care
 }
 
 /**
-\brief Read tune options 
+\brief Read tune options
 */
 s8_least hartcmd_ReadTuneOptions(const u8 *src, u8 *dst)
 {
     UNUSED_OK(src);
     Rsp_ReadTuneOptions_t *s1 = (void *)dst;
     TuneOptionsStudy_t *s = (void *)s1->TuneOptionsStudy[0];
-    TuneOptions_t t;
-    (void)tune_GetTOptions(&t);
-    util_PutU32(s->TuneOptionsBitmap[0], t.toption);
-    util_PutU8(s->LowOvershootThreshold[0], (u8)t.low_overshoot_thresh);
-    util_PutU8(s->MinNumberOfRampPoints[0], t.min_number_of_ramp_points);
-    util_PutU8(s->PAdjustRecalcScale[0], (u8)t.PAdjust_recalc_scale);
+    TuneData_t t;
+    (void)tune_GetTuneData(&t);
+    util_PutU32(s->TuneOptionsBitmap[0], t.TuneOptions.toption);
+    util_PutU8(s->LowOvershootThreshold[0], (u8)t.TuneOptions.low_overshoot_thresh);
+    util_PutU8(s->MinNumberOfRampPoints[0], t.TuneOptions.min_number_of_ramp_points);
+    util_PutU8(s->PAdjustRecalcScale[0], (u8)t.TuneOptions.PAdjust_recalc_scale);
+    util_PutU8(s->PAdjustRecalcScale2[0], (u8)t.TuneOptions.PAdjust_recalc_scale2);
     return HART_NO_COMMAND_SPECIFIC_ERRORS;
 }
 

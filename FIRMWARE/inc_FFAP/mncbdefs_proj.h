@@ -30,7 +30,7 @@ demand.
 
 #define FIRMWARE_TYPE 3 //FF AP
 
-#define NVRAM_VERSION 12 //Manually maintained. Absolutely must be kept current
+#define NVRAM_VERSION 13 //Manually maintained. Absolutely must be kept current
 #define MNCB_VERSIONS_ARRAY { MNCB_VERSION_NUMBER }
 
 //lint -emacro((755),MNCB_VERSION_NUMBER_) "not referenced" - Used by NVMEMDUMP build target
