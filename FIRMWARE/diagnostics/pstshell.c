@@ -384,9 +384,24 @@ static void pst_AIDImon_Run(void)
 
     if(digsp_GetExternalMode() == IPC_MODE_AUTO)
     {
-        pstmon_helper(&dimon_state, equiv(!bios_ReadDiState(), (PSTrigger.PstDiTrigger==DhogDiEnableClosed)), &DIconf); //DI switch is active low
-        sig_least_t signal      = inpv_GetPV();
-        pstmon_helper(&aimon_state, equiv((signal > PSTrigger.pvthreshold), (PSTrigger.PstPvTrigger == DhogPvEnableAbove)), &AIconf);
+        if(PSTrigger.PstDiTrigger == DhogDiDisable)
+        {
+            boolmon_init(&dimon_state, DIPstMon);
+        }
+        else
+        {
+            bool_t di = !bios_ReadDiState();
+            pstmon_helper(&dimon_state, equiv(di, (PSTrigger.PstDiTrigger==DhogDiEnableClosed)), &DIconf); //DI switch is active low
+        }
+        if(PSTrigger.PstPvTrigger == DhogPvDisable)
+        {
+            boolmon_init(&aimon_state, AIPstMon);
+        }
+        else
+        {
+            sig_least_t signal = inpv_GetPV();
+            pstmon_helper(&aimon_state, equiv((signal > PSTrigger.pvthreshold), (PSTrigger.PstPvTrigger == DhogPvEnableAbove)), &AIconf);
+        }
     }
     else
     {
