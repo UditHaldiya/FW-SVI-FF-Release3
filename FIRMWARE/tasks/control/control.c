@@ -48,7 +48,7 @@ demand.
 
 /* Local options to decide */
 #define STARTUP_FORCE_JIGGLE_TEST 0  /*TFS:8814 "Remove jiggle test at startup" */
-#define USE_VALVE_MOVE_ESTIMATE 0 //or 1 - used for saving bias but looks obsolete
+#define USE_VALVE_MOVE_ESTIMATE 1 //or 0 - used for saving bias but looks obsolete, except for jiggle test cancel
 #define USE_PILOT_FOR_SUPPLY_THRESHOLD 0 //wasn't working, TFS:37623. If we add it, need to verify pilot tempcomp in existing units
 #define USE_BIAS_TEMPR_ADJ_T_LOW_T_HIGH 1 //1 - as in David's initialization, 0 - as in David's save
 //Not used because now power limit is evaluated externally: #define USE_OUTPUT_LIMIT 0
@@ -632,23 +632,22 @@ static void calcSP_Err(const ctlExtData_t *data)
 
     //calculate the current position error
     // m_PosErr.err is positive in the fill direction (i.e., need to fill to get to SP)
-    // **NOTE:  sp from here down is now the error rather than the setpoint
+    s32 errScaled;
     if(m_bATO)   // air to open
     {
-        sp = (s32)m_n2CSigPos - m_n4PositionScaled;
+        errScaled = (s32)m_n2CSigPos - m_n4PositionScaled;
     }
     else
     {
-        sp = m_n4PositionScaled - (s32)m_n2CSigPos;
+        errScaled = m_n4PositionScaled - (s32)m_n2CSigPos;
     }
 
     /** TFS:4233 */
     //Adjust PID error to the new range, adjusted to the new open stop..
-    s32 errScaled = sp;
-    /** TFS:4233 */
+#if USE_BORROWED_FROM_SVI1K
     //Adjust PID error to the new range, adjusted by open stop to be in full mechanical travel range
     errScaled = intscale32(errScaled, data->m_pCPS->n4OpenStopAdj, 0, (u8)STANDARD_NUMBITS );
-
+#endif
     //limit the error to fit in 16 bits
     errScaled = CLAMP(errScaled, -INT16_MAX, INT16_MAX);
 
@@ -708,7 +707,7 @@ static bool_t CheckForInControl(const ctlExtData_t *data)
 	          )
 	        && (process_GetProcId() != PROC_AUTOTUNE)
                   )
-            
+
 	    {
 	        ictest.m_bProbeActive = true;
 
@@ -915,7 +914,7 @@ static bool_t control_HasValveMoved(void)
 // DZ: Estimate for noise. A rough estimate.
 
     //compute estimate of noise in position units
-    pos_t nPosShift = POS_SHIFT + (pos_t)(15u*(MAX_FOR_16BIT/(m_n2PosRange)));
+    pos_t nPosShift = POS_SHIFT + (pos_t)(15u*(UINT16_MAX/(m_n2PosRange)));
 
     //compute change in position
     pos_t nPosChange = (pos_t)ABS(m_n4PositionScaled - ictest.m_n2Pos_p);
@@ -1000,7 +999,7 @@ static void airloss_handle(const ctlExtData_t *data)
         cstate.BiasChangeFlag = 0;
 
         //capture bias average at base, and now let it get rejected if out of range
-#if 0
+#if 1 //like in AP and elsewhere
         ictest.BiasAvgAtBase = MAX(m_BiasData.BIAS, BIAS_LOW_LIMIT);
 #else
         ictest.BiasAvgAtBase = m_BiasData.BIAS;
@@ -1240,7 +1239,8 @@ static bool_t isOutputAtLimit(const ctlExtData_t *data)
     /*Get pointer to pressures (raw_pressures are compensated, but they don't
     include user calibration */
 
-    const pres_t * raw_pressures = pres_GetRawPressureData()->Pressures;
+    const /*volatile*/ pres_t * raw_pressures = pres_GetRawPressureData()->Pressures;
+    /* EXPLANATION: pressures are not updated while control task is running */
 
     /* Initilize limits to false */
     result = false;
@@ -1623,6 +1623,104 @@ static bool_t IsIControl(const ctlExtData_t *data)
     return m_bIControl;
 }
 
+/** \brief Calculate effective P gain w.r.t. beta and direction
+*/
+static s32 control_ComputePGain(s32 Pcoef, s8_least beta)
+{
+    s32 lKp; //effective P gain
+    /* NON-LINEAR GAIN */
+    pos_least_t TempErrorAbs;       //absolute value of error, limited to 20%
+
+
+    // if Beta is 0, the proportional output is linear with respect to the locally computed error
+    // gain factor = 1.0
+    if(beta == 0)
+    {
+        lKp = Pcoef;
+    }
+    else
+    {
+        s16_least TempFactor1;        //constant in beta calculation
+        s16_least TempFactor2;        //constant in beta calculation
+        //use 20% as cutoff for both + and - beta
+        if(m_PosErr.err_abs > TWENTY_PCT_3277)
+        {
+            TempErrorAbs = TWENTY_PCT_3277;
+        }
+        else
+        {
+            TempErrorAbs = ABS(m_n2Err_p);
+        }
+
+        //equations for + or - beta different by a couple of factors
+        //magic numbers still left as magic numbers
+        if(beta > 0)
+        {
+            TempFactor1 = 164;
+            TempFactor2 = 95;
+        }
+        else
+        {
+            TempFactor1 = 27;
+            TempFactor2 = 70;
+        }
+
+        s32 lTemp = (  ( (10-beta)*100) + ( (beta*TempErrorAbs)/TempFactor1) );
+        lKp = ((Pcoef)*lTemp)/(1000-(TempFactor2*beta));
+    }
+
+#if 0  //replaced with simpler code above - use 20% for both + and - beta as cutoff
+
+    //  if  Beta is greater than 0, compute the gain factor as a function of positon error
+    // in two ranges with corner at 20 percent
+    // Refer to chart titled LINEAR ERROR SIZE RELATED GAIN FACTOR FOR REFERENCE ERROR OF 5%
+    // (1 <= Beta <= 9) in document AP Firmware Control Theory of Operation
+    else if(data->m_pPID->Beta > 0)
+    {
+        // if error greater than 20 % ...
+        if(m_PosErr.err_abs > TWENTY_PCT_3277)
+        {
+            lTemp = ((s16)data->m_pPID->P)*(200-(16*data->m_pPID->Beta));
+            lKp = lTemp/(200-(19*data->m_pPID->Beta));
+        }
+        else
+        {
+            lTemp = (  ( (10-data->m_pPID->Beta)*100) + ( (data->m_pPID->Beta*((s16)ABS((s32)m_n2Err_p)))/164) );
+            lKp = (((s16)data->m_pPID->P)*lTemp)/(1000-(95*data->m_pPID->Beta));
+        }
+    }
+
+    //  if  Beta is less than 0 compute the gain factor as a function of positon error
+    // in two ranges with corner at 30 percent
+    // Refer to chart titled LINEAR ERROR SIZE RELATED GAIN FACTOR FOR REFERENCE ERROR OF 5%
+    // (-9 <= Beta <= -1) in document AP Firmware Control Theory of Operation
+    else
+    {
+        // if error greater than 30 % ...
+        if(m_PosErr.err_abs > THIRTY_PCT_4915)
+        {
+            lTemp = ((s16)data->m_pPID->P)*(100+(8*data->m_pPID->Beta));
+            lKp = lTemp/(100-(7*data->m_pPID->Beta));
+        }
+        else
+        {
+            lTemp = ( ((10-data->m_pPID->Beta)*100) + ((data->m_pPID->Beta*ABS((s32)m_n2Err_p))/27) );
+            lKp = (((s16)data->m_pPID->P)*lTemp)/(1000-(70*data->m_pPID->Beta));
+        }
+    }
+#endif
+
+    // now limit the gain factor to the range P*1.5 .. P/5
+    lKp = CLAMP(lKp, Pcoef/5, 3*Pcoef/2);
+
+    // if the actual error is small (< .2 %) and the gain factor is above P_MID_CON
+    // set the gain factor to the error times the (gain factor / 32)
+    if((m_PosErr.err_abs < PT2_PCT_32) && (lKp > P_MID_CON))    // 200
+    {
+        lKp = (m_PosErr.err_abs*lKp)/32;
+    }
+    return lKp;
+}
 /**
      DZ: 8/22/06
     \brief This function is internally called to calculate proportional control.
@@ -1641,18 +1739,11 @@ static s32 Proportional_Control(const ctlExtData_t *data, bool_t m_bIControl)
     s16_least nOffset;      // dead area (zdead+offset) where boost is not applied
                             //   only for double acting
     //s16_least nOffset1;
-    s32 lVal,               // output value after computing err*P + K*D and adding boost, if any
-        lKp,                // gain factor
-        lKp2,               // for intermediate calc of lKp
-        lTemp;              // for computation of gain factor and output
+    s32 lVal;               // output value after computing err*P + K*D and adding boost, if any
     const boostCoeff_t *boostCoeff;
 
     cstate.nBoostCount++;          // count of control cycles - must be 300 (4.5 seconds)
                             //  or more to apply boost in the fill direction
-    s16 TempErrorAbs;       //absolute value of error, limited to 20%
-    s16 TempFactor1;        //constant in beta calculation
-    s16 TempFactor2;        //constant in beta calculation
-
     /* limit beta and error for P action  */
 
     // compute local error, m_n2Err_p. It is upper limited to +/- ERR_HIGH_P
@@ -1704,109 +1795,8 @@ static s32 Proportional_Control(const ctlExtData_t *data, bool_t m_bIControl)
     nOffset = boostCoeff->BoostOffset;
     nZdead = (s16)(boostCoeff->boost[Xhi] * nBand);
 
-    /* NON-LINEAR GAIN */
-
-    // if Beta is 0, the proportional output is linear with respect to the locally computed error
-    // gain factor = 1.0
-    if(data->m_pPID->Beta == 0)
-    {
-        lKp = (s32)data->m_pPID->P;
-    }
-    else
-    {
-        //use 20% as cutoff for both + and - beta
-        if(m_PosErr.err_abs > TWENTY_PCT_3277)
-        {
-            TempErrorAbs = TWENTY_PCT_3277;
-        }
-        else
-        {
-            TempErrorAbs = (s16)ABS((s32)m_n2Err_p);
-        }
-
-        //equations for + or - beta different by a couple of factors
-        //magic numbers still left as magic numbers
-        if(data->m_pPID->Beta > 0)
-        {
-            TempFactor1 = 164;
-            TempFactor2 = 95;
-        }
-        else
-        {
-            TempFactor1 = 27;
-            TempFactor2 = 70;
-        }
-
-        lTemp = (  ( (10-data->m_pPID->Beta)*100) + ( (data->m_pPID->Beta*TempErrorAbs)/TempFactor1) );
-        lKp = (((s16)data->m_pPID->P)*lTemp)/(1000-(TempFactor2*data->m_pPID->Beta));
-    }
-
-#if 0  //replaced with simpler code - use 20% for both + and - beta as cutoff
-
-    //  if  Beta is greater than 0, compute the gain factor as a function of positon error
-    // in two ranges with corner at 20 percent
-    // Refer to chart titled LINEAR ERROR SIZE RELATED GAIN FACTOR FOR REFERENCE ERROR OF 5%
-    // (1 <= Beta <= 9) in document AP Firmware Control Theory of Operation
-    else if(data->m_pPID->Beta > 0)
-    {
-        // if error greater than 20 % ...
-        if(m_PosErr.err_abs > TWENTY_PCT_3277)
-        {
-            lTemp = ((s16)data->m_pPID->P)*(200-(16*data->m_pPID->Beta));
-            lKp = lTemp/(200-(19*data->m_pPID->Beta));
-        }
-        else
-        {
-            lTemp = (  ( (10-data->m_pPID->Beta)*100) + ( (data->m_pPID->Beta*((s16)ABS((s32)m_n2Err_p)))/164) );
-            lKp = (((s16)data->m_pPID->P)*lTemp)/(1000-(95*data->m_pPID->Beta));
-        }
-    }
-
-    //  if  Beta is less than 0 compute the gain factor as a function of positon error
-    // in two ranges with corner at 30 percent
-    // Refer to chart titled LINEAR ERROR SIZE RELATED GAIN FACTOR FOR REFERENCE ERROR OF 5%
-    // (-9 <= Beta <= -1) in document AP Firmware Control Theory of Operation
-    else
-    {
-        // if error greater than 30 % ...
-        if(m_PosErr.err_abs > THIRTY_PCT_4915)
-        {
-            lTemp = ((s16)data->m_pPID->P)*(100+(8*data->m_pPID->Beta));
-            lKp = lTemp/(100-(7*data->m_pPID->Beta));
-        }
-        else
-        {
-            lTemp = ( ((10-data->m_pPID->Beta)*100) + ((data->m_pPID->Beta*ABS((s32)m_n2Err_p))/27) );
-            lKp = (((s16)data->m_pPID->P)*lTemp)/(1000-(70*data->m_pPID->Beta));
-        }
-    }
-#endif
-
-
-    // now limit the gain factor to the range P*1.5 .. P/5
-    lTemp = (data->m_pPID->P*3)>>1;
-    if(lKp > lTemp)
-    {
-        lKp = lTemp;                // limit is 1.5P
-    }
-    else if(lKp < (data->m_pPID->P/5))
-    {
-        lKp = data->m_pPID->P/5;    // limit is P/5
-    }
-    else // for MISRA
-    {
-        //Don't modify
-    }
-
-    // if the actual error is small (< .2 %) and the gain factor is above P_MID_CON
-    // set the gain factor to the error times the (gain factor / 32)
-    if((m_PosErr.err_abs < PT2_PCT_32) && (lKp > (s32)P_MID_CON))    // 200
-    {
-        lKp = (m_PosErr.err_abs*(s16)(((u32)lKp)>>5) );
-    }
-
-    /* I/P OUTPOUT */
-    // lKp = (s32)nKp;
+    // This lKp is good for D term and for P term in fill direction
+    s32 lKp = control_ComputePGain(data->m_pPID->P, data->m_pPID->Beta);
 
     // make sure cBoost is only 0 or 1 (change to boolean?)
     if(cstate.cBoost > 1 )
@@ -1820,7 +1810,7 @@ static s32 Proportional_Control(const ctlExtData_t *data, bool_t m_bIControl)
     if( m_PosErr.err >= 0)
     {
         // main proportional output calculation with P and D terms
-    //TFS:3520, TFS:3596 -- separate terms P, D and Boost
+        //TFS:3520, TFS:3596 -- separate terms P, D and Boost
         PTerm = (lKp * m_n2Err_p) / P_CALC_SCALE;   /* Kp =100 mean 10%*/
         DTerm = (lKp * m_n2Deriv) / D_CALC_SCALE;
         lVal = PTerm + DTerm;
@@ -1871,15 +1861,9 @@ static s32 Proportional_Control(const ctlExtData_t *data, bool_t m_bIControl)
     {
         cstate.nBoostCount = BOOST_COUNT_HIGH;
 
-        // main proportional output calculation with P and D terms
-        if(data->m_pPID->P == 0)
-        {
-            lKp2 = 0;
-        }
-        else
-        {
-            lKp2 = lKp + (((s32)data->m_pPID->PAdjust*lKp)/(s32)data->m_pPID->P);
-        }
+        //Recalc lKp for exhaust direction
+        s32 lKp2 = control_ComputePGain(data->m_pPID->P + data->m_pPID->PAdjust, data->m_pPID->Beta);
+
         //TFS:3520, TFS:3596 -- separate terms P, D and Boost
         PTerm = (lKp2 * m_n2Err_p) / P_CALC_SCALE;
         DTerm = (lKp * m_n2Deriv) / D_CALC_SCALE;
@@ -2200,7 +2184,12 @@ static void Integral_Control(const ctlExtData_t *data)
             }
             else
             {
-                lVal = (m_n2Err_p*(s16)data->m_pPID->P)/(I_CALC_COEF*(s16)data->m_pPID->I); /// AK:NOTE: The scaler can be precomputed once.
+                s16_least Pcoef = (s16_least)data->m_pPID->P;
+                if(IS_EXHAUSTING())
+                {
+                    Pcoef += data->m_pPID->PAdjust;
+                }
+                lVal = (m_n2Err_p*Pcoef)/(I_CALC_COEF*(s16)data->m_pPID->I); /// AK:NOTE: The scaler can be precomputed once.
             }
 
             // Adjustment of the integral contribution: at low temperature less integral control.

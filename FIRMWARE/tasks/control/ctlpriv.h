@@ -51,7 +51,7 @@ demand.
 #define I_LIMIT_AT_STOP 100
 #define I_LIMIT_NOT_STOP 500
 
-#define P_MID_CON 300u
+#define P_MID_CON 300
 
 #define ERR_S 10
 #define T_BASE  25             /* temperature reference 25 degree C */
