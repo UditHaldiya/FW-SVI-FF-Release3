@@ -25,8 +25,8 @@ demand.
 static FactoryDefaultState_t fdstate;
 static const FactoryDefaultState_t fdstate_default =
 {
-    .first_time = false,
-    .fwdl_mode = 0U, //0 by default; APP doesn't (yet) care
+    .first_time = true, //We allow FFP to reinitialize fresh, so it MUST be 'true', else the log file won't be created
+    .fwdl_mode = 0U, //0 -interleaved, !=0 - sequential
     .CheckWord = 0U, //don't care;
 };
 
