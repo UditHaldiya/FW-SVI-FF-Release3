@@ -554,10 +554,10 @@ static void process_RunProcedure(void)
     procId = procdata.ProcessCommand[PROC_CURRENT];
 
     (void)process_Exec(procId);
-    process_EndHook(procId);
 
     if(procId != PROC_NONE)
     {
+        process_EndHook(procId);
         process_UpdateProcessIds(procdata.ProcessCommand[PROC_PENDING], procdata.reqflag[PROC_PENDING], PROC_NONE, ProcSourceDefault);
     }
     /* EXPLANATION is due here.

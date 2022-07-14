@@ -578,10 +578,13 @@ void process_EndHook(ProcId_t ProcId)
     //It may or may not succeed, depending on device mode, but if fails,
     // FINAL_VALUE_x is subject to reinit, so nothing is lost.
     UNUSED_OK(ProcId);
-    MN_ENTER_CRITICAL();
-        s32 sp = digsp_GetDigitalPosSetpoint();
-        mode_SetControlMode(CONTROL_MANUAL_POS, sp);
-    MN_EXIT_CRITICAL();
+    if(digsp_GetExternalMode()!=IPC_MODE_LOVERRIDE)
+    {
+        MN_ENTER_CRITICAL();
+            s32 sp = digsp_GetDigitalPosSetpoint();
+            mode_SetControlMode(CONTROL_MANUAL_POS, sp);
+        MN_EXIT_CRITICAL();
+    }
 }
 
 //doc in the project-independent header
