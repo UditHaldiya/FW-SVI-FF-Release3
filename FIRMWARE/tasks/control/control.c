@@ -87,8 +87,6 @@ demand.
 /* -------------------------------------------------------- */
 /* variables definition */
 
-typedef s32 Bias_t;
-
 
 typedef struct ControlState_t
 {
@@ -100,7 +98,7 @@ typedef struct ControlState_t
     u16 start_count;    /// ep: startup count 0, 1... 65000;
     bool_t Integral_Previously_Limited; // = false;
     bool_t m_bActuatorAtLim;         // true indicates integral windup to [actuator pressure] limit
-    s16 m_n2Erf1;
+    s32 m_n2Erf1; //boosted pos_t filter base
     tick_t Integral_First_Stopped;
     u8 BiasChangeFlag;     /* set to +/-1 if big change of BIAS */ /// AK:Q: This doesn't appear accurate (?) AK:NOTE: Can be enum.
     bool_t isIPLowerLimited; //Could be automatic but used in 1 run delay
@@ -212,7 +210,7 @@ static s32 m_n4Setpoint; /* - the setpoint in standard range derived from the si
 
 //Computed every control cycle but used next cycle
 static s32 PIDOut;          /** TFS:4226 */
-static u16 m_CtlOutputValue;    /** TFS:4226 Diag Var */
+static Bias_t m_CtlOutputValue;    /** TFS:4226 Diag Var */
 
 //Updated every control cycle
 static PosErr_t m_PosErr;       //*** ATO:  setpoint - position,   ATC: position - setpoint ***
@@ -325,7 +323,7 @@ static void IPCurrent_StoreAndOutput(s32 ipcurr, u16 OutputLim)
     {
         // if control mode is CONTROL_OFF, don't change - keep the previous output
         // what is the correct action in this mode??
-        m_CtlOutputValue = 0u;              // Set Diag Variable
+        //Set by control_SetPWM() NOT m_CtlOutputValue = 0u;              // Set Diag Variable
     }
     else
     {
@@ -358,7 +356,7 @@ static void IPCurrent_StoreAndOutput(s32 ipcurr, u16 OutputLim)
             CtlOutputValue = ipcurr;
             pwmNormalize = PWMNORMALIZED;
         }
-        m_CtlOutputValue = (u16)CtlOutputValue;      // Set Diag Variable
+        m_CtlOutputValue = CtlOutputValue;      // Set Diag Variable
         //write the value to the I/P
         u8 output_lim = sysio_WritePwm(CtlOutputValue, pwmNormalize);
 
@@ -385,15 +383,15 @@ static void IPCurrent_StoreAndOutput(s32 ipcurr, u16 OutputLim)
 */
 static void control_ComputePoscomp(const ctlExtData_t *data)
 {
-    s16_least nFull_delta;
-	s16 scaledSetPoint =
+    pos_least_t nFull_delta;
+	pos_t scaledSetPoint =
 #if USE_BORROWED_FROM_SVI1K //TFS:4011
-		(s16)intscale32( (s32)m_n2CSigPos, data->m_pCPS->n4OpenStopAdj, 0, (u8)STANDARD_NUMBITS );
+		(pos_t)intscale32( m_n2CSigPos, data->m_pCPS->n4OpenStopAdj, 0, (u8)STANDARD_NUMBITS );
 #else
 		m_n2CSigPos;
 #endif
-    s16 SpringCompensation = 0;
-    s16 HysterisisCompensation = 0;
+    Bias_t SpringCompensation = 0;
+    Bias_t HysterisisCompensation = 0;
 
     //calculate the setpoint change from the last setpoint
     if (m_bATO)
@@ -411,7 +409,7 @@ static void control_ComputePoscomp(const ctlExtData_t *data)
         {
             //PosComp < COMP_BASE means we need to make an adjustment
             //PosComp is 1/slope so multiply by setpoint step
-            SpringCompensation = (s16)(nFull_delta/data->m_pPID->PosComp);
+            SpringCompensation = (Bias_t)(nFull_delta/data->m_pPID->PosComp);
         }
         else if(data->m_pPID->PosComp < COMP_MAX)
         {
@@ -419,11 +417,11 @@ static void control_ComputePoscomp(const ctlExtData_t *data)
             // correction is -SPChange/(2^N) where N =  COMP_MAX - PosComp
             if (nFull_delta >= 0)
             {
-                HysterisisCompensation = -(s16)( ((u16)nFull_delta) >> (COMP_MAX-data->m_pPID->PosComp) );
+                HysterisisCompensation = -(Bias_t)( ((u16)nFull_delta) >> (COMP_MAX-data->m_pPID->PosComp) );
             }
             else
             {
-                HysterisisCompensation = -(s16)(( (u16)(-nFull_delta)) >> (COMP_MAX-data->m_pPID->PosComp)) ;
+                HysterisisCompensation = -(Bias_t)(( (u16)(-nFull_delta)) >> (COMP_MAX-data->m_pPID->PosComp)) ;
             }
         }
         else
@@ -435,7 +433,7 @@ static void control_ComputePoscomp(const ctlExtData_t *data)
     }
 
     //Add the position based terms; also good for COMP_BASE (zero)
-    cstate.LastComputedPosComp = (s16)( (s32)SpringCompensation + (s32)HysterisisCompensation);
+    cstate.LastComputedPosComp = SpringCompensation + HysterisisCompensation;
     //save the setpoint as the last setpoint
     cstate.m_n2CSigPos_p = m_n2CSigPos;
     // restart the integral timer
@@ -446,15 +444,16 @@ static void control_ComputePoscomp(const ctlExtData_t *data)
     to produce analog current to I/P by calling function bios_WritePwm(PWMValue).
     Output m_CtlOutputValue depends on the specific control mode (m_n1ControlMode).
     parameters description
-    \param[in] u16_least PWMValue:  the input is used to produce the output PWMValue
+    \param[in] PWMValue:  the input is used to produce the output PWMValue
                  in CONTROL_OFF mode, which is the mode for directly set the output to D/A.
 */
-void control_SetPWM(u16_least PWMValue)
+void control_SetPWM(Bias_t PWMValue)
 {
     //this should only be called open loop with control off
     if(cstate.m_n1ControlMode == CONTROL_OFF)
     {
-        (void)sysio_WritePwm((s32)(u16)PWMValue, PWMNORMALIZED);
+        (void)sysio_WritePwm(PWMValue, PWMNORMALIZED);
+        m_CtlOutputValue = PWMValue;
     }
 }
 /* -------------------------------------------------------- */
@@ -536,16 +535,16 @@ void control_GetControlMode(ctlmode_t* pn1ControlMode, s32* pn4Setpoint)
 
 /** \brief This function is externally called to get the current BIAS
     parameters description:
-    \param[out] s16 LastComputedPosComp: return the value of current BIAS
+    \return the value of current steady-state BIAS
 */
-u16 control_GetBias(void)
+Bias_t control_GetBias(void)
 {
     Bias_t ret = cstate.LastComputedPosComp+m_BiasData.BIAS;
-    return (u16)CLAMP(ret, 0, UINT16_MAX);
+    return CLAMP(ret, 0, UINT16_MAX);
 }
 
 /** \brief This function is externally called to get the current BIAS change flag
-    \param[out] u8 BiasChangeFlag: return the value of current BIAS change flag
+    \return the value of current BIAS change flag
 */
 u8 control_GetBiasChangeFlag(void)
 {
@@ -622,7 +621,7 @@ static void calcSP_Err(const ctlExtData_t *data)
 
     //moved control_RateLimitsGuard(sp);
 
-    m_n2CSigPos = (s16)(sp + ictest.m_n2SPOffset); //Guaranteed no overflow by effective sp limit values
+    m_n2CSigPos = (pos_t)(sp + ictest.m_n2SPOffset); //Guaranteed no overflow by effective sp limit values
 
     //move all of the historical errors down
     m_PosErr.err8 = m_PosErr.err7; m_PosErr.err7 = m_PosErr.err6;
@@ -632,19 +631,20 @@ static void calcSP_Err(const ctlExtData_t *data)
 
     //calculate the current position error
     // m_PosErr.err is positive in the fill direction (i.e., need to fill to get to SP)
-    s32 errScaled;
+    pos_least_t errScaled;
     if(m_bATO)   // air to open
     {
-        errScaled = (s32)m_n2CSigPos - m_n4PositionScaled;
+        errScaled = m_n2CSigPos - m_n4PositionScaled;
     }
     else
     {
-        errScaled = m_n4PositionScaled - (s32)m_n2CSigPos;
+        errScaled = m_n4PositionScaled - m_n2CSigPos;
     }
 
     /** TFS:4233 */
     //Adjust PID error to the new range, adjusted to the new open stop..
 #if USE_BORROWED_FROM_SVI1K
+    /** TFS:4233 */
     //Adjust PID error to the new range, adjusted by open stop to be in full mechanical travel range
     errScaled = intscale32(errScaled, data->m_pCPS->n4OpenStopAdj, 0, (u8)STANDARD_NUMBITS );
 #endif
@@ -693,7 +693,7 @@ static bool_t CheckForInControl(const ctlExtData_t *data)
     }
     else
     {
-        s16_least nTemp = (s16_least)GetDetectorIntegralLimit(data->m_pPID->PosComp);
+        Bias_t nTemp = GetDetectorIntegralLimit(data->m_pPID->PosComp);
 
 	    //Only run the jiggle test if the integral is allowed to run
 	    //and we have not indicated airloss
@@ -705,9 +705,7 @@ static bool_t CheckForInControl(const ctlExtData_t *data)
 	            (ABS(m_BiasData.m_Integral) > nTemp) &&
 	            (ABS((s32)ictest.avgErr) < DETECTOR_AVG_ERROR_THRESH)
 	          )
-	        && (process_GetProcId() != PROC_AUTOTUNE)
-                  )
-
+           )
 	    {
 	        ictest.m_bProbeActive = true;
 
@@ -1011,6 +1009,12 @@ static void airloss_handle(const ctlExtData_t *data)
     }
 }
 
+#if defined(NDEBUG) || defined(_lint)
+#define D_SCALE 1 //Boosted representation scale for future
+#else
+s32 D_SCALE = 1;
+#endif
+
 /** \brief This function is main function and internally called to calculate PID
     control by calling multiple functions.
     It calls function calcSP_Err(data) to calculate position setpoint and position error;
@@ -1053,10 +1057,14 @@ static s32 control_PID(const ctlExtData_t *data)
 
 
     /* D CONTROL */
-    lErf =  ( (m_PosErr.err - cstate.m_n2Erf1)*D_CALC_COEF)/(D_CALC_COEF + data->m_pPID->D); /// AK:NOTE: A good application for division by multiplication?
+    /* Exponential forgetting new = (1-b)*old + b*x = old + b*(x-old)
+    with b=D_CALC_COEF)/(D_CALC_COEF + data->m_pPID->D)
+    */
+    lErf =  ( (D_SCALE*m_PosErr.err - cstate.m_n2Erf1)*D_CALC_COEF)/(D_CALC_COEF + data->m_pPID->D); /// AK:NOTE: A good application for division by multiplication?
     lErf += cstate.m_n2Erf1;
-    cstate.m_n2Erf1 = (s16)lErf; /// AK:Q: What guarantees that the cast is safe?
-    m_n2Deriv = m_PosErr.err - cstate.m_n2Erf1;
+    cstate.m_n2Erf1 = lErf;
+
+    m_n2Deriv = m_PosErr.err - (pos_t)(cstate.m_n2Erf1/D_SCALE);
     if( ((ABS((s32)m_n2Deriv)) < 3) && (m_PosErr.err_abs < PT1_PCT_16) ) /// AK:NOTE: The 3 is now .03% (5 counts). AK:Q: How is it determined?
     {
         m_n2Deriv = 0;
@@ -1239,8 +1247,7 @@ static bool_t isOutputAtLimit(const ctlExtData_t *data)
     /*Get pointer to pressures (raw_pressures are compensated, but they don't
     include user calibration */
 
-    const /*volatile*/ pres_t * raw_pressures = pres_GetRawPressureData()->Pressures;
-    /* EXPLANATION: pressures are not updated while control task is running */
+    const pres_t * raw_pressures = pres_GetRawPressureData()->Pressures;
 
     /* Initilize limits to false */
     result = false;
@@ -1602,7 +1609,7 @@ static bool_t IsIControl(const ctlExtData_t *data)
             if (data->pPneumaticParams->SingleActing != 0)
             {
                 //REQ 35-5 disable integral control on single acting when I<2
-                m_bIControl = false;  // m_bIControl = m_bIControl;  temporay!!! to avoid noise
+                m_bIControl = false;  // to avoid noise
             }
             // if DA to avoid limit cycling if DA
             else  // double acting
@@ -1744,6 +1751,7 @@ static s32 Proportional_Control(const ctlExtData_t *data, bool_t m_bIControl)
 
     cstate.nBoostCount++;          // count of control cycles - must be 300 (4.5 seconds)
                             //  or more to apply boost in the fill direction
+
     /* limit beta and error for P action  */
 
     // compute local error, m_n2Err_p. It is upper limited to +/- ERR_HIGH_P
@@ -1795,8 +1803,7 @@ static s32 Proportional_Control(const ctlExtData_t *data, bool_t m_bIControl)
     nOffset = boostCoeff->BoostOffset;
     nZdead = (s16)(boostCoeff->boost[Xhi] * nBand);
 
-    // This lKp is good for D term and for P term in fill direction
-    s32 lKp = control_ComputePGain(data->m_pPID->P, data->m_pPID->Beta);
+    ///////////// This lKp is good for D term and for P term in fill direction
 
     // make sure cBoost is only 0 or 1 (change to boolean?)
     if(cstate.cBoost > 1 )
@@ -1810,6 +1817,7 @@ static s32 Proportional_Control(const ctlExtData_t *data, bool_t m_bIControl)
     if( m_PosErr.err >= 0)
     {
         // main proportional output calculation with P and D terms
+        s32 lKp = control_ComputePGain(data->m_pPID->P, data->m_pPID->Beta);
         //TFS:3520, TFS:3596 -- separate terms P, D and Boost
         PTerm = (lKp * m_n2Err_p) / P_CALC_SCALE;   /* Kp =100 mean 10%*/
         DTerm = (lKp * m_n2Deriv) / D_CALC_SCALE;
@@ -1819,7 +1827,7 @@ static s32 Proportional_Control(const ctlExtData_t *data, bool_t m_bIControl)
         // 1% error: 100*164/250=65
 
         // now determine boost, if any
-        if( /*(m_bIControl==true) && */ (m_PosErr.err > (ERR_BOOST_1-(cstate.cBoost*ERR_BOOST_2))) )            // if(err > (150-cBoost*50))
+        if( /*m_bIControl && */ (m_PosErr.err > (ERR_BOOST_1-(cstate.cBoost*ERR_BOOST_2))) )  //ignoring m_bIcontrol on fill, like in AP
         {
             // if nBand very small, booststate is 0
             if(nBand < 1)
@@ -1861,11 +1869,11 @@ static s32 Proportional_Control(const ctlExtData_t *data, bool_t m_bIControl)
     {
         cstate.nBoostCount = BOOST_COUNT_HIGH;
 
-        //Recalc lKp for exhaust direction
-        s32 lKp2 = control_ComputePGain(data->m_pPID->P + data->m_pPID->PAdjust, data->m_pPID->Beta);
+        // main proportional output calculation with P and D terms
+        s32 lKp = control_ComputePGain(data->m_pPID->P + data->m_pPID->PAdjust, data->m_pPID->Beta);
 
         //TFS:3520, TFS:3596 -- separate terms P, D and Boost
-        PTerm = (lKp2 * m_n2Err_p) / P_CALC_SCALE;
+        PTerm = (lKp * m_n2Err_p) / P_CALC_SCALE;
         DTerm = (lKp * m_n2Deriv) / D_CALC_SCALE;
         lVal = PTerm + DTerm;
         ctltrace.m_pTerm = PTerm;
@@ -1876,10 +1884,10 @@ static s32 Proportional_Control(const ctlExtData_t *data, bool_t m_bIControl)
         {   // double acting
 
             // integral must be active and error within limits to boost
-            if((m_bIControl == true) && (m_n2Err_p < -(ERR_BOOST_1-(cstate.cBoost*ERR_BOOST_2) )) )  //  if(m_n2Err_p < -(150-cBoost*50))
+            if(m_bIControl && (m_n2Err_p < -(ERR_BOOST_1-(cstate.cBoost*ERR_BOOST_2) )) )  //  if(m_n2Err_p < -(150-cBoost*50))
             {
                 // if computed output < dead + offset apply boost 1 and set boost state 1
-                if((lVal < (-nZdead + nOffset)) && (nBand > 0))
+                if((lVal < -(nZdead + nOffset)) && (nBand > 0))
                 {
                     //lVal -= (boostCoeff->boosthigh * nBand);
                     lVal -= (boostCoeff->boost[Xhi] * nBand);
@@ -3074,7 +3082,7 @@ void control_Control(void)
     but becomes different in SVi1000 with PWM normalization
     \return the control output
 */
-u16 control_GetControlOutput(void)
+Bias_t control_GetControlOutput(void)
 {
 
     //m_CtlOutputValue
@@ -3185,7 +3193,7 @@ void control_FillExtAnalysParams(ExtAnalysParams_t *extAnalysPar)
     GetMinMaxErr(&extAnalysPar->MinErr, &extAnalysPar->MaxErr); //min/max error of 8 historic errors and current err
 
     /** TFS:4016 **/  /** TFS:4226 */
-    extAnalysPar->CtlOutput = m_CtlOutputValue;               //u16: Control prog calculated (not normalized) PWM value
+    extAnalysPar->CtlOutput = (u16)m_CtlOutputValue;               //u16: Control prog calculated (not normalized) PWM value
     extAnalysPar->AvgErr = ictest.avgErr;                        //s16:
     extAnalysPar->PosComp = (u16)cstate.LastComputedPosComp;     //u16: PosComp
     //TFS:3520, TFS:3596 -- separate terms P, D and Boost

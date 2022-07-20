@@ -53,7 +53,7 @@ demand.
 
 #define P_MID_CON 300
 
-#define ERR_S 10
+#define ERR_S 10 //0.061%
 #define T_BASE  25             /* temperature reference 25 degree C */
 
 #define P_CALC_SCALE 250
