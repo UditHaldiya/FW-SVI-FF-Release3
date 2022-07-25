@@ -406,7 +406,7 @@ ErrorCode_t TypeUnsafe_tune_SetPIDData(u8_least index, const void *src)
 
     if(index >= NUM_POSCTL_PARAMSETS)
     {
-        err = ERR_INVALID_PARAMETER; /* Legit. early return: prerequisite test before side effects */
+        err = ERR_INVALID_PARAMETER;
     }
     else
     {
@@ -484,6 +484,11 @@ CONST_ASSERT(NVRAMID_CtlSetSlot > NVRAMID_PIDData);
 //We need working data in case we want to tentatively change the content, such as disable deadzone
 static PIDData_t wrk_ctlset;
 
+/** \brief Current PID parameters accessor
+    Performs integrity test of the referenced data struct and returns data.
+\param dst - a pointer to the receiving object (may be a NULL)
+\return a pointer to const PID parameters
+*/
 const PIDData_t *tune_GetWorkinPIDData(PIDData_t *dst)
 {
     return STRUCT_TESTGET(&wrk_ctlset, dst);
@@ -569,6 +574,7 @@ procresult_t tune_Run_Selftune(s16 *procdetails)
         */
         tune_LimitPID(&workpid);
         (void)tune_SetCurrentPIDData(&workpid);
+#if 0
         for(s8_least try_count=0; try_count < 30; try_count++) //limit taken from thin air - but 8 is not enough
         {
             if(!util_WaitForPos(T0_250, NOISE_BAND_STABLE, true)) //get to setpoint
@@ -580,16 +586,20 @@ procresult_t tune_Run_Selftune(s16 *procdetails)
                 break;
             }
         }
+#endif
         ui_setNext(UINODEID_TUNE3);
 
         nRet = tune_CloseLoop(index, &workpid);
         if(nRet == 1)
         {
-            nReturn = PROCRESULT_OK;
-        }
-        else
-        {
-            Reason = FAIL_NVWRITE; //for now
+            if(tune_SetPIDData(CTLPARAMSET_AUTOTUNE, &workpid) == ERR_OK)
+            {
+                nReturn = PROCRESULT_OK;
+            }
+            else
+            {
+                Reason = PARAM_OUT_OF_RANGE;
+            }
         }
     }
 
