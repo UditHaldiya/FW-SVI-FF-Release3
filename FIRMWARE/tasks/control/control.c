@@ -1762,14 +1762,15 @@ static s32 Proportional_Control(const ctlExtData_t *data, bool_t m_bIControl)
         cstate.cBoost = 0;
     }
 
+    //Proportinal gain in fill direction
+    s32 lKp = control_ComputePGain(data->m_pPID->P, data->m_pPID->Beta);
+    //TFS:3520, TFS:3596 -- separate terms P, D and Boost
     s32 PTerm;
     s32 DTerm;
     // if SA filling or  DA (don't boost SA in exhaust direction)
     if( m_PosErr.err >= 0)
     {
         // main proportional output calculation with P and D terms
-        s32 lKp = control_ComputePGain(data->m_pPID->P, data->m_pPID->Beta);
-    //TFS:3520, TFS:3596 -- separate terms P, D and Boost
         PTerm = (lKp * m_n2Err_p) / P_CALC_SCALE;   /* Kp =100 mean 10%*/
         DTerm = (lKp * m_n2Deriv) / D_CALC_SCALE;
         lVal = PTerm + DTerm;
@@ -1778,7 +1779,16 @@ static s32 Proportional_Control(const ctlExtData_t *data, bool_t m_bIControl)
         // 1% error: 100*164/250=65
 
         // now determine boost, if any
-        if( /*m_bIControl && */ (m_PosErr.err > (ERR_BOOST_1-(cstate.cBoost*ERR_BOOST_2))) )  //ignoring m_bIcontrol on fill, like in AP
+#if 0
+        if(data->pPneumaticParams->SingleActing==0)
+        {   // double acting
+            cstate.nBoostCount = BOOST_COUNT_HIGH; //don't wait to boost DA, just as with exhaust
+        }
+        bool_t useIControl = data->pPneumaticParams->SingleActing==0;
+        if( (m_bIControl || !useIControl) && (m_PosErr.err > (ERR_BOOST_1-(cstate.cBoost*ERR_BOOST_2))) )  //ignoring m_bIcontrol on fill, like in AP
+#else
+        if((m_PosErr.err > (ERR_BOOST_1-(cstate.cBoost*ERR_BOOST_2))) )  //ignoring m_bIcontrol on fill, like in AP
+#endif
         {
             // if nBand very small, booststate is 0
             if(nBand < 1)
@@ -1821,9 +1831,18 @@ static s32 Proportional_Control(const ctlExtData_t *data, bool_t m_bIControl)
         cstate.nBoostCount = BOOST_COUNT_HIGH;
 
         // main proportional output calculation with P and D terms
-        s32 lKp = control_ComputePGain(data->m_pPID->P + data->m_pPID->PAdjust, data->m_pPID->Beta);
+        s32 lKp2; // = control_ComputePGain(data->m_pPID->P + data->m_pPID->PAdjust, data->m_pPID->Beta);
+        if(data->m_pPID->P == 0)
+        {
+            lKp2 = 0;
+        }
+        else
+        {
+            lKp2 = lKp + (((s32)data->m_pPID->PAdjust*lKp)/(s32)data->m_pPID->P);
+        }
+
     //TFS:3520, TFS:3596 -- separate terms P, D and Boost
-        PTerm = (lKp * m_n2Err_p) / P_CALC_SCALE;
+        PTerm = (lKp2 * m_n2Err_p) / P_CALC_SCALE;
         DTerm = (lKp * m_n2Deriv) / D_CALC_SCALE;
         lVal = PTerm + DTerm;
         ctltrace.m_pTerm = PTerm;
@@ -2146,10 +2165,12 @@ static void Integral_Control(const ctlExtData_t *data)
             else
             {
                 s16_least Pcoef = (s16_least)data->m_pPID->P;
+#if 0
                 if(IS_EXHAUSTING())
                 {
                     Pcoef += data->m_pPID->PAdjust;
                 }
+#endif
                 lVal = (m_n2Err_p*Pcoef)/(I_CALC_COEF*(s16)data->m_pPID->I); /// AK:NOTE: The scaler can be precomputed once.
             }
 
