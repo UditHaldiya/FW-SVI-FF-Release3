@@ -62,14 +62,6 @@ typedef struct DO_Passthrough_t
     u16 CheckWord;
 } DO_Passthrough_t;
 
-//--------------------------------------------------------------
-// Bits in the 16-bit IPC buffer
-
-#define DO_2_IPC_STATE                  (0x8000u)
-#define DO_1_IPC_STATE                  (0x4000u)
-
-//--------------------------------------------------------------
-
 extern void dosw_SetPassthroughValues(const DO_Passthrough_t *src);
 
 SAFEGET(cnfg_GetFillSwitchConfiguration, SwitchConfiguration_t);

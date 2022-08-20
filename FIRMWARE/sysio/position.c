@@ -30,6 +30,7 @@ prepresents the last one (and overal organization).
 #include "smoothing.h"
 #include "nvram.h"
 #include "mnassert.h"
+#include "devicemode.h"
 
 
 #define EXTRA_POS_CLOSED  INT_PERCENT_OF_RANGE(1.0)     //160
@@ -307,6 +308,7 @@ ErrorCode_t TypeUnsafe_pos_SetPositionConf(const void *src)
 
         pos_InitFilter();
         pos_InitFilterRaw();
+        spmgr_RequestSpTrack();
     MN_EXIT_CRITICAL();
     return ram2nvramAtomic(NVRAMID_PositionConf);
 }

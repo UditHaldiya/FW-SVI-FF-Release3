@@ -6,7 +6,6 @@
 #include "position.h"
 #include "datahog.h"
 
-#define DHOG_TB_ALERT_TRIGGER (0x0002U) //! IPC Trigger on conditions detected in FFP
 //lint -esym(641 756, DhogBinaryOptionsBits_t) enum on RHS of shift OK; Unused typedef OK
 typedef enum DhogBinaryOptionsBits_t
 {

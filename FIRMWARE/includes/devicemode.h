@@ -102,5 +102,10 @@ extern void mode_Mopup(void);
 */
 extern devmode_t mode_GetEffectiveMode(devmode_t mode);
 
+/** \brief Public interface for recalc of process setpoint (in flow capacity domain).
+It is necessarily project-specific.
+*/
+extern void spmgr_RequestSpTrack(void);
+
 #endif //DEVICEMODE_H_
 /* This line marks the end of the source */

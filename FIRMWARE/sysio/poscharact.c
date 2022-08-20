@@ -24,6 +24,7 @@ demand.
 #include "mnassert.h"
 #include "position.h"
 #include "nvram.h"
+#include "devicemode.h"
 
 static PosCharact_t CustomCharact;
 static PosCharactSel_t PosCharactSel; //! characterization selector
@@ -77,6 +78,7 @@ ErrorCode_t TypeUnsafe_poscharact_SetCharacterizationSel(const void *src)
         return ERR_INVALID_PARAMETER;
     }
     Struct_Copy(PosCharactSel_t, &PosCharactSel, s);
+    spmgr_RequestSpTrack();
     return ram2nvramAtomic(NVRAMID_PosCharactSel);
 }
 
@@ -302,6 +304,10 @@ ErrorCode_t poscharact_SetCustomTable(const PosCharact_t *src)
     if(err == ERR_OK)
     {
         Struct_Copy(PosCharact_t, &CustomCharact, src);
+        if(PosCharactSel.CharactSel == CHARACT_CUSTOM)
+        {
+            spmgr_RequestSpTrack();
+        }
         err = ram2nvramAtomic(NVRAMID_PosCharact);
     }
     return err;

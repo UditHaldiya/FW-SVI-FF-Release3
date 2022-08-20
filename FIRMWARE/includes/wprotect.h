@@ -23,7 +23,6 @@ demand.
 #define bios_ReadWriteProtectInput sysio_ReadWriteProtectInput //for legacy compatibility
 extern bool_t sysio_ReadWriteProtectInput(void);
 
-#define OPTIONVAL_WRITE_LOCK (0x0001U) //! From FFP to APP
 extern void wprotect_SetExtLock(bool_t wlock);
 
 #endif //WPROTECT_H_

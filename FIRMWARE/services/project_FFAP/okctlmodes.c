@@ -39,6 +39,15 @@ demand.
 #include "reset.h"
 #endif
 
+//Doc in header
+void spmgr_RequestSpTrack(void)
+{
+    if(digsp_GetExternalMode() != IPC_MODE_AUTO)
+    {
+        ipc_SetSpTrackRequest();
+    }
+}
+
 /* Arrays of various possible device mode-compatible control modes
 */
 static const ctlmode_t NormalControlModes[] =
@@ -133,6 +142,8 @@ bool_t mode_TransitionHook(devmode_t newmode)
         //For now, we fix it up to the current position regardless of now-ignored configuration
         mode_SetControlMode(CONTROL_MANUAL_POS, vpos_GetScaledPosition());
     }
+    ipc_SetSpTrackRequest(); //That is, regardless of mode
+
     return true;
 }
 
@@ -489,6 +500,30 @@ const digitalsp_t *digsp_GetData(digitalsp_t *dst)
     return STRUCT_TESTGET(&digitalsp, dst);
 }
 
+s32 digsp_ComputeTrackedSetpoint(void)
+{
+    s32 sp;
+    ctlmode_t ctlmode = mode_GetIntendedControlMode(&sp);
+    if(ctlmode == CONTROL_MANUAL_POS)
+    {
+        //In closed loop, tracking APP setpoint
+    }
+    else
+    {
+        //In open loop, tracking valve position
+        sp = vpos_GetScaledPosition();
+    }
+    //overwrite last received digital setpoint with tracked value
+    MN_ENTER_CRITICAL();
+        storeMemberInt(&digitalsp, setpoint, sp);
+    MN_EXIT_CRITICAL();
+
+    //Convert to flow capacity domain
+    sp = poscharact_Inverse(sp);
+
+    return sp;
+}
+
 static const digitalsp_t digitalsp_default =
 {
     .setpoint = 0, //don't really care
@@ -668,6 +703,7 @@ bool_t mode_IsPersistent(devmode_t mode)
 bool_t poscharact_IsInUse(void)
 {
     bool_t ret = false;
+#if 0 //removed restriction because FINAL_VALUE is now tracking WORKING_SP
     if(oswrap_IsContext(TASKID_IPCCOMM))
     {
         /* Per TFS:15789, Do not allow change in TB MAN because
@@ -680,6 +716,7 @@ bool_t poscharact_IsInUse(void)
         }
     }
     else
+#endif
     {
         //No restriction on debug or factory action (over other channels)
     }

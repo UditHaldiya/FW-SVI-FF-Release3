@@ -503,6 +503,7 @@ procresult_t process_Exec(ProcId_t procId)
         if((proctable[i].action[result].termflags & PROCTERMFLAG_CTLMODE) != 0U)
         {
             mode_SetControlMode(ctlmode, sp);
+            spmgr_RequestSpTrack();
         }
 
 	    if((proctable[i].action[result].termflags & PROCTERMFLAG_KEEPON) != 0U)

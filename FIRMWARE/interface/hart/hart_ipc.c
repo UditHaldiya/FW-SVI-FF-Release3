@@ -73,6 +73,8 @@ demand.
 #include "dhogtrigger.h"
 
 #include "ff_devicevars.h"
+#include "ipccmdflags.h"
+#include "oswrap.h" //for PRIOrities
 
 //--------------------------------------------------------------
 
@@ -1068,17 +1070,53 @@ static ErrorCode_t      IPC_SetIPAction(const IPC_IPVariable_t    *pIPCIPStruc)
 }
 
 //--------------------------------------------------------------
-CONST_ASSERT(OPTIONVAL_WRITE_LOCK != DO_1_IPC_STATE);
-CONST_ASSERT(OPTIONVAL_WRITE_LOCK != DO_2_IPC_STATE);
+// Process IPC command flags
 
-// Process DO Switches and other bits
-
-static void IPC_Process_DOSwitches(u16 U16BufferValue)
+/*We must be careful to not Ack the sp track request if a new request came AFTER
+a previous tracking response
+*/
+typedef enum sptrack_t
 {
-    // Process as Digital Switches :
-    // Bit 15 = DO2 state
-    // Bit 14 = DO1 state
+    sptrack_void,
+    sptrack_requested,
+    sptrack_sent
+} sptrack_t;
 
+static sptrack_t sptrack_event = sptrack_void;
+
+void ipc_SetSpTrackRequest(void)
+{
+    sptrack_event = sptrack_requested;
+}
+
+static void ipc_AckSpTrackRequest(void)
+{
+    MN_ENTER_CRITICAL();
+        if(sptrack_event == sptrack_sent)
+        {
+            sptrack_event = sptrack_void;
+        }
+    MN_EXIT_CRITICAL();
+}
+
+/** \brief Mark track sp "sent" if not sptrack_void after ipc_AckSpTrackRequest()
+\return A flag indicating the need to send
+*/
+static bool_t ipc_MarkSpTrackSent(void)
+{
+    bool_t ret;
+    MN_ENTER_CRITICAL();
+        ret = (sptrack_event != sptrack_void);
+        if(ret)
+        {
+            sptrack_event = sptrack_sent;
+        }
+    MN_EXIT_CRITICAL();
+    return ret;
+}
+
+static bool_t IPC_Process_Flags(u16 U16BufferValue)
+{
     if (cnfg_GetOptionConfigFlag(DO_OPTION))
     {   // DO Parameters  configured
         DO_Passthrough_t Passthrough;
@@ -1100,6 +1138,17 @@ static void IPC_Process_DOSwitches(u16 U16BufferValue)
             (void)datahog_ControlAuto(DatahogStart, HogConfPerm); //only in AUTO mode
         }
     }
+
+    bool_t ret = false;
+    if(oswrap_IsContext(TASKID_IPCCOMM))
+    {
+        if((U16BufferValue & ACK_SP_TRACKING) != 0U)
+        {
+            ipc_AckSpTrackRequest();
+        }
+        ret = ipc_MarkSpTrackSent(); //trust the caller to do the right thing
+    }
+    return ret;
 }
 
 //--------------------------------------------------------------
@@ -1177,9 +1226,9 @@ s8_least hartcmd_IPCDynamicParametersExchange(const u8 *src, u8 *dst)
     IPC_ReadAnalogInput(&ReadPtrs);
 
     //-----------------------------------------------------------------------------------------
-    // Handle the Digital Switches -- from the 2 byte unused buffer
-    U16BufferValue = util_GetU16(s1->IPCUnused2byteBuffer[0]);          // Get the buffer
-    IPC_Process_DOSwitches(U16BufferValue);
+    // Handle the command flags -- from the 2 byte  buffer
+    U16BufferValue = util_GetU16(s1->IPCCommandFlags[0]);          // Get the buffer
+    bool_t track_sp = IPC_Process_Flags(U16BufferValue); //See the use below
 
     //-----------------------------------------------------------------------------------------
     // Variables
@@ -1206,10 +1255,38 @@ s8_least hartcmd_IPCDynamicParametersExchange(const u8 *src, u8 *dst)
     }
 
     //-----------------------------------------------------------------------------------------
-    // Read Mode
+    // Read the Mode
 
     IPCActualMode = IPC_GetActualMode();
     util_PutU8(d1->IPCActualMode[0], IPCActualMode);
+
+    //Continue with SP tracking
+    //Do we need to send the setpoint to track in FFP?
+    if(!track_sp)
+    {
+        //track if TB is in LO
+        track_sp = (IPCActualMode == IPC_MODE_LOVERRIDE);
+    }
+    if(!track_sp)
+    {
+        //track if a running process uses setpoint
+        track_sp = (IPCActualMode == IPC_MODE_MANUAL);
+        if(track_sp)
+        {
+            track_sp = (process_GetResourceFlags() & PROCINIT_CLAIMCTLMODE) != 0U;
+        }
+    }
+    if(track_sp)
+    {
+        s32 sp = digsp_ComputeTrackedSetpoint();
+        (void)fpconvert_IntToFloatBuffer(sp, UNITSID_POSITION_ENTRY, d1->IPCSPTracked[0]);
+    }
+    else
+    {
+        //Indicate with a NaN that we are not tracking
+        util_PutU32(d1->IPCSPTracked[0], 0x7fc00000U);
+    }
+
 
     //-----------------------------------------------------------------------------------------
 
@@ -1257,11 +1334,6 @@ s8_least hartcmd_IPCReadShortVariables(const u8 *src, u8 *dst)
     {
         retval = ret;
     }
-
-    //-----------------------------------------------------------------------------------------
-    UNUSED_OK(s1->IPCUnused2byteBuffer[0]);
-    UNUSED_OK(s1->IPCUnused4byteBufferA[0]);
-    UNUSED_OK(s1->IPCUnused4byteBufferB[0]);
 
     //-----------------------------------------------------------------------------------------
     // Return with correct status

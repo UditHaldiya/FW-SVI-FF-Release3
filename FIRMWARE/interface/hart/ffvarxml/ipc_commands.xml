@@ -17,12 +17,13 @@
         <Param>IPC IP Action</Param>
         <Param>IPC Variable ID 1</Param>
         <Param>IPC Variable ID 2</Param>
-        <Param>IPC Unused 2 byte Buffer</Param>
+        <Param>IPC Command Flags</Param>
       </RequestParams>
       <ResponseParams>
         <Param>IPC Actual Mode</Param>
         <Param>IPC POS Status</Param>
         <Param>IPC POS Float</Param>
+        <Param>IPC SP Tracked</Param>
         <Param>IPC AI Status</Param>
         <Param>IPC AI Float</Param>
         <Param>IPC Variable ID 1</Param>
@@ -33,13 +34,10 @@
         <Param>IPC Var 2 Buffer</Param>
       </ResponseParams>
     </Command>
-    <Command Name="IPC Read Short Variables" CmdNum="188" CmdType="Command" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_READ_COMMAND" Description="IPC - Read three short variables">
+    <Command Name="IPC Read Short Variables" CmdNum="188" CmdType="Command" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_READ_COMMAND" Description="IPC - Read two short variables">
       <RequestParams>
         <Param>IPC Variable ID 1</Param>
         <Param>IPC Variable ID 2</Param>
-        <Param>IPC Unused 4 byte BufferA</Param>
-        <Param>IPC Unused 4 byte BufferB</Param>
-        <Param>IPC Unused 2 byte Buffer</Param>
       </RequestParams>
       <ResponseParams>
         <Param>IPC Variable ID 1</Param>
@@ -106,14 +104,13 @@
     <Variable Name="IPC Variable ID 2" DataType="H_UINT" Description="Device Variable 2 ID Index" />
     <Variable Name="IPC Actual Mode" DataType="H_UCHAR" Description="Device Actual Mode" />
     <Variable Name="IPC POS Status" DataType="H_UCHAR" Description="Device Position Status" />
-    <Variable Name="IPC POS Float" DataType="H_FLOAT" Description="Device Position" />
+    <Variable Name="IPC POS Float" DataType="H_FLOAT" Description="Valve Position" />
+    <Variable Name="IPC SP Tracked" DataType="H_FLOAT" Description="Valve Setpoint to track. If NaN, do not track. No tracking if TB in AUTO.\nNOTE: In open-loop control, position is tracked instead of setpoint." />
     <Variable Name="IPC Var 1 Status" DataType="H_UCHAR" Description="Device Variable 1 Status" />
     <Variable Name="IPC Var 1 Buffer" DataType="H_UINT4" Description="Device Variable 1 Buffer" />
     <Variable Name="IPC Var 2 Status" DataType="H_UCHAR" Description="Device Variable 2 Status" />
     <Variable Name="IPC Var 2 Buffer" DataType="H_UINT4" Description="Device Variable 2 Buffer" />
-    <Variable Name="IPC Unused 4 byte BufferA" DataType="H_UINT4" Description="Unused 4 byte buffer" />
-    <Variable Name="IPC Unused 4 byte BufferB" DataType="H_UINT4" Description="Unused 4 byte buffer" />
-    <Variable Name="IPC Unused 2 byte Buffer" DataType="H_UINT" Description="Unused 2 byte buffer" />
+    <Variable Name="IPC Command Flags" DataType="H_UINT" Description="Command bits to APP:\n&#xD;&#xA;0x8000 - DO2 state\n&#xD;&#xA;0x4000 - DO1 state\n&#xD;&#xA;0x0004 - APP SP tracking acknowlwdgment\n&#xD;&#xA;0x0002 - Data collection trigger on TB alerts\n&#xD;&#xA;0x0001 - Write lock status resolved with resource block" />
     <Variable Name="IPC Data Block Num" DataType="H_UCHAR" Description="Data block Number for Array Variables" />
     <Variable Name="IPC Array Status" DataType="H_UCHAR" Description="Arrray Variable Status" />
     <Variable Name="IPC Array Data" DataType="H_UCHAR" MinSize="32" MaxSize="32" Description="Data for Array Variable" />

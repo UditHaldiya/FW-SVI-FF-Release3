@@ -222,4 +222,6 @@ typedef struct IPC_WritePtrs_t
 
 extern  void  IPC_IpcMonitor(void);
 
+extern void ipc_SetSpTrackRequest(void);
+
 #endif //IPCDEFS_H_

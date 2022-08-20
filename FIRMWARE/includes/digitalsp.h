@@ -54,6 +54,12 @@ extern ErrorCode_t digsp_SetDigitalSetpointEx(u8 xmode, s32 sp);
 extern u8 digsp_GetExternalMode(void);
 extern void digsp_Mopup(void);
 
+/** \brief Computes tracking value of setpoint and replaces last
+received digital setpoint.
+\return tracking setpoint in flow capacity domain (i.e. inversely characterized)
+*/
+extern s32 digsp_ComputeTrackedSetpoint(void);
+
 extern s32 digsp_GetDigitalPosSetpoint(void);
 extern s32 digsp_GetDigitalSetpoint(void);
 
