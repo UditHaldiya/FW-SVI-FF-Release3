@@ -314,7 +314,7 @@ static const TuneData_t  def_TuneData =
         .toption =
         (0U<<OvershootCountUse) |
         (1U<<DisAllowOutOfRangeInterimPID) |
-        (1U<<AllowExtraStabilityWait) |
+        (0U<<AllowExtraStabilityWait) |
         (0U<<UseActualPosDiffForPoscomp) |
         (0U<<UseTimeForTauCalc) |
         (1U<<MinLimitingPAdjust) |
@@ -326,11 +326,11 @@ static const TuneData_t  def_TuneData =
         (0U<<UseSmoothedPositionForStep) |
         (0U<<UseSmoothedPositionForRamp) |
         (1U<<UsePrelimPosComp) |
-        (1U<<Apply_nY_min_fix) |
+        (0U<<Apply_nY_min_fix) |
         (0U<<Include_P_and_D_in_bias) |
         0U,
-        .min_number_of_ramp_points = 7, // 7 in AP and R2, 10 in ESD (C9565[1])
-        .low_overshoot_thresh = 4, // 4 in AP, OVERSHOOT_LOW=3 in ESD (C59565[2])
+        .min_number_of_ramp_points = 10, // 7 in AP and R2, 10 in ESD (C9565[1])
+        .low_overshoot_thresh = 3, // 4 in AP, OVERSHOOT_LOW=3 in ESD (C59565[2])
         .PAdjust_recalc_scale = 20, // inconsistent 20 in AP, PADJ_INC_RATIO=16 in ESD
         .PAdjust_recalc_scale2 = 20, // inconsistent 20 in AP, PADJ_INC_RATIO=16 in ESD
     },
@@ -589,9 +589,31 @@ procresult_t tune_Run_Selftune(s16 *procdetails)
 #endif
         ui_setNext(UINODEID_TUNE3);
 
+        u16 Pcoef = workpid.P;
         nRet = tune_CloseLoop(index, &workpid);
         if(nRet == 1)
         {
+            /* Result produced so far provides crisp response but large short
+            overshoot up 12-13%, esp. in the fill direction.
+            To mitigate the effect, we shamelessly reduce the P gain.
+
+            The amount of reduction is roughly to match R2 gain (and performance): A less
+            pronounced overshoot at the expense of slower stabilization, and some rise time.
+            The exception is when tune steps 1-2 grossly underestimate the gain (typically,
+            springless DA). R2 autotune tends to make the gains worse in Step 3,
+            and eventually fails.
+            R3 autotune recovers the gains in Step 3, but there is no need in gain reduction.
+            */
+            if(10U*workpid.P > 11U*Pcoef) //Did we increase Pcoef by at least 10%?
+            {
+                //Don't reduce
+            }
+            else
+            {
+                workpid.P = (u16)Change20Pct((s16)workpid.P, false);
+            }
+            tune_LimitPID(&workpid);
+
             if(tune_SetPIDData(CTLPARAMSET_AUTOTUNE, &workpid) == ERR_OK)
             {
                 nReturn = PROCRESULT_OK;

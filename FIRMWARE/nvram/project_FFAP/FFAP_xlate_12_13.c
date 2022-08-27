@@ -79,7 +79,7 @@ const TuneOptions_t13 TuneOptions_default_13 =
     .toption =
         (0U<<OvershootCountUse_13) |
         (1U<<DisAllowOutOfRangeInterimPID_13) |
-        (1U<<AllowExtraStabilityWait_13) |
+        (0U<<AllowExtraStabilityWait_13) |
         (0U<<UseActualPosDiffForPoscomp_13) |
         (0U<<UseTimeForTauCalc_13) |
         (1U<<MinLimitingPAdjust_13) |
@@ -91,11 +91,11 @@ const TuneOptions_t13 TuneOptions_default_13 =
         (0U<<UseSmoothedPositionForStep_13) |
         (0U<<UseSmoothedPositionForRamp_13) |
         (1U<<UsePrelimPosComp_13) |
-        (1U<<Apply_nY_min_fix_13) |
+        (0U<<Apply_nY_min_fix_13) |
         (0U<<Include_P_and_D_in_bias_13) | //AP doesn't have it, contrary to Ernie's caution of ESD time
         0U,
-    .min_number_of_ramp_points = 7, // 7 in AP and R2, 10 in ESD (C9565[1])
-    .low_overshoot_thresh = 4, // 4 in AP, OVERSHOOT_LOW=3 in ESD (C59565[2])
+    .min_number_of_ramp_points = 10, // 7 in AP and R2, 10 in ESD (C9565[1])
+    .low_overshoot_thresh = 3, // 4 in AP, OVERSHOOT_LOW=3 in ESD (C59565[2])
     .PAdjust_recalc_scale = 20, // inconsistent 20 in AP, PADJ_INC_RATIO=16 in ESD
     .PAdjust_recalc_scale2 = 20, // inconsistent 16 in AP, PADJ_INC_RATIO=16 in ESD
 };
