@@ -327,6 +327,11 @@ ErrorCode_t digsp_SetDigitalSetpointEx(u8 xmode, s32 sp)
                             accept = false;
                             break;
                     }
+                    if(accept)
+                    {
+                        //We need to sync the setpoint in FFP whether APP mode will change or not
+                        ipc_SetSpTrackRequest(); //That is, regardless of mode
+                    }
                 }
             }
             if(accept)
