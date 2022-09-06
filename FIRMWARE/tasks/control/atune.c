@@ -99,7 +99,7 @@ static const diag_t* m_pDiagBuffer;
 #define SPEED_MIN 100
 
 #define OUT_STEP_HIGH 2000
-#define TUNE_SKIP_TRIES 1
+#define TUNE_SKIP_TRIES 2
 #define TUNE_MAX_TRIES (10+TUNE_SKIP_TRIES) //was TUNE_TIME_LIMIT
 #define TUNE_TRY_INITVAL (5+TUNE_SKIP_TRIES) //was TUNE_TIME_START
 
@@ -130,6 +130,10 @@ static const diag_t* m_pDiagBuffer;
 
 #define STEP_TIME 7u //seconds - time of the step test (legacy)
 #define SAMPLE_RATE 20u //per second - number of samples/s (legacy)
+//AK: Moved here
+#define DATA_PTS 100 // <STEP_TIME*SAMPLE_RATE, ok
+#define STEP_CHANGE_INDEX (16) //See diag_Perform_StepTest()
+#define MAX_TIMES_LIMIT (DATA_PTS - STEP_CHANGE_INDEX - 1) //AK: differences are 1 less <DATA_PTS, ok
 #define FORTY_PCT        ((s32)((PERCENT_TO_SCALED_RANGE * 40.0F) + 0.5F))
 #define SIXTY_PCT        ((s32)((PERCENT_TO_SCALED_RANGE * 60.0F) + 0.5F))
 #define SIXTY_FOUR_PCT   ((s32)((PERCENT_TO_SCALED_RANGE * 64.0F) + 0.5F))
@@ -137,11 +141,8 @@ static const diag_t* m_pDiagBuffer;
 #define RAMPING_RATE2      ((s32)(PERCENT_TO_SCALED_RANGE/6.0F))
 #define POS_ONE 40.0F
 #define POS_TWO 45.0F
-#define STEP_CHANGE_INDEX (13)
-#define DATA_PTS 100
 #define AVERAGE_PTS 10
 #define TEST_TIMES_LIMIT 8
-#define MAX_TIMES_LIMIT 70
 #define STABLE_TRY_NUM 40
 #define INDEX1 10
 #define INDEX2 30
@@ -191,7 +192,7 @@ CONST_ASSERT(P_NOT_LOW >= P_LOW_LIMIT);
 
 #define FIVE_PCT 5 // *Relative* % overshoot
 
-static s16 nTuneArray[70];         /* buffer for tune calculation*/
+static s16 nTuneArray[MAX_TIMES_LIMIT];         /* buffer for tune calculation*/
 
 static s16 nSCount;
 
@@ -499,6 +500,9 @@ ErrorCode_t tune_SetCurrentPIDData(const PIDData_t *src)
     return tune_SetRamPIDData(src, &wrk_ctlset);
 }
 
+#if 0
+bool_t reduce = false;
+#endif
 /* ------------------------ Here the real thing begins -------------------------------- */
 
 /** \brief A wrapper function for the self-tune process
@@ -542,7 +546,7 @@ procresult_t tune_Run_Selftune(s16 *procdetails)
 
 #if !defined(NDEBUG) && !defined(_lint)
     extern const struct TuneOptions_t13 TuneOptions_default_13;
-    MN_ASSERT(0==mn_memcmp(&def_TuneData.TuneOptions, &TuneOptions_default_13, sizeof(def_TuneData.TuneOptions)));
+    //MN_ASSERT(0==mn_memcmp(&def_TuneData.TuneOptions, &TuneOptions_default_13, sizeof(def_TuneData.TuneOptions)));
 #endif
     u8_least index = posctl_GetCtlSetIndex();
 
@@ -590,28 +594,50 @@ procresult_t tune_Run_Selftune(s16 *procdetails)
         ui_setNext(UINODEID_TUNE3);
 
         u16 Pcoef = workpid.P;
+        u16 Pvent = workpid.P + workpid.PAdjust;
         nRet = tune_CloseLoop(index, &workpid);
         if(nRet == 1)
         {
-            /* Result produced so far provides crisp response but large short
-            overshoot up 12-13%, esp. in the fill direction.
-            To mitigate the effect, we shamelessly reduce the P gain.
+#if 0
+            if(reduce)
+            {
+                /* Result produced so far provides crisp response but large short
+                overshoot up 12-13%, esp. in the fill direction.
+                To mitigate the effect, we shamelessly reduce the P gain.
 
-            The amount of reduction is roughly to match R2 gain (and performance): A less
-            pronounced overshoot at the expense of slower stabilization, and some rise time.
-            The exception is when tune steps 1-2 grossly underestimate the gain (typically,
-            springless DA). R2 autotune tends to make the gains worse in Step 3,
-            and eventually fails.
-            R3 autotune recovers the gains in Step 3, but there is no need in gain reduction.
-            */
-            if(10U*workpid.P > 11U*Pcoef) //Did we increase Pcoef by at least 10%?
-            {
-                //Don't reduce
+                The amount of reduction is roughly to match R2 gain (and performance): A less
+                pronounced overshoot at the expense of slower stabilization, and some rise time.
+                The exception is when tune steps 1-2 grossly underestimate the gain (typically,
+                springless DA). R2 autotune tends to make the gains worse in Step 3,
+                and eventually fails.
+                R3 autotune recovers the gains in Step 3, but there is no need in gain reduction.
+                */
+                if(10U*workpid.P > 11U*Pcoef) //Did we increase Pcoef by at least 10%?
+                {
+                    //Don't reduce
+                }
+                else
+                {
+                    workpid.P = (u16)Change20Pct((s16)workpid.P, false);
+                    //workpid.I = (u16)Change10Pct((s16)workpid.I, true);
+                }
+                u16 newPvent = workpid.P + workpid.PAdjust;
+                if(10U*newPvent > 11U*Pvent) //Did we increase Pvent by at least 10%?
+                {
+                    //Don't reduce
+                }
+                else
+                {
+#if 0
+                    workpid.PAdjust = (u16)Change10Pct(newPvent, false) - workpid.P;
+#else
+                    workpid.PAdjust = newPvent - workpid.P; //preserve the found Pvent
+#endif
+                }
             }
-            else
-            {
-                workpid.P = (u16)Change20Pct((s16)workpid.P, false);
-            }
+#else
+            UNUSED_OK(Pvent-Pcoef);
+#endif
             tune_LimitPID(&workpid);
 
             if(tune_SetPIDData(CTLPARAMSET_AUTOTUNE, &workpid) == ERR_OK)
@@ -2129,7 +2155,8 @@ static void Data_Processing(const PIDData_t *pid, StepData_t *tune_xchange)
     //find the max to use to calc overshoot
         //find position max and time there
         //find delta position max and time there
-    nY_max = 0;     nT_max = 0;
+    nY_max = -INT16_MAX;    //AK: Changed
+    nT_max = 0;
     nDY_max = 0;    nT_DY_max = 0;
     for(i=0; i<DATA_PTS; i++)
     {
@@ -2138,7 +2165,7 @@ static void Data_Processing(const PIDData_t *pid, StepData_t *tune_xchange)
             nY_max = m_pDiagBuffer[i+STEP_CHANGE_INDEX];              /* search for peak value;    */
             nT_max = i;
         }
-        if(i < (MAX_TIMES_LIMIT-2))
+        if(i < MAX_TIMES_LIMIT) //AK: changed from MAX_TIMES_LIMIT-2
         {
             nTuneArray[i] = m_pDiagBuffer[i+1+STEP_CHANGE_INDEX]-m_pDiagBuffer[i+STEP_CHANGE_INDEX];
             if(nTuneArray[i] >nDY_max)         /* search for max rate of change */
@@ -2228,6 +2255,8 @@ static void Data_Processing(const PIDData_t *pid, StepData_t *tune_xchange)
     nT_DY_min = nT_DY_max;
     if(nT_max > (nT_DY_max+7) ) ///AK:Q: What are these 7 and 5? And 5 and 8 and 20 below? Are those 5's the same? 8's?
     {                           /// DZ: A rough number significant enough to separate these times.
+        //AK: This can go beyond nTuneArray! for(i=(nTau_m+1); i<(nT_max-5); i++)
+        CONST_ASSERT((DATA_PTS-STEP_CHANGE_INDEX) >= (MAX_TIMES_LIMIT - (5+1))); //See below
         for(i=(nTau_m+1); i<(nT_max-5); i++)
         {
             if(nTuneArray[i] < nDY_min)
@@ -2325,7 +2354,7 @@ static s8 CheckPosStablize(u8_least index, PIDData_t *pid)
 
             if(Pfill < P_NOT_HIGH)
             {
-                Pfill = Change20Pct((s16)pid->P, true);
+                Pfill = Change20Pct(Pfill, true);
                 pid->P = (u16)Pfill;
             }
             if(Pvent < P_NOT_HIGH)

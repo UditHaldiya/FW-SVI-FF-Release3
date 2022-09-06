@@ -529,7 +529,8 @@ void control_GetControlMode(ctlmode_t* pn1ControlMode, s32* pn4Setpoint)
 */
 Bias_t control_GetBias(void)
 {
-    return cstate.LastComputedPosComp+m_BiasData.BIAS;
+    Bias_t ret = cstate.LastComputedPosComp+m_BiasData.BIAS;
+    return CLAMP(ret, MIN_DA_VALUE, MAX_DA_VALUE);
 }
 
 /** \brief This function is externally called to get the current BIAS change flag
@@ -1843,7 +1844,7 @@ static s32 Proportional_Control(const ctlExtData_t *data, bool_t m_bIControl)
 
     //TFS:3520, TFS:3596 -- separate terms P, D and Boost
         PTerm = (lKp2 * m_n2Err_p) / P_CALC_SCALE;
-        DTerm = (lKp * m_n2Deriv) / D_CALC_SCALE;
+        DTerm = (lKp2 * m_n2Deriv) / D_CALC_SCALE;
         lVal = PTerm + DTerm;
         ctltrace.m_pTerm = PTerm;
         ctltrace.m_dTerm = DTerm;
