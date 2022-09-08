@@ -99,7 +99,7 @@ static const diag_t* m_pDiagBuffer;
 #define SPEED_MIN 100
 
 #define OUT_STEP_HIGH 2000
-#define TUNE_SKIP_TRIES 2
+#define TUNE_SKIP_TRIES 2 //1 may have a noticeable overshoot
 #define TUNE_MAX_TRIES (10+TUNE_SKIP_TRIES) //was TUNE_TIME_LIMIT
 #define TUNE_TRY_INITVAL (5+TUNE_SKIP_TRIES) //was TUNE_TIME_START
 
@@ -1195,6 +1195,33 @@ static void SetCurrentPIDData_reckless(PIDData_t *pid)
     }
 }
 
+#if defined(NDEBUG) || defined(_lint)
+#define WAIT_CYCLES 4
+#else
+u8_least WAIT_CYCLES = 4; //so that we can manipulate it in the debugger
+#endif
+
+/** \brief Tries to make dead sure the valve is stable.
+\param where - true if at the current setpoint, false if anywhere, just stable
+\return true if deemed stable, false if canceled
+*/
+static bool_t tune_ExtraStability(bool_t where)
+{
+    bool_t ret;
+    for(u8_least u=0; u<WAIT_CYCLES; u++)
+    {
+        ret = util_WaitForPos(T0_150,  STABLE_POS_TEST, where);
+        if(!ret)
+        {
+            break;
+        }
+    }
+    return ret;
+}
+
+/** \brief Options-aware attempt to wait for stable position at setpoint
+\return true if canceled, false if presumed stable
+*/
 static bool_t pos_wait_stable(void)
 {
     bool_t cancel;
@@ -1204,7 +1231,7 @@ static bool_t pos_wait_stable(void)
     }
     else
     {
-        cancel = !util_WaitForPos(T0_250, NOISE_BAND_STABLE, true); //make sure we arrived at setpoint
+        cancel = !tune_ExtraStability(true); //make sure we arrived at setpoint
     }
     return cancel;
 }
@@ -1260,6 +1287,13 @@ static s32 tune_RampingTest(u8_least index, PIDData_t *pid)
         return 1;
     }
     SetCurrentPIDData_reckless(pid);
+
+    mode_SetControlMode(CONTROL_MANUAL_POS, INT_PERCENT_OF_RANGE(64.0));
+    if(!tune_ExtraStability(true))
+	{
+		return 1;
+	}
+
     //ramp from 64 to 60
     for(i=COUNT_24; i>=0; i--)
     {
@@ -2407,10 +2441,10 @@ static s8 tune_Stabilize(u8_least index, PIDData_t *pid, u32 option)
     }while( (i>0) && moved );
     if(option != 0U)
     {
-        if(!util_WaitForPos(T0_250,  STABLE_POS_TEST, false)) //T0_500?
-        {
-            return 1;    // early exit - process cancelled Or Bias changed
-        }
+	    if(!tune_ExtraStability(false))
+		{
+			return 1;
+		}
     }
     return 0;
 }
