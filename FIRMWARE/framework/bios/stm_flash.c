@@ -307,7 +307,7 @@ static void wcopy (u32 *d, u32 *s, u32 len)
 #endif
 
 #define OPT_WRITE_ALLOWED (0x55aaf00f)
-static u32 OptGuard = OPT_WRITE_ALLOWED;
+static u32 Atomic_ OptGuard = OPT_WRITE_ALLOWED;
 
 /** \brief Set the preferred boot partition Bank1 or Bank 2
 
