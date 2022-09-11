@@ -58,6 +58,7 @@ SUBMODULES+= MNEnvir_5-0.mak,72775 \
     syswd_2-0.mak,66864
 
 #General helpers
+MOD_OVERRIDE+=numutils.h
 SUBMODULES+=numutils_1-1.mak,55618 \
     bitutils_1-0.mak,55618
 
