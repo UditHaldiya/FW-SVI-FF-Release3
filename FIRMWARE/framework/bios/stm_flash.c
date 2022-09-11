@@ -306,41 +306,50 @@ static void wcopy (u32 *d, u32 *s, u32 len)
 }
 #endif
 
+#define OPT_WRITE_ALLOWED (0x55aaf00f)
+static u32 OptGuard = OPT_WRITE_ALLOWED;
+
 /** \brief Set the preferred boot partition Bank1 or Bank 2
+
+Now guards against consecutive writes without a reset in between
 
     \param BootFromBank2 - true sets prefered Bank2; false sets preferred Bank1
     \return 0 if OK; otherwise error ((BSY | WRPRTERR | PGERR)
 */
 u32 flash_SetPartition(u32 BootFromBank2)
 {
+    u32 status = WRPRTERR;
     OB_TypeDef lob = *OB;
 
     // fetch the current options bytes
    // wcopy((u32*)(void*)&lob, (u32*)(void*)OB_BASE, sizeof(lob) / sizeof(u32));
 
-    rcc_enable_HSI();           // enable HSI for flash operations
-
-    const FLASHB_Typedef *BankCtrlReg = FLASHB1;
-
-    u32 status  = opterase(BankCtrlReg);
-
-    if (status == 0u)
+    if(OptGuard == OPT_WRITE_ALLOWED)
     {
-        lob.Data0 = (BootFromBank2 != 0) ? BFB2 : BFB1;
-        const u16 *lob6 = (const u16*)(void*)&lob;
-        status    = optwrite(HARDWARE(u16*, OB_BASE), lob6, sizeof(lob), BankCtrlReg);
-    }
+        rcc_enable_HSI();           // enable HSI for flash operations
 
-    FLASH->CR &= ~CR_OPTWRE_SET;
+        const FLASHB_Typedef *BankCtrlReg = FLASHB1;
 
-    //--- Moved from flash_ClosePartition()
-    // Lock and "load"
-    FLASH->CR  |= CR_LOCK_Set;
+        status  = opterase(BankCtrlReg);
+
+        if (status == 0u)
+        {
+            lob.Data0 = (BootFromBank2 != 0) ? BFB2 : BFB1;
+            const u16 *lob6 = (const u16*)(void*)&lob;
+            status    = optwrite(HARDWARE(u16*, OB_BASE), lob6, sizeof(lob), BankCtrlReg);
+            OptGuard = 0U; //disallow future writes (until next reset)
+        }
+
+        FLASH->CR &= ~CR_OPTWRE_SET;
+
+        //--- Moved from flash_ClosePartition()
+        // Lock and "load"
+        FLASH->CR  |= CR_LOCK_Set;
 #ifdef STM32F10X_XL
-    FLASH->CR2 |= CR_LOCK_Set;
+        FLASH->CR2 |= CR_LOCK_Set;
 #endif
-
-    rcc_disable_HSI();           // enable HSI for flash operations
+        rcc_disable_HSI();           //end enable HSI for flash operations
+    }
 
     return status;
 }
