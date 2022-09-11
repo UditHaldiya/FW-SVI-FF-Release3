@@ -84,7 +84,7 @@ extern u32 SUInv(u32 divisor);
 #define CLAMP(val, lo, hi) (((val)<(lo))?(lo):(((val)>(hi))?(hi):(val)))
 
 #define PRE_ROUND(x) (x) //! control/autotune bisbehave with rounding (non-monotonic response on P)
-//lint -emacro(506, PRE_ROUND) constant value Boolean - of course!
+// lint -emacro(506, PRE_ROUND) constant value Boolean - of course!
 //#define PRE_ROUND(x) ((x)+(((x)>=0.0)?0.5:-0.5)) //! ubiquitous compile-time conversion
 /* NOTE: There is no cast INTENTIONALLY so as to ensure (by Lint) that there is
 no implicit promotion
