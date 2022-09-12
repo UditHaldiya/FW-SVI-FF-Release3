@@ -13,11 +13,474 @@ demand.
 
      CPU: Any
 
+    $Revision: 356 $
     OWNER: JS
+    $Archive: /MNCB/Dev/LCX2AP/FIRMWARE/tasks/control/control.c $
+    $Date: 1/30/12 12:40p $
+    $Revision: 356 $
+    $Author: Arkkhasin $
 
     \ingroup poscontrol
 */
- 
+/* $History: control.c $
+ *
+ * *****************  Version 356  *****************
+ * User: Arkkhasin    Date: 1/30/12    Time: 12:40p
+ * Updated in $/MNCB/Dev/LCX2AP/FIRMWARE/tasks/control
+ * Removed control dependencies on loop signal and signal setpoint FBO
+ * TFS:8782
+ *
+ * *****************  Version 355  *****************
+ * User: Arkkhasin    Date: 12/07/11   Time: 1:04p
+ * Updated in $/MNCB/Dev/LCX2AP/FIRMWARE/tasks/control
+ * TFS:8204 - features for I/O channels
+ *
+ * *****************  Version 354  *****************
+ * User: Arkkhasin    Date: 11/29/11   Time: 3:07p
+ * Updated in $/MNCB/Dev/LCX2AP/FIRMWARE/tasks/control
+ * TFS:8313 Lint - dead code removal
+ *
+ * *****************  Version 353  *****************
+ * User: Arkkhasin    Date: 11/21/11   Time: 12:05a
+ * Updated in $/MNCB/Dev/LCX2AP/FIRMWARE/tasks/control
+ * TFS:8255 - centralized A/D channel processing
+ *
+ * *****************  Version 352  *****************
+ * User: Arkkhasin    Date: 11/17/11   Time: 11:10a
+ * Updated in $/MNCB/Dev/LCX2AP/FIRMWARE/tasks/control
+ * Corrected calc of m_n2Position (to be removed altogether when channel
+ * functions come in)
+ *
+ * *****************  Version 351  *****************
+ * User: Arkkhasin    Date: 11/15/11   Time: 7:12p
+ * Updated in $/MNCB/Dev/LCX2AP/FIRMWARE/tasks/control
+ * Preliminary check-in for
+ * TFS:8051 new tempcomp
+ * TFS:8202 decouple I/O subsystem
+ *
+ * *****************  Version 350  *****************
+ * User: Arkkhasin    Date: 11/04/11   Time: 7:41p
+ * Updated in $/MNCB/Dev/LCX2AP/FIRMWARE/tasks/control
+ * TFS:8072 NVMEM upgrade
+ *
+ * *****************  Version 348  *****************
+ * User: Arkkhasin    Date: 5/24/11    Time: 2:10p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:5874 - SP==threshold means in tight shutoff (and, correspondingly,
+ * out)
+ *
+ * *****************  Version 347  *****************
+ * User: Justin Shriver Date: 5/13/11    Time: 5:44p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:4923 Autotune Performance, New Interface
+ *
+ * *****************  Version 346  *****************
+ * User: Sergey Kruss Date: 5/12/11    Time: 2:10p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:6073 - removed function IsOvershooting(). Bit "Overshoot Present"
+ * is not analyzed anymore and shall always be set to 1.
+ *
+ * *****************  Version 345  *****************
+ * User: Sergey Kruss Date: 5/09/11    Time: 3:09p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:5392-Fixed defect: valve briefly jumps up before moving down, with
+ * large negative step of the SP (for example 95% to 5%).
+ *
+ * *****************  Version 344  *****************
+ * User: Sergey Kruss Date: 4/13/11    Time: 4:55p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:6073 -  fixed. Command 242,1 always returned zero value for
+ * "Overshooting".
+ *
+ * *****************  Version 343  *****************
+ * User: Justin Shriver Date: 3/21/11    Time: 7:41p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:5914
+ *
+ * *****************  Version 342  *****************
+ * User: Justin Shriver Date: 3/21/11    Time: 7:12p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:5912
+ * For control also TFS:5913
+ *
+ * *****************  Version 341  *****************
+ * User: Arkkhasin    Date: 3/11/11    Time: 2:46p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * Oops. THIS is the intended completion of TFS:5438 (moved the test of
+ * BiasExt to a non-time-critical place where it is used
+ *
+ * *****************  Version 340  *****************
+ * User: Arkkhasin    Date: 3/11/11    Time: 12:34p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * Conditionally relocated testIntegralState per code review of ver. 335.
+ * This intends to complete TFS:5438
+ *
+ * *****************  Version 339  *****************
+ * User: Anatoly Podpaly Date: 3/08/11    Time: 5:36p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * One more correction - remove init local var from the Diag var.
+ *
+ * *****************  Version 338  *****************
+ * User: Anatoly Podpaly Date: 3/08/11    Time: 11:16a
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:5819 -- introduced a local var CtlOutputValue.
+ *
+ * *****************  Version 337  *****************
+ * User: Anatoly Podpaly Date: 3/03/11    Time: 1:44p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:5791 -- replaced teh function call, do the limiting in sysio Write
+ * PWM function.
+ *
+ * *****************  Version 336  *****************
+ * User: Sergey Kruss Date: 3/02/11    Time: 12:19p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:5746 - CalcFreq is an erroneous term: it must be period of adding
+ * integral.
+ *
+ * *****************  Version 335  *****************
+ * User: Anatoly Podpaly Date: 2/25/11    Time: 6:59p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:5698 - finishing the resolution:
+ *
+ * -- Implement function to normalize non-PWM values when compared with
+ * PWMHighLimit (also involves sysio.c) -- resolved
+ * -- resolved -- Line 741 is wrong        if(ipcurr >=
+ * (s32)sysio_GetPWMHightLimit())
+ * -- resolved -- Line 750 is wrong and really hard to read
+ * -- resolved -- Line 2810 if (PIDOut >= sysio_GetPWMHightLimit())
+ * -- resolved -- 782 should be removed       if((PWMValue >=
+ * MIN_DA_VALUE) && (PWMValue <= MAX_DA_VALUE))
+ * -- resolved-- 710 commented out remove
+ * -- resolved -- 743 commented out remove
+ *
+ * *****************  Version 334  *****************
+ * User: Arkkhasin    Date: 2/25/11    Time: 3:36p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:5438 Step 7. Removed orphaned code (BiasAvg is gone from NVMEM,
+ * too)
+ * Also, restored testing of BiasExt
+ *
+ * *****************  Version 333  *****************
+ * User: Arkkhasin    Date: 2/24/11    Time: 6:57p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:5438 Step 6. Critical bias components are protected continuously;
+ * the integrity test is interleaved with integral control
+ *
+ * *****************  Version 332  *****************
+ * User: Arkkhasin    Date: 2/24/11    Time: 5:23p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:5438 Step 5. Critical bias components are protected continuously;
+ * the rest of previosly protected states are protected condionally based
+ * on compile-time switch. In the checked-in version, they are protected.
+ * In the process of realigning the variables, bias save implementation
+ * revisited.
+ *
+ * *****************  Version 331  *****************
+ * User: Anatoly Podpaly Date: 2/23/11    Time: 3:39p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:5698 -- partial resolution:
+ * -- Added checksumming of the structure inside the critical section
+ * -- Added buffer variable for PWM High Limits.
+ *
+ * *****************  Version 330  *****************
+ * User: Anatoly Podpaly Date: 2/17/11    Time: 3:26p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:5607 -- added Doxy comments.
+ *
+ * *****************  Version 329  *****************
+ * User: Anatoly Podpaly Date: 2/17/11    Time: 3:22p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:5607 -- moved Low Power handling code to SYSIO layer.
+ *
+ * *****************  Version 328  *****************
+ * User: Arkkhasin    Date: 2/14/11    Time: 10:46a
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:5438 Step 4 - checksummed control state, bias data and jiggle test
+ * state. Still unprotected while control is running. (.stratup moved to
+ * jiggle state)
+ *
+ * *****************  Version 327  *****************
+ * User: Arkkhasin    Date: 2/11/11    Time: 11:15p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:5276 Added clearing of FAULT_BIAS_OUT_OF_RANGE in cycle context (to
+ * minimize upsetting the system timing)
+ *
+ *
+ * *****************  Version 326  *****************
+ * User: Arkkhasin    Date: 2/10/11    Time: 7:42p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:5438 (step 3). Took preliminary stock of static variables;
+ * encapsulated state variables in structs.
+ *
+ * *****************  Version 325  *****************
+ * User: Arkkhasin    Date: 2/09/11    Time: 4:13p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * Null cleanup FBO TFS:5438 (step 2): removed unused m_n2Pos_peak,
+ * m_n2Pos_valley, BiasChangeFlag_p, nPosTrend, count_lim. Compiler
+ * removed them anyway.
+ *
+ * *****************  Version 324  *****************
+ * User: Arkkhasin    Date: 2/09/11    Time: 3:08p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * Null cleanup FBO TFS:5438 (step 1)
+ *
+ * *****************  Version 323  *****************
+ * User: Anatoly Podpaly Date: 2/04/11    Time: 1:51p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:5024 -- Incoporated H/W parameters from Ernie. Added new file to
+ * project-specific Includes (iplimit.h).
+ *
+ * *****************  Version 322  *****************
+ * User: Arkkhasin    Date: 2/03/11    Time: 7:05p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:5518 Setpoint used for tight sutoff is range-limited but not
+ * rate-limited
+ *
+ * *****************  Version 321  *****************
+ * User: Arkkhasin    Date: 1/05/11    Time: 12:46a
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:4430 purity annotation. No code change.
+ *
+ * *****************  Version 320  *****************
+ * User: Sergey Kruss Date: 11/19/10   Time: 12:01p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:4761--Final checkin for command 242,2
+ *
+ * *****************  Version 319  *****************
+ * User: Sergey Kruss Date: 11/17/10   Time: 4:21p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:4761--Intermediate checkin.
+ * Added command 242,2 for observing position propagation through all
+ * transformations from A/D converter.
+ *
+ * *****************  Version 318  *****************
+ * User: Arkkhasin    Date: 11/10/10   Time: 3:58p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:4659,4676,4680. Use consistent (user) setpoint - before range and
+ * rate limits and jiggle test excitation - to manage tight shutoff events
+ *
+ * *****************  Version 317  *****************
+ * User: Arkkhasin    Date: 11/09/10   Time: 4:46p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:4206 kill debug.h
+ *
+ * *****************  Version 316  *****************
+ * User: Sergey Kruss Date: 10/29/10   Time: 2:40p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:4011
+ * Fixed incorrect PosComp scaling for ATC. Moved scaling to SP.
+ *
+ * *****************  Version 315  *****************
+ * User: Arkkhasin    Date: 10/22/10   Time: 4:04p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:4395 - regularized time to exit tight shutoff in presence of rate
+ * limits
+ *
+ * *****************  Version 314  *****************
+ * User: Arkkhasin    Date: 10/22/10   Time: 2:51a
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:4206 fix - Step 2: (a, also TFS:2514) checksums in rate limits
+ * stuff which moved to ctllimits.c (b) removed /some/ compiled-out code
+ * (c, FOB TFS:2616) rate limits can be reset to any setpoint
+ *
+ *
+ * *****************  Version 313  *****************
+ * User: Arkkhasin    Date: 10/21/10   Time: 5:26p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:4206 fix - Step 1: Removed unused (and confusing) mode
+ * CONTROL_MANUAL_SIG.
+ *
+ * *****************  Version 312  *****************
+ * User: Arkkhasin    Date: 10/21/10   Time: 12:03p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * A wrapper for pressure sensors availability (TFS:3548)
+ *
+ * *****************  Version 311  *****************
+ * User: Arkkhasin    Date: 10/06/10   Time: 9:43p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:4128 Dismantling io.{c,h}
+ * -cnfg_SetSwitchIP
+ *
+ * *****************  Version 310  *****************
+ * User: Sergey Kruss Date: 10/05/10   Time: 3:54p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:4233 Corrected for code review of 10/04/2010
+ *
+ * *****************  Version 309  *****************
+ * User: Justin Shriver Date: 10/04/10   Time: 9:22p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:3401 Update for I=0
+ *
+ * *****************  Version 308  *****************
+ * User: Sergey Kruss Date: 10/01/10   Time: 11:53a
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:4226. Changed Cotnrol Output related variables to less misleading.
+ *
+ * *****************  Version 307  *****************
+ * User: Sergey Kruss Date: 9/24/10    Time: 10:14a
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:4180
+ * Fixed some  types in cmd-242
+ *
+ * *****************  Version 306  *****************
+ * User: Sergey Kruss Date: 9/13/10    Time: 11:41a
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * Modified for code review 9/07/2010. See TFS: 4108.
+ *
+ * *****************  Version 305  *****************
+ * User: Sergey Kruss Date: 9/02/10    Time: 10:56a
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:4062
+ * Moved "CLAMP" pound-define to numutils.h from control.c
+ *
+ * *****************  Version 304  *****************
+ * User: Arkkhasin    Date: 9/02/10    Time: 1:50a
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * Lint (indentation)
+ *
+ * *****************  Version 303  *****************
+ * User: Sergey Kruss Date: 9/01/10    Time: 11:46a
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:4037 fixed.
+ *
+ * *****************  Version 302  *****************
+ * User: Sergey Kruss Date: 9/01/10    Time: 10:35a
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:4015 and Code Review2.3.4
+ * - Moved PWM scaling to sysio.c
+ * - Introduced a wrapper function "bios_WritePwm()" around
+ * "bios_WritePwm()"
+ * -Scale PWM contingent on the state of the control
+ *
+ * *****************  Version 301  *****************
+ * User: Sergey Kruss Date: 8/07/10    Time: 3:16p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:3520, TFS:3596 -- Separate terms P and D and add Boost term
+ *
+ * *****************  Version 300  *****************
+ * User: Justin Shriver Date: 7/30/10    Time: 5:16p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:3686
+ *
+ * *****************  Version 299  *****************
+ * User: Justin Shriver Date: 7/30/10    Time: 4:49p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:3683 Change parameter name
+ *
+ * *****************  Version 298  *****************
+ * User: Justin Shriver Date: 7/30/10    Time: 4:32p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:3681
+ *
+ * *****************  Version 297  *****************
+ * User: Justin Shriver Date: 7/30/10    Time: 4:04p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * TFS:3680
+ *
+ * *****************  Version 295  *****************
+ * User: Arkkhasin    Date: 7/19/10    Time: 7:34p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * Brought setpoint limiting **and nothing else** to the level of
+ * $/MNCB/Dev/AP_Release_3.1.x/FIRMWARE/tasks/control/control.c,285
+ *
+ * *****************  Version 294  *****************
+ * User: Sergey Kruss Date: 7/19/10    Time: 10:13a
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * Made variable m_extAnalysPar "static" to passify Lint.
+ *
+ * *****************  Version 293  *****************
+ * User: Sergey Kruss Date: 7/13/10    Time: 9:28a
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * Bug 3527: removed dependency of displaying Pilot Pressure by command
+ * 242 on the selected option of FW.
+ *
+ * *****************  Version 292  *****************
+ * User: Sergey Kruss Date: 7/12/10    Time: 4:20p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * Implemented command 242.
+ * Known remaining problem: D-component is not yet separated from
+ * P-component.
+ *
+ * *****************  Version 291  *****************
+ * User: Sergey Kruss Date: 6/29/10    Time: 4:14p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * Intermediate check-in to allow the FW to build with changes to cmd-242.
+ *
+ * *****************  Version 290  *****************
+ * User: Sergey Kruss Date: 6/10/10    Time: 3:10p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * Bug 3315:
+ * Integer Open Stop Adjustment made a member of static structure of the
+ * type ComputedPositionStop_t.
+ * Changes made to scaling of PosComp and PIDerror in the control code.
+ *
+ * *****************  Version 289  *****************
+ * User: Arkkhasin    Date: 5/13/10    Time: 6:49p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * Lint: m_Integral made static in debug build, too
+ *
+ * *****************  Version 288  *****************
+ * User: Sergey Kruss Date: 5/12/10    Time: 4:42p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * -Added PID error compensation for Open Stop Adjustment.
+ *
+ * *****************  Version 287  *****************
+ * User: Sergey Kruss Date: 5/01/10    Time: 3:29p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * SK
+ * - Added PosComp adjustment for Open Stop adjustment.
+ * - Removed internal diag HART commands 129
+ * - Wrote internal diag HART command 242
+ *
+ * *****************  Version 286  *****************
+ * User: Arkkhasin    Date: 3/27/10    Time: 7:14a
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * charact_CharacterizationTableLookup() no longer takes Characterization
+ * as a parameter
+ * charact_HallCharacterization() is now separate from signal
+ * characterization lookup
+ *
+ * *****************  Version 285  *****************
+ * User: Arkkhasin    Date: 3/24/10    Time: 1:54p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * Corrected a comparison to single-acting in boost reduction
+ *
+ * *****************  Version 284  *****************
+ * User: Anatoly Podpaly Date: 3/19/10    Time: 5:48p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * Code review: remove LED periodic updates.
+ *
+ * *****************  Version 283  *****************
+ * User: Arkkhasin    Date: 3/09/10    Time: 1:04a
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * Changed over to use aggregated PneumaticParams
+ * Also uses API for pressure sensor fault by pressure index (may be
+ * short-lived)
+ *
+ * *****************  Version 282  *****************
+ * User: Arkkhasin    Date: 2/25/10    Time: 12:46a
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * Changed over to centralized control limits
+ *
+ * *****************  Version 281  *****************
+ * User: Anatoly Podpaly Date: 2/08/10    Time: 7:15p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * LCX development - moved teh update LED function c all to here from
+ * cycle task - to provide finer time resolution.
+ *
+ * *****************  Version 280  *****************
+ * User: Anatoly Podpaly Date: 2/01/10    Time: 6:25p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/tasks/control
+ * LINT correction - indendation.
+ *
+ * *****************  Version 278  *****************
+ * User: Arkkhasin    Date: 1/28/10    Time: 7:16p
+ * Updated in $/MNCB/Dev/AP_Release_3.1.x/FIRMWARE/tasks/control
+ * File header standardized
+ * Implementation of setpoint rate limits reset fixed (vs. ver 276, too)
+ * Rate limits reset occurs now while not in closed-loop control for
+ * *whatever* reason
+*/
 #include "mnwrap.h"
 #include "oswrap.h"
 #include "reset.h"
@@ -47,20 +510,14 @@ demand.
 #include "errlimits.h"
 #include "cutoff.h"
 
-#define USE_VALVE_MOVE_ESTIMATE 1 //or 0 - used for saving bias but looks obsolete, except for jiggle test cancel
-#define USE_BIAS_TEMPR_ADJ_T_LOW_T_HIGH 1 //1 - as in David's initialization, 0 - as in David's save
 //TFS:8333
 #include "pressmon_act_hw.h"
 //#include "pressmon_pilot_hw.h"
 //END TFS:8333
 
-#if USE_BIAS_TEMPR_ADJ_T_LOW_T_HIGH
 #define T_LOW  -20             /* temperature low -20 degree C */
 #define T_HIGH  70             /* temperature high 70 degree C */
-#endif
-#if USE_VALVE_MOVE_ESTIMATE
 #define POS_SHIFT   40
-#endif
 //Checksum protection policy
 #define CONTROL_CONTROL_STATE 0x01U //Test the whole control state
 #define CONTROL_INCONTROL_TEST 0x02U //Test the jiggle test state
@@ -88,6 +545,7 @@ typedef struct ControlState_t
     s32 LastComputedPosComp; //=0;
     pos_t m_n2CSigPos_p;               // m_n2CSigPos delayed 1 cycle for set-point delta
     u16 start_count;    /// ep: startup count 0, 1... 65000;
+    //u16 stay_count;     /// ep: stay_count: how long at curr pos 0..65000
     bool_t Integral_Previously_Limited; // = false;
     bool_t m_bActuatorAtLim;         // true indicates integral windup to [actuator pressure] limit
     s16 m_n2Erf1;
@@ -122,10 +580,9 @@ typedef struct InControlTest_t
     bool_t m_bOKtoSave;         //!< "in control" detector succeeds - ok to transfer integral to bias; could be a return code
     bool_t m_bSaveBias;         //!<  "in control" detector succeeds - delayed request to save [base]bias in NVM
     bool_t m_bProbeActive;          //!< true when "in control" detector is active
-#if 0
-    /*TFS:8814 "Remove jiggle test at startup" */
+    /*TFS:8814 "Remove jiggle test at startup"
     bool_t startup; // = true;      //!< true means force "in control" detector regardless of integral magnitude
-#endif //0
+    */
     u16 BiasAvgAtBase;
     s16 m_n2SPOffset;               //!< amount to jiggle the valve for "in control" detection
     u16 timeKtr; // = 0;
@@ -159,6 +616,7 @@ typedef struct ctlExtData_t
     const ComputedPositionConf_t* m_pCPS; //AK+
     /* const DASignalLimits_t* m_pDASignalLimits; */
     const ErrorLimits_t*  m_pComputedErrorLimits; //AK+
+    //const ComputedSignalData_t* m_pComputedSignalData;   //AK+
     const CtlLimits_t *ControlLimits; //AK: Not needed in the trunk
     const PneumaticParams_t *pPneumaticParams; //AK: all about pneumatic relay and sensors
     u16 OutputLim;
@@ -173,6 +631,8 @@ static BiasData_t m_NVMEMBiasData;   /// AK:NOTE: This is NEVER tested except wh
 This is solved in later versions of device mode.
 */
 static ctlmode_t  m_n1ControlMode; // - the mode of the control routine
+//static s32 Atomic_ m_n4ManualPos;         /* manual valve position in 0 to 16384 count - check must be done versus ATO/ATC */
+
 
 //Continuous diagnostice only - not critical
 static s16 m_nTravelAccum;
@@ -310,7 +770,8 @@ static void IPCurrent_StoreAndOutput(s32 ipcurr, u16 OutputLim)
     if (m_n1ControlMode==CONTROL_OFF)
     {
         // if control mode is CONTROL_OFF, don't change - keep the previous output
-        //Set by control_SetPWM() NOT m_CtlOutputValue = 0u;              // Set Diag Variable
+        // what is the correct action in this mode??
+        m_CtlOutputValue = 0u;              // Set Diag Variable
     }
     else
     {
@@ -374,13 +835,13 @@ static void IPCurrent_StoreAndOutput(s32 ipcurr, u16 OutputLim)
     \param[in] u16_least PWMValue:  the input is used to produce the output PWMValue
                  in CONTROL_OFF mode, which is the mode for directly set the output to D/A.
 */
-void control_SetPWM(Bias_t PWMValue)
+void control_SetPWM(u16_least PWMValue)
 {
     //this should only be called open loop with control off
     if(m_n1ControlMode == CONTROL_OFF)
     {
         (void)sysio_WritePwm((s32)(u16)PWMValue, PWMNORMALIZED);
-        m_CtlOutputValue = PWMValue;
+        //m_CtlOutputValue = (u16)PWMValue;
     }
 }
 /* -------------------------------------------------------- */
@@ -451,7 +912,7 @@ void control_GetControlMode(ctlmode_t* pn1ControlMode, s32* pn4Setpoint)
     parameters description:
     \param[out] s16 LastComputedPosComp: return the value of current BIAS
 */
-Bias_t control_GetBias(void)
+u16 control_GetBias(void)
 {
     return ((u16)((s32)cstate.LastComputedPosComp+(s32)m_BiasData.BIAS));
 }
@@ -820,6 +1281,7 @@ static void airloss_handle(const ctlExtData_t *data)
 // AK: Future: Would fuzzy logic be better than boolean logic here?
 // DZ: Very well be.
 
+// AK:NOTE: m_bValveMove == (stay_count!=0). Could be a #define or eliminated altogether
 
     //compute estimate of noise in position units
     nPosShift = (s16)POS_SHIFT + (s16)(15u*(UINT16_MAX/((u32)m_n2PosRange)));
@@ -867,8 +1329,10 @@ static void airloss_handle(const ctlExtData_t *data)
         (ABS(m_PosErr.err4-m_PosErr.err) < PT3_PCT_49)
       && (cstate.BiasChangeFlag != AIR_LOLO_3) )
     {
+/// AK:Q: Are STAY_COUNT_LOW, STAY_COUNT_HIGH absolute counts of control cycles or time values measured in control cycles?
 ///       What's their meaning and intention?
 // DZ: counts; a way to detect how long valve is not moving much.
+        //STAY_COUNT_HIGH = 900
 
         if ( ictest.m_bOKtoSave) /// AK:NOTE "5" is now 0.03% STD.
         {
@@ -1411,7 +1875,7 @@ static bool_t isOutputAtLimit(const ctlExtData_t *data)
 #define LAST_INTEGRAL_STATUS_BIT  8
 
 /**
-     DZ: 8/22/06
+    // DZ: 8/22/06
     \brief  This function is internally called to determine if integral control should apply.
     If integral control should apply, m_bIControl = true; otherwise m_bIControl = false.
 
@@ -1539,7 +2003,7 @@ static void IsIControl(const ctlExtData_t *data)
 }
 
 /**
-     DZ: 8/22/06
+    // DZ: 8/22/06
     \brief This function is internally called to calculate proportional control.
      In addition to proportional control, boost parameter is used to add additonal
      output to improve response near the steady state.
@@ -1706,7 +2170,6 @@ static s32 Proportional_Control(const ctlExtData_t *data)
     }
     else // for MISRA
     {
-        //Don't modify
     }
 
     // if the actual error is small (< .2 %) and the gain factor is above P_MID_CON
@@ -1840,7 +2303,7 @@ static s32 Proportional_Control(const ctlExtData_t *data)
 }
 
 /*
-     DZ: 8/22/06
+    // DZ: 8/22/06
     \brief This function is internally called to set position error flag FAULT_POSITION_ERROR.
      If the option is selected and if position error exceeds user configured limit for
      user specified time T1, the flag will set.  After the flag is set, if position error
@@ -1926,12 +2389,12 @@ static void control_SetPositionErrorFlag(const ctlExtData_t *data)
         if(cstate.nErrorCount > (data->m_pComputedErrorLimits->PositionTime1 + nDiff) )
         {
 
-            error_SetFault(FAULT_POSITION_ERROR);          /* set warning fault */
+            error_SetFault(FAULT_POSITION_ERROR); //         /* set warning fault */
             /*
             if( (data->m_pComputedErrorLimits->bPosErr2Enable == 1) &&
                 (nErrorCount > (data->m_pComputedErrorLimits->nPositionTime2+nDiff )) )
             {
-                error_SetFault(FAULT_POSITION_ERROR_FAIL);
+                error_SetFault(FAULT_POSITION_ERROR_FAIL); //
                 nErrorCount = 0;
             } */
         }
@@ -1945,7 +2408,7 @@ static void control_SetPositionErrorFlag(const ctlExtData_t *data)
 
 
 /**
-     DZ: 8/22/06
+    // DZ: 8/22/06
     \brief This function is internally called to calculate integral control when m_bIControl is set.
      The integral control is nonlinear.  Less integral control for low temperature.
      Note: This function is not called if the valve is considered to be moving
@@ -2042,7 +2505,6 @@ static void Integral_Control(const ctlExtData_t *data)
     }
     else  // for MISRA
     {
-        //Don't modify
     }
 
     // if interval elapsed, calculate integral action
@@ -2146,7 +2608,6 @@ static void Integral_Control(const ctlExtData_t *data)
             }
             else
             {
-                //Don't modify
             }
 
             // make sure the integral increment amount is not too big
@@ -2226,7 +2687,6 @@ static void Integral_Control(const ctlExtData_t *data)
                 }
                 else
                 {
-                    //don't adjust
                 }
             }
 
@@ -2288,7 +2748,7 @@ static void Integral_Control(const ctlExtData_t *data)
 }
 
 /**
-     DZ: 8/22/06
+    // DZ: 8/22/06
     \brief This function is internally called each cycle to prepare for control. This is called before
       control_PID(data) is called
      When the counter start_count == 0, manual setpoint m_n4ManualPos is initialized to valve position.
@@ -2352,7 +2812,7 @@ static void control_Prepare(const ctlExtData_t *data)
 /* -------------------------------------------------------- */
 
 /**
-     DZ: 8/22/06
+    // DZ: 8/22/06
     \brief This function is internally called to update the time counter for Time closed,
      time open, time near closed counters, part of continuous diagnosis data.
 
@@ -2429,7 +2889,7 @@ static void increments(s16 nGap)
 }
 
 /**
-     DZ: 8/22/06
+    // DZ: 8/22/06
     \brief This function is externally called to update valve continuous diagnosis data.
     It accumulates data for valve travel (strokes), cycles, Time closed,
      time open, time near closed counters.
@@ -2498,7 +2958,7 @@ void control_ContinuousDiagnostics(void)
 }
 
 /**
-     DZ: 8/22/06
+    // DZ: 8/22/06
     \brief This function is externally called to get valve continuous diagnostic data.
     It returns a pointer to the m_ContinuousDiagnostics structure.
      *pContinuousDiagnositcs = m_ContinuousDiagnostics;
@@ -2511,7 +2971,7 @@ const ContinuousDiagnostics_t* posmon_GetContinuousDiagnostics(ContinuousDiagnos
 
 
 /**
-    DZ: 8/22/06
+    // DZ: 8/22/06
     \brief This function is externally called to initialize data for valve continuous diagnosis.
 */
 static void control_InitContinuousDiagnostics(void)
@@ -2551,7 +3011,7 @@ ErrorCode_t posmon_SetContinuousDiagnostics(const ContinuousDiagnostics_t *src)
 
 #ifdef OLD_NVRAM
 /**
-     DZ: 8/22/06
+    // DZ: 8/22/06
     \brief This function is externally called to save valve continuous diagnosis data in RAM to NVRAM.
 */
 static void  control_SaveContinuousDiagnostics(void)
@@ -2567,7 +3027,7 @@ static void  control_SaveContinuousDiagnostics(void)
 #endif //OLD_NVRAM
 
 /**
-     DZ: 8/22/06
+    // DZ: 8/22/06
     \brief This function is externally called to get valve position errors.
     Used by atune.c
 */
@@ -2577,7 +3037,7 @@ const PosErr_t*  control_GetPosErr(void)
 }
 
 /**
-     DZ: 8/22/06
+    // DZ: 8/22/06
     \breif This function is externally called to check if bias is shifted.
     If bias shift exceeds a predefined limit, bias will be saved in NVRAM.
 */
@@ -2704,6 +3164,7 @@ static void control_PostInit(const ctlExtData_t *data)
 
     ictest.BiasAvgAtBase = m_BiasData.BIAS;
     PIDOut = ictest.BiasAvgAtBase;
+    // BiasRemainder = 0;  /* fist order lag for svi_uiBIAS_Historic regarding BIAS change */
     cstate.BiasChangeFlag = 0;
     // finished adjusting the bias
 
@@ -2724,7 +3185,7 @@ static void control_PostInit(const ctlExtData_t *data)
 
 #ifdef OLD_NVRAM
 /**
-     DZ: 8/22/06
+    // DZ: 8/22/06
     \brief This function is externally called to initialized data for control.
      If Type == INIT_FROM_NVRAM, relevant data are copied from NVRAM to RAM.
      else if Type == INIT_TO_DEFAULT, data are initialized to default values
@@ -2778,7 +3239,7 @@ const BiasData_t *control_GetNVMEMBiasData(BiasData_t* dst)
 
 //Was control_SetBiasData removed at ver. 194; resurrecting.
 /**
-     DZ: 8/22/06
+    // DZ: 8/22/06
     \brief This function is externally called to set bias data and write to NVRAM.
      parameters description:
 
@@ -2818,7 +3279,7 @@ ErrorCode_t control_SetNVMEMBiasData(const BiasData_t* pBiasData)
 }
 
 /**
-     DZ: 8/22/06
+    // DZ: 8/22/06
     \brief This function is externally called to return a pointer to m_BiasExt.
 
     return BiasExt_t * pointer to extra bias data structure
@@ -2829,7 +3290,7 @@ const BiasExt_t* control_GetFillBiasExt(BiasExt_t *dst)
 }
 
 /*
-     DZ: 8/22/06
+    // DZ: 8/22/06
     \brief This function is externally called to set extra bias data and write it to NVRAM.
 
     \param[in] BiasExt_t* pBiasExt: the pointer to extra bias data structure
@@ -2867,7 +3328,6 @@ static const ctlExtData_t *control_PopulateData(ctlExtData_t *data)
     data->m_pComputedErrorLimits = pos_GetErrorLimits(NULL);
     return data;
 }
-
 /** \brief Finish initialization of all state variables
 */
 void control_FirstRun(void)
@@ -2881,7 +3341,7 @@ void control_FirstRun(void)
 }
 
 /**
-     DZ: 8/22/06
+    // DZ: 8/22/06
     \brief This function is main function and externally called to run control.
      It gets raw data of signal, which is then temperature compensated and converted
     to the standard range.
@@ -2973,7 +3433,7 @@ void control_Control(void)
     but becomes different in SVi1000 with PWM normalization
     \return the control output
 */
-Bias_t control_GetControlOutput(void)
+u16 control_GetControlOutput(void)
 {
 
     //m_CtlOutputValue
@@ -3082,7 +3542,7 @@ void control_FillExtAnalysParams(ExtAnalysParams_t *extAnalysPar)
     GetMinMaxErr(&extAnalysPar->MinErr, &extAnalysPar->MaxErr); //min/max error of 8 historic errors and current err
 
     /** TFS:4016 **/  /** TFS:4226 */
-    extAnalysPar->CtlOutput = m_CtlOutputValue;               //u16: Control prog calculated (not normalized) PWM value
+    extAnalysPar->CtlOutput = (u16)m_CtlOutputValue;               //u16: Control prog calculated (not normalized) PWM value
     extAnalysPar->AvgErr = ictest.avgErr;                        //s16:
     extAnalysPar->PosComp = (u16)cstate.LastComputedPosComp;     //u16: PosComp
     //TFS:3520, TFS:3596 -- separate terms P, D and Boost

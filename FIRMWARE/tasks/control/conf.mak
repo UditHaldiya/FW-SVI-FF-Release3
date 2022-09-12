@@ -1,6 +1,6 @@
 #tasks/control
 #SOURCE, if defined, is a space-separated list of the sources in this directory
-SOURCE:=atune.c control.c ctllimits.c pneumatics.c errlimits.c cutoff.c
+SOURCE:=atune-52598.c control-52598.c ctllimits.c pneumatics.c errlimits.c cutoff.c
 
 #This is temporary; soon various projects will get their pidselect_$(PROJ).c or such
 SOURCE+=pidselect.c

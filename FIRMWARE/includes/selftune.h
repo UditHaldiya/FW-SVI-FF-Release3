@@ -24,6 +24,7 @@ demand.
 #include "position.h"
 #include <process.h>
 
+#if 0
 // -------------- tune options ---------------------
 enum
 {
@@ -44,6 +45,7 @@ enum
      Apply_nY_min_fix = 14, //Fix like in ESD. AP will always go to the end
      Include_P_and_D_in_bias = 15 //AP doesn't have it, contrary to Ernie's caution of ESD time
 } ;
+#endif
 
 typedef struct TuneOptions_t
 {

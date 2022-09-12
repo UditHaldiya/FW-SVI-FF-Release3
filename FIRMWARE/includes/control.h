@@ -65,7 +65,7 @@ typedef struct ContinuousDiagnostics_t
     CHECKFIELD;
 } ContinuousDiagnostics_t;
 
-typedef s32 Bias_t; //Control output type before output normalization
+//typedef s32 Bias_t; //Control output type before output normalization
 
 void control_CheckSaveBias(void);
 void control_ContinuousDiagnostics(void);
@@ -73,7 +73,8 @@ void control_ContinuousDiagnostics(void);
 
 void control_GetControlMode(ctlmode_t* pn1ControlMode, s32* pn4Setpoint);
 void control_GetSetpointPosition(s32* pn4Setpoint , s32* pn4Position);
-Bias_t control_GetBias(void);
+u16 control_GetBias(void);
+//Bias_t control_GetBias(void);
 
 pos_t control_GetPosition(void);
 
@@ -127,13 +128,14 @@ void  control_SaveControlDiagData(void);
 
 #define OUT_LOW_LIMIT 3000u
 #define OUT_HIGH_LIMIT 65000u
-#define BIAS_LOW_LIMIT 8000
-#define BIAS_HIGH_LIMIT 45000
-#define BIAS_ALARM_LOW_LIMIT 10000
-#define BIAS_ALARM_HIGH_LIMIT 35000
+#define BIAS_LOW_LIMIT 8000u
+#define BIAS_HIGH_LIMIT 45000u
+#define BIAS_ALARM_LOW_LIMIT 10000u
+#define BIAS_ALARM_HIGH_LIMIT 35000u
 
 /* guarded output  */
-extern void control_SetPWM(Bias_t PWMValue);
+extern void control_SetPWM(u16_least PWMValue);
+//extern void control_SetPWM(Bias_t PWMValue);
 
 #define MIN_EFFECTIVE_SETPOINT_FP (-50.0)
 #define MIN_EFFECTIVE_SETPOINT INT_PERCENT_OF_RANGE(MIN_EFFECTIVE_SETPOINT_FP)
@@ -146,7 +148,8 @@ extern void control_SetPWM(Bias_t PWMValue);
 #define JIGGLE_AMOUNT               INT_PERCENT_OF_RANGE(JIGGLE_AMOUNT_FP) //! amount to move alter the setpoint
 
 
-extern Bias_t control_GetControlOutput(void);
+extern u16 control_GetControlOutput(void);
+//extern Bias_t control_GetControlOutput(void);
 
 extern ErrorCode_t control_IsLimited(void);
 
