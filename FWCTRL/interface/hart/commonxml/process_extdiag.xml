@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<HART Version="1.0">
+  <Include></Include>
+  <Commands>
+    <Command CmdNum="190" SubCmdOnly="1">
+      <SubCommands>
+        <Command Name="Extended Actuator Diagnostics" CmdNum="2" CmdType="Process" AllowedModes="HC_ALLOWED_MODE_OOS" CmdFlags="HC_PROCESS_COMMAND">
+          <RequestParams>
+            <Param>Start Position</Param>
+            <Param>End Position</Param>
+            <Param>Setpoint Ramp Speed</Param>
+            <Param>Diag Direction</Param>
+            <Param>Diag Control Option</Param>
+          </RequestParams>
+        </Command>
+        <Command Name="Save Diagnostic Signature" CmdNum="20" CmdType="Process" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_PROCESS_COMMAND">
+          <RequestParams>
+            <Param>Signature Type</Param>
+            <Param>Signature Assignment</Param>
+          </RequestParams>
+        </Command>
+        <Command Name="Read Diagnostic Signature Into Diagnostic Buffer" CmdNum="21" CmdType="Process" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_PROCESS_COMMAND">
+          <RequestParams>
+            <Param>Signature Type</Param>
+            <Param>Signature Assignment</Param>
+            <Param>File Version</Param>
+            <Param>Buffer Id</Param>
+          </RequestParams>
+        </Command>
+      </SubCommands>
+    </Command>
+  </Commands>
+  <Variables>
+    <Variable Name="Diag Control Option" DataType="H_UCHAR" Description="Open or closed loop">
+      <EnumValues v0="HC_DIAGCTL_OPENLOOP" v1="HC_DIAGCTL_CLOSEDLOOP" />
+    </Variable>
+    <Variable Name="Signature Type" DataType="H_UCHAR" Description="(For future expansion)">
+      <EnumValues v0="HC_DIAGRW_EXT_SIGNATURE" />
+    </Variable>
+    <Variable Name="Signature Assignment" DataType="H_UCHAR" Description="Save As... parameter">
+      <EnumValues v0="HC_DIAGRW_CURRENT" v1="HC_DIAGRW_BASELINE" v2="HC_DIAGRW_USER" />
+    </Variable>
+  </Variables>
+  <Structs></Structs>
+</HART>

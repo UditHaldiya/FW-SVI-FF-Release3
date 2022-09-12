@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<HART Version="1.0">
+  <Include></Include>
+  <XCommands>
+    <SubCmdOnly CmdNum="129">
+      <SubCommands></SubCommands>
+    </SubCmdOnly>
+    <SubCmdOnly CmdNum="130">
+      <SubCommands></SubCommands>
+    </SubCmdOnly>
+    <SubCmdOnly CmdNum="170">
+      <SubCommands></SubCommands>
+    </SubCmdOnly>
+    <SubCmdOnly CmdNum="171">
+      <SubCommands></SubCommands>
+    </SubCmdOnly>
+  </XCommands>
+  <Variables></Variables>
+  <Structs></Structs>
+</HART>

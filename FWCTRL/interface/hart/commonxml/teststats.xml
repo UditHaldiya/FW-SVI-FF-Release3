@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--    $Archive: /MNCB/Dev/FIRMWARE/mn_instrum/profiler/instrum.xml $
+    $Date: 2/18/11 4:16p $
+    $Revision: 2 $
+    $Author: Arkkhasin $
+
+-->
+<HART Version="1.0">
+  <Include></Include>
+  <Commands>
+    <Command CmdNum="129" SubCmdOnly="1">
+      <SubCommands>
+        <Command Name="Read Selftest Stats" CmdNum="254" CmdType="Read" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_READ_COMMAND" Description="Read free CPU time and ticks spent in various places">
+          <ResponseParams>
+            <Param>Free CPU time</Param>
+            <Param>Shortest flash test</Param>
+            <Param>Longest flash test</Param>
+            <Param>Shortest NVMEM test</Param>
+            <Param>Longest NVMEM test</Param>
+          </ResponseParams>
+        </Command>
+      </SubCommands>
+    </Command>
+  </Commands>
+  <Variables>
+    <Variable Name="Free CPU time" DataType="H_UCHAR" Description="Rough estimate in %" />
+    <Variable Name="Shortest flash test" DataType="H_UINT4" Description="In CPU clock ticks"></Variable>
+    <Variable Name="Longest flash test" DataType="H_UINT4" Description="In CPU clock ticks"></Variable>
+    <Variable Name="Shortest NVMEM test" DataType="H_UINT4" Description="In CPU clock ticks"></Variable>
+    <Variable Name="Longest NVMEM test" DataType="H_UINT4" Description="In CPU clock ticks"></Variable>
+  </Variables>
+</HART>
