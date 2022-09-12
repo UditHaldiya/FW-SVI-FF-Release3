@@ -99,6 +99,7 @@ SUBMODULES+=temprmncb_1-0.mak,55618 \
     lcduiio_4-0.mak,77268
 
 #Tempcomp engine
+MOD_OVERRIDE+=tempcomp.c
 SUBMODULES+=tempcomp_2-0.mak,54722
 
 #Floating point
