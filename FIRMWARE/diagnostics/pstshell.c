@@ -484,7 +484,9 @@ void pst_PSTScheduler(void)
     Struct_Test(pst_abort_t, &pst_abort);
     s32 pst_sp = pst_abort.setpoint;
 
-    if(process_GetProcId() == PROC_DIAG_PARTIAL_STROKE_TEST)
+    //Now we abort PST on deviations only in AUTO mode
+    u8 xmode = digsp_GetExternalMode();
+    if( (process_GetProcId() == PROC_DIAG_PARTIAL_STROKE_TEST) && (xmode == IPC_MODE_AUTO))
     {
         const PSTConf_t *conf = diag_GetPstData(NULL);
         bool_t need_cancel = false;
