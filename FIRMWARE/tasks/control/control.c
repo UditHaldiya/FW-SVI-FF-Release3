@@ -82,6 +82,12 @@ demand.
 /** private defines */
 
 /* -------------------------------------------------------- */
+typedef s32 Bias_t;
+#define BIAS_LOW_LIMIT_ ((Bias_t)BIAS_LOW_LIMIT)
+#define BIAS_HIGH_LIMIT_ ((Bias_t)BIAS_HIGH_LIMIT)
+#define BIAS_ALARM_LOW_LIMIT_ ((Bias_t)BIAS_ALARM_LOW_LIMIT)
+#define BIAS_ALARM_HIGH_LIMIT_ ((Bias_t)BIAS_ALARM_HIGH_LIMIT)
+
 /* variables definition */
 typedef struct ControlState_t
 {
@@ -238,7 +244,7 @@ static const ContinuousDiagnostics_t  def_ContinuousDiagnostics =
 
     static const BiasData_t  def_BiasData =
     {
-        .BiasSaved          = BIAS_LOW_LIMIT, //instead of BIAS_DEFAULT, based on usage in control_InitControlData
+        .BiasSaved          = BIAS_LOW_LIMIT_, //instead of BIAS_DEFAULT, based on usage in control_InitControlData
         CHECKFIELD_CLEAR()
     };
 
@@ -438,13 +444,13 @@ static void control_ComputePoscomp(const ctlExtData_t *data)
     \param[in] PWMValue:  the input is used to produce the output PWMValue
                  in CONTROL_OFF mode, which is the mode for directly set the output to D/A.
 */
-void control_SetPWM(Bias_t PWMValue)
+void control_SetPWM(u16_least PWMValue)
 {
     //this should only be called open loop with control off
     if(cstate.m_n1ControlMode == CONTROL_OFF)
     {
-        (void)sysio_WritePwm(PWMValue, PWMNORMALIZED);
-        m_CtlOutputValue = PWMValue;
+        (void)sysio_WritePwm((Bias_t)PWMValue, PWMNORMALIZED);
+        m_CtlOutputValue = (Bias_t)PWMValue;
     }
 }
 /* -------------------------------------------------------- */
@@ -527,10 +533,10 @@ void control_GetControlMode(ctlmode_t* pn1ControlMode, s32* pn4Setpoint)
     parameters description:
     \param[out] s16 LastComputedPosComp: return the value of current BIAS
 */
-Bias_t control_GetBias(void)
+u16 control_GetBias(void)
 {
     Bias_t ret = cstate.LastComputedPosComp+m_BiasData.BIAS;
-    return CLAMP(ret, MIN_DA_VALUE, MAX_DA_VALUE);
+    return (u16)CLAMP(ret, MIN_DA_VALUE, MAX_DA_VALUE);
 }
 
 /** \brief This function is externally called to get the current BIAS change flag
@@ -999,7 +1005,7 @@ static void airloss_handle(const ctlExtData_t *data)
 
         //capture bias average at base, and now let it get rejected if out of range
 #if 0
-        ictest.BiasAvgAtBase = MAX(m_BiasData.BIAS, BIAS_LOW_LIMIT);
+        ictest.BiasAvgAtBase = MAX(m_BiasData.BIAS, BIAS_LOW_LIMIT_);
 #else
         ictest.BiasAvgAtBase = m_BiasData.BIAS;
 #endif
@@ -2302,9 +2308,9 @@ static void Integral_Control(const ctlExtData_t *data)
 
             Bias_t newBIAS;
             // limit new bias value
-            if(pVal > (BIAS_HIGH_LIMIT - cstate.LastComputedPosComp))
+            if(pVal > (BIAS_HIGH_LIMIT_ - cstate.LastComputedPosComp))
             {
-                newBIAS = BIAS_HIGH_LIMIT - cstate.LastComputedPosComp;
+                newBIAS = BIAS_HIGH_LIMIT_ - cstate.LastComputedPosComp;
                 cstate.isBiasUpperLimited = true;
                 // this allows us to integrate away from the limit
                 if (out_I < 0 )
@@ -2316,9 +2322,9 @@ static void Integral_Control(const ctlExtData_t *data)
                     newBIAS = newBIAS + out_I;
                 }
             }
-            else if(pVal < (BIAS_LOW_LIMIT - cstate.LastComputedPosComp))
+            else if(pVal < (BIAS_LOW_LIMIT_ - cstate.LastComputedPosComp))
             {
-                newBIAS = BIAS_LOW_LIMIT - cstate.LastComputedPosComp;
+                newBIAS = BIAS_LOW_LIMIT_ - cstate.LastComputedPosComp;
                 cstate.isBiasLowerLimited = true;
                 // this allows us to integrate away from the limit
                 if (out_I > 0 )
@@ -2538,7 +2544,7 @@ void control_ContinuousDiagnostics(void)
 
     //see if we can clear the bias alarms
     Bias_t steady_state_output = m_BiasData.BIAS + cstate.LastComputedPosComp;
-    if( (steady_state_output < BIAS_ALARM_LOW_LIMIT) || (steady_state_output > BIAS_ALARM_HIGH_LIMIT))
+    if( (steady_state_output < BIAS_ALARM_LOW_LIMIT_) || (steady_state_output > BIAS_ALARM_HIGH_LIMIT_))
     {
         error_SetFault(FAULT_BIAS_OUT_OF_RANGE);
     }
@@ -2670,7 +2676,7 @@ void control_CheckSaveBias(void)
                 /* Reject outlandish biases
                 */
                 //Bias_t steady_state_output = uiBiasNew + ictest.poscomp; //at the time of save
-                if( (uiBiasNew < BIAS_LOW_LIMIT) || (uiBiasNew > BIAS_HIGH_LIMIT) )
+                if( (uiBiasNew < BIAS_LOW_LIMIT_) || (uiBiasNew > BIAS_HIGH_LIMIT_) )
                 {
                     ctltrace.BiasesRejected++;
                 }
@@ -2729,17 +2735,17 @@ static void control_PostInit(const ctlExtData_t *data)
     Bias_t bias = (Bias_t)m_NVMEMBiasData.BiasSaved;
 
     // if the saved value is out of range, use the default
-    if( (bias < (BIAS_LOW_LIMIT + BIAS_MARGIN_LO)) ||
-        (bias > (BIAS_HIGH_LIMIT - BIAS_MARGIN_HI)) )
+    if( (bias < (BIAS_LOW_LIMIT_ + BIAS_MARGIN_LO)) ||
+        (bias > (BIAS_HIGH_LIMIT_ - BIAS_MARGIN_HI)) )
     {
         bias = BIAS_DEFAULT;
     }
 
-    if( bias > (BIAS_LOW_LIMIT + nTemp) )
+    if( bias > (BIAS_LOW_LIMIT_ + nTemp) )
     {
         bias = bias - nTemp;
     }
-	//TODO: more likely that bias = MAX(BIAS_LOW_LIMIT, bias - nTemp; was intended
+	//TODO: more likely that bias = MAX(BIAS_LOW_LIMIT_, bias - nTemp; was intended
 
     m_BiasData.BIAS = bias;
     ictest.BiasAvgAtBase = bias;
@@ -2792,8 +2798,8 @@ ErrorCode_t control_SetNVMEMBiasData(const BiasData_t* pBiasData)
 
 #if 0 //control handles it all in RunOnce
     /** validate the input */
-    if( (pBiasData->BiasSaved < (u16)BIAS_LOW_LIMIT)  ||
-        (pBiasData->BiasSaved > (u16)BIAS_HIGH_LIMIT)  )
+    if( (pBiasData->BiasSaved < (u16)BIAS_LOW_LIMIT_)  ||
+        (pBiasData->BiasSaved > (u16)BIAS_HIGH_LIMIT_)  )
     {
         return ERR_INVALID_PARAMETER;
     }
@@ -2840,7 +2846,7 @@ ErrorCode_t control_SetBiasExt(const BiasExt_t* pBiasExt)
     }
 
     /** validate the input */
-    if(   (pBiasExt->uiBiasShift > (u16)BIAS_HIGH_LIMIT)  )
+    if(   (pBiasExt->uiBiasShift > (u16)BIAS_HIGH_LIMIT_)  )
     {
         return ERR_INVALID_PARAMETER;
     }
@@ -2962,13 +2968,13 @@ void control_Control(void)
     but becomes different in SVi1000 with PWM normalization
     \return the control output
 */
-Bias_t control_GetControlOutput(void)
+u16 control_GetControlOutput(void)
 {
 
     //m_CtlOutputValue
     //Set by
     //  IPCurrent_StoreAndOutput
-    return(m_CtlOutputValue);
+    return (u16)(m_CtlOutputValue);
 }
 
 
