@@ -1,0 +1,7 @@
+#MP Include "ustd.inc"
+#MP Include "ddvargen.inc"
+#MP Export (0) outfile
+#ifndef RB_CUSTOMVAR_INCLUDED
+#define RB_CUSTOMVAR_INCLUDED
+#MP Include "rb_custom.inc"
+#endif

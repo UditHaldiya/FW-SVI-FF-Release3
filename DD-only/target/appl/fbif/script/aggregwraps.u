@@ -1,0 +1,52 @@
+#MP If 0 ;Comment
+Generate DD macros to expand all members of Record and Array object
+#MP Endif
+        #MP
+#MP Include "ustd.inc"
+#MP Include "gwtypes.inc"
+#MP Include "paramstubs.inc"
+#MP     Export (0) outfile
+        #MP
+#MP Undef DDcolbreak {MAC}
+#MP Macro DDcolbreak
+	EDD(COLUMNBREAK) \
+#MP Endm
+#MP Undef DDrowbreak {MAC}
+#MP Macro DDrowbreak
+	EDD(ROWBREAK) \
+#MP Endm
+        #MP
+#MP Undef BeginRecordParam {MAC}
+#MP Macro BeginRecordParam ;(type, name, attrib, dd_label, dd_help.opt, dd_name.opt)
+#MP toupper[{#2#}]
+#MP Setstr RecordName = toupper
+#define WHOLE_PARAM__#mp%stoupper \
+#MP Endm
+        #MP
+#MP Undef BeginStdRecordParam {MAC}
+#MP Macro BeginStdRecordParam
+#MP BeginRecordParam([1:#0#])
+#MP Endm
+        #MP
+#MP Undef DefaultRecordParam {MAC}
+#MP Macro DefaultRecordParam ;(member_name, default_value, subx_access, dd_name.opt)
+#MP If (#3# & SUBX_NOPARAMWRAP) == 0
+#MP toupper[{#1#}]
+    PARAM.#mp%sRecordName.#mp%stoupper \
+#MP Endif
+#MP Endm
+        #MP
+#MP Undef EndRecordParam {MAC}
+#MP Macro EndRecordParam ;()
+
+#MP Endm
+        #MP If 0 ;don't need to expand arrays
+#MP Undef BeginArrayParam {MAC}
+#MP Macro BeginArrayParam ;[type, name, dimension, access]
+#MP BeginRecordParam[#1#, #2#] ;lucky match of arguments
+#MP For x=1, #3#
+    PARAM.#mp%sRecordName[#mp%dx] \
+#MP Endfor
+#MP Endm
+        #MP Endif
+#MP Include "ptb_custom.inc"

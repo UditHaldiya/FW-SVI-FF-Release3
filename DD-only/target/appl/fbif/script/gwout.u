@@ -1,0 +1,28 @@
+#MP Include "gwgen.inc"
+#MP Export (0) outfile
+// ===========================================================================
+//
+// FILE_NAME          ptb_custom1.gw
+// Time-stamp: <2013-11-12 13:05:11 GE-300010777>
+//
+// FUNCTIONAL_MODULE_DESCRIPTION
+//
+//    A GenVFD script contains custom (non-standard) parameters
+//    of the FF transducer block.
+//
+//    Must be included in the SVI_Positioner_APP.gw AFTER positioner_tb.gw
+//
+// ===========================================================================
+
+
+// ===========================================================================
+//
+//  NON-STANDARD RECORD TYPES DEFINITIONS
+//      Types not defined in <stdStructs_unpacked.gw>
+//
+//      (Non-std record type names start with an underscore.. (in GW)
+//      ..to distinguish them from parameter names)
+//
+// ===========================================================================
+#MP Include "ptb_custom.inc"
+
