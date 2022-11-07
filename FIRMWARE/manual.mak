@@ -1,8 +1,13 @@
 OFFVCS ?= "$(ProgramFiles)\Microsoft Visual Studio 10.0\Common7\IDE\tf.exe"
 TFPT = "$(ProgramFiles)\Microsoft Team Foundation Server 2010 Power Tools\tfpt.exe"
 
+export OFFlogin=/login:$(OFFuser),$(OFFpass)
+
 #latest CS number extracted from 1st word of appserverc.txt
-appserverc = $(firstword $(shell cmd /C sort /R appserverc.txt))
+ifeq ($(strip $(appserverc)),)
+override appserverc = $(firstword $(shell cmd /C sort /R appserverc.txt))
+$(info appserverc="$(appserverc)")
+endif
 #recursively update current dir (Projects/FIRMWARE) with latest CS sourcecode
 #synccmd = $(OFFVCS) get . /recursive /noprompt /overwrite
 #modcmd = gnumake proj=FFAP MODULES
@@ -39,10 +44,12 @@ all : appserverc.txt
     @echo appserverc=$(appserverc)
     $(synccmd)
 	$(modcmd)
-    if not exist $(out_dir)\$(buildname) cmd /C mkdir $(out_dir)\$(buildname) && $(MAKE) OFFDir=Rel proj=FFAP plugin=ffplug.mak OFFICIAL notask=1 buildname=$(buildname) OFFver=$(buildname) \
+    if not exist $(out_dir)\$(buildname) cmd /C mkdir $(out_dir)\$(buildname) && ($(MAKE) Hide= OFFDir=Rel proj=FFAP plugin=ffplug.mak OFFICIAL notask=1 buildname=$(buildname) OFFver=$(buildname) \
 	ver=FS8.40_3_30356 Hide= \
 	NO_MNS=1 OFFroot=$(OFFroot) OFFmodroot=$(OFFmodroot) MNS_OFFICIAL_DIR=$(out_dir)\$(buildname) \
-	silent=1 | ptee $(out_dir)\$(buildname)\build.log 2>&1
+	avplugin=avplugin.mak silent=1) 2>&1 |ptee $(out_dir)\$(buildname)\build.log
+
+#> 
 
 appserverc.txt : force
     $(OFFVCS) history . /noprompt /sort:descending /recursive /stopafter:1 | sed --text -e "$$!d" >$@

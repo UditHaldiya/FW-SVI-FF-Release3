@@ -58,7 +58,7 @@ modstart :
 
 modmidst :
     $(pause)
-    $(Hide)$(OFFVCS) @modlist.txt
+    $(Hide)$(OFFVCS) @modlist.txt /force
     $(pause)
 	$(Hide)cp.exe modcpy.butt modcpy.bat
 	$(Hide)modcpy.bat

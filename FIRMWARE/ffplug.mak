@@ -45,8 +45,12 @@ define VC_PLUGIN
     $(OFFVCS) workfold /map "$$/$(TFSProject)/$(ReleaseDir)/FD-SW/$(TokenizerDir)" $(SISTER_OFFroot)/$(TokenizerDir) /workspace:$(OFFworkspace) $(OFFlogin)
     $(PAUSE)
     echo %TIME% Sync FF >> $(PROJDIR)\buildtime.log
-    $(OFFVCS) get $(SISTER_OFFroot);$(OFFver) /recursive /force $(OFFlogin) || $(OFFVCS) get $(SISTER_OFFroot);$(OFFver) /recursive $(OFFlogin)
-    $(OFFVCS) get $(SISTER_OFFroot)/$(TokenizerDir);$(OFFver) /recursive /force $(OFFlogin) || $(OFFVCS) get $(SISTER_OFFroot)/$(TokenizerDir);$(OFFver) /recursive $(OFFlogin)
+    $(OFFVCS) get $(SISTER_OFFroot);$(OFFver) /recursive /force $(OFFlogin) \
+	|| $(OFFVCS) get $(SISTER_OFFroot);$(OFFver) /recursive $(OFFlogin) \
+	|| $(OFFVCS) get $(SISTER_OFFroot);$(OFFver) /recursive $(OFFlogin)
+    $(OFFVCS) get $(SISTER_OFFroot)/$(TokenizerDir);$(OFFver) /recursive /force $(OFFlogin) \
+	|| $(OFFVCS) get $(SISTER_OFFroot)/$(TokenizerDir);$(OFFver) /recursive $(OFFlogin) \
+	|| $(OFFVCS) get $(SISTER_OFFroot)/$(TokenizerDir);$(OFFver) /recursive $(OFFlogin)
 endef
 
 ifeq ($(NO_MNS),1)
