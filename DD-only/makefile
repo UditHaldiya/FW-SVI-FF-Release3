@@ -401,6 +401,7 @@ $(ALL_PROJ_DIRS) : force
 
 #This is only a helper for main project's plugin with files it doesn't know about
 SEND :
+	$(MN_CP) -f -p target\appl\fbif\script\paramdoc.html $(MNS_OFFICIAL_DIR)\paramdoc.html
     $(MN_CP) -f -p target\appl\fbif\ddl\$(DEVICE_TYPE)/*.cff $(MNS_OFFICIAL_DIR)/
     $(MN_CP) -f -p target\appl\fbif\ddl\$(DEVICE_TYPE)/*.ff5 $(MNS_OFFICIAL_DIR)/
     $(MN_CP) -f -p target\appl\fbif\ddl\$(DEVICE_TYPE)/*.sy5 $(MNS_OFFICIAL_DIR)/
