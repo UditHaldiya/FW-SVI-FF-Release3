@@ -94,13 +94,11 @@ $(DDL_root)\ddl\svi_customvar.h : $(DDL_root)\script\ddvars.u includes\ddvargen.
 $(DDL_root)\ddl\rb_customvar.h : $(DDL_root)\script\rb_ddvars.u includes\ddvargen.inc inc_$(PROJ)\rb_custom.inc  $(PROJDIR)\inc_$(PROJ)\gwtypes.inc
     $(UNIMAL) -I. $(addprefix -I,$(ISUBDIR)) -O. -Soutfile="$@" $(DDL_root)\script\rb_ddvars.u
 
-ifeq (1,1)
 $(nvport) : $(DDL_root)\script\lfout.u $(PROJDIR)\includes\lfgen.inc $(PROJDIR)\inc_$(PROJ)\ptb_custom.inc  $(PROJDIR)\inc_$(PROJ)\gwtypes.inc
     $(UNIMAL) -I. $(addprefix -I,$(ISUBDIR)) -O. -Sidir=$(PROJDIR)\inc_$(PROJ) -Shdir=$(PROJDIR)\inc_$(PROJ) -Scdir=$(PROJDIR)\nvram\project_$(PROJ) -Sbname=ff2nvram $(DDL_root)\script\lfout.u
 
 $(iochannels_gw) : $(DDL_root)\script\fbchannels.u $(PROJDIR)\inc_$(PROJ)\gwtypes.inc includes\iocgen.inc
     $(UNIMAL) -I. $(addprefix -I,$(ISUBDIR)) -O$(DDL_root)\script $(DDL_root)\script\fbchannels.u
-endif
 
 # Add fault bits generation for DD
 SheetSelect_def=if ($$WS eq \"Faults\")
@@ -150,8 +148,6 @@ define dd4
     $(MN_CP) $(TARGET_BINARY_DD)\symbols.txt $(SOURCE_BINARY_DD)\symbols.txt
     attrib -R $(SOURCE_BINARY_DD)\symbols.txt
     $(dd4_naked)
-	sort $(SOURCE_BINARY_DD)\$(DEVICE_REV)$(DD_REV).sym > $(SOURCE_BINARY_DD)\$(DEVICE_REV)$(DD_REV).sym.ref
-    $(igdiff)fc $(SOURCE_BINARY_DD)\$(DEVICE_REV)$(DD_REV).sym.ref $(TARGET_BINARY_DD)\$(DEVICE_REV)$(DD_REV).sym.ref
 endef
 
 define dd5_naked
@@ -162,8 +158,6 @@ define dd5
     $(MN_CP) $(TARGET_BINARY_DD)\symbols.txt $(SOURCE_BINARY_DD)\symbols.txt
     attrib -R $(SOURCE_BINARY_DD)\symbols.txt
     $(dd5_naked)
-    sort $(SOURCE_BINARY_DD)\$(DEVICE_REV)$(DD_REV).sy5 > $(SOURCE_BINARY_DD)\$(DEVICE_REV)$(DD_REV).sy5.ref
-    $(igdiff)fc $(SOURCE_BINARY_DD)\$(DEVICE_REV)$(DD_REV).sy5.ref $(TARGET_BINARY_DD)\$(DEVICE_REV)$(DD_REV).sy5.ref
 endef
 
 #------
@@ -192,6 +186,9 @@ define DD_compat
     $(DD_clean)
 	$(dd4)
 	$(dd5)
+    sort $(SOURCE_BINARY_DD)\symbols.txt > $(SOURCE_BINARY_DD)\symbols.txt.sorted
+    sort $(TARGET_BINARY_DD)\symbols.txt > $(TARGET_BINARY_DD)\symbols.txt.sorted
+    $(igdiff)fc $(SOURCE_BINARY_DD)\symbols.txt.sorted $(TARGET_BINARY_DD)\symbols.txt.sorted
 endef
 
 ifeq (0,1)
