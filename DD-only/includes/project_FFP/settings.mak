@@ -30,5 +30,5 @@ DOXYGEN:="$(ProgramFiles)\doxygen_$(DOXVER)\bin\doxygen.exe"
 # ======== FFP-specific but made by FFAP build ===============
 include inc_FFP\ffids.mak
 export FAULTDEF:=$(PROJDIR)\FFAPmncb_FAULT_matrix.xls
-export igdiff=-
+export igdiff=
 
