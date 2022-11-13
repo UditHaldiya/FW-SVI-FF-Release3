@@ -267,7 +267,6 @@ IMPORT MANUFACTURER     __FF,
 				  ADD { 0x0002,  "|en|Completion of block execution",    [block_completion_help] }
               }
           }
-#if 0
           VARIABLE __grant /* #13923, see FF-891 1.9 4.4.3.18 */
           {
               TYPE BIT_ENUMERATED
@@ -277,8 +276,6 @@ IMPORT MANUFACTURER     __FF,
                   ADD { 0x40,  "|en|Diagnostic", "|en|Diagnostic" }
               }
           }
-#endif
-#if 0
           VARIABLE __deny /* #13923, see FF-891 1.9 4.4.3.18 */
           {
               TYPE BIT_ENUMERATED
@@ -288,7 +285,6 @@ IMPORT MANUFACTURER     __FF,
                   ADD { 0x40,  "|en|Diagnostic Denied" , "|en|Diagnostic Denied" }
               }
           }
-#endif
           REDEFINE VARIABLE    __current_summary
           {
               LABEL           [current_summary_label] ;
