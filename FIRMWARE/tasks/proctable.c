@@ -973,13 +973,13 @@ const proctable_t proctable[] =
                 .UIplace = -1,
                 .termflags = PROCTERMFLAG_NOCTLMODE|PROCTERMFLAG_KEEPON,
             },
-            [PROCRESULT_CANCELED] =
+            [PROCRESULT_CANCELED] = //By convention, means that vertran failed. See clonenvram.c
             {
-                .event = FAULT_NONE,
+                .event = FAULT_NV_XLATE,
                 .UIplace = -1,
                 .termflags = PROCTERMFLAG_NOCTLMODE|PROCTERMFLAG_KEEPON,
             },
-            [PROCRESULT_FAILED] =
+            [PROCRESULT_FAILED] = //By convention, means that writing out to NVMEM failed
             {
                 .event = FAULT_NV_XLATE,
                 .UIplace = -1,
