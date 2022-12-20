@@ -145,6 +145,7 @@ OFFICIAL : $(SS)
     echo %TIME% Finished >> $(PROJDIR)\buildtime.log
 
 # -- Get the build sources --
+export LOGIN=$(OFFlogin)
 SS : force
 # 1. Start clean
     echo %TIME% Start build > $(PROJDIR)\buildtime.log
@@ -163,7 +164,7 @@ SS : force
     $(OFFVCS) get $(OFFroot);$(OFFver) /recursive /force $(OFFlogin) || $(OFFVCS) get $(OFFroot);$(OFFver) /recursive $(OFFlogin)
 # 5. Get modules
     echo %TIME% Get modules >> $(PROJDIR)\buildtime.log
-    gnumake -C $(OFFroot) proj=$(PROJ) MODULES VCS_MODULES_ROOT=$(OFFmodroot) MODARG= LOGIN=$(OFFlogin)
+    gnumake -C $(OFFroot) proj=$(PROJ) MODULES VCS_MODULES_ROOT=$(OFFmodroot) MODARG=
 # 6. Execute a plugin if supplied
     $(VC_PLUGIN)
 # 7. Delete temporary workspace

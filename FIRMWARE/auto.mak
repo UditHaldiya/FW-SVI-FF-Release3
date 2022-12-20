@@ -31,6 +31,8 @@ else
 export TokenizerDir:=..\FFTokenizer
 endif
 
+export override OFFlogin=/login:$(OFFuser),$(OFFpass)
+$(info OFFpass=$(OFFpass))
 
 #all - displays CS number being built; performs latest CS get;
 #if latest CS folder doesn't exist in $(out_dir), create it & perform OFFICIAL build
