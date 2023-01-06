@@ -536,8 +536,11 @@ procresult_t process_Exec(ProcId_t procId)
         //Notify UI that no process is started from UI
         process_SetRequestorFlag(0);
 
-        //Unconditionally stop sampling
-        buffer_StopSampling(DIAGBUF_DEFAULT);
+        {
+            //Unconditionally stop sampling but without here-irrelevant housekeeping
+            u16 skip = buffer_SuspendSampling(DIAGBUF_DEFAULT);
+            UNUSED_OK(skip); //we aint gonna resume
+        }
     }
 
     return result;
