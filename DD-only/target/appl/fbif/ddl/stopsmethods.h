@@ -5,11 +5,11 @@ This file is now #include'd in svi_tb.ddl.
 
 #define PROMPT_1_MANSTOPS_OPEN "|en|Wait for RAW POSITION to stabilize.\n" \
     "Click Next to accept its last value as the OPEN stop\n" \
-    "Click Cancel otherwise.\n\n " \
+    "Click Cancel otherwise.\n\n" \
     "ACTUATOR A PRESSURE = %[7.2f]{4} %{strPress_Unit}\n"
 #define PROMPT_1_MANSTOPS_CLOSED "|en|Wait for RAW POSITION to stabilize.\n" \
     "Click Next to accept its last value as the CLOSED stop\n" \
-    "Click Cancel otherwise.\n\n " \
+    "Click Cancel otherwise.\n\n" \
     "ACTUATOR A PRESSURE = %[7.2f]{4} %{strPress_Unit}\n"
 
 #define PROMPT_PB_MANSTOPS "ACTUATOR B PRESSURE = %[7.2f]{5} %{strPress_Unit}\n"
@@ -211,6 +211,8 @@ METHOD  do_manual_hi_low_stops
             if(status == BLTIN_SUCCESS) {
                 status = send_value(ids[3],mbs[3]);
             }
+            get_acknowledgement("|en|Stop(s) accepted.\n",dummy,dummy,0);
+                                  
             sel = nextsel;
             nextsel = -1;
 
@@ -218,18 +220,18 @@ METHOD  do_manual_hi_low_stops
 
         /* Commit the accepted stops */
         if(status == BLTIN_SUCCESS) {
-            status = put_signed_value( ids[3], mbs[3], FINDSTOPS_COMMIT);
+            status = put_unsigned_value( ids[3], mbs[3], FINDSTOPS_COMMIT);
         }
         if(status == BLTIN_SUCCESS) {
             status = send_value( ids[3], mbs[3]);
-#if 0
+            get_acknowledgement("|en|Stop(s) confirmed.\n",dummy,dummy,0);
+
             /* This crashes the method in reference environment RRTE */
             if(status == BLTIN_FAIL_RESPONSE_CODE) {
                 unsigned long code;
                 get_response_code(&code, &ids[3], &mbs[3]);
                 display_response_code(code, ids[3], mbs[3]);
             }
-#endif
         }
 
         /* Regardless of status, restore what was saved */
@@ -250,7 +252,7 @@ METHOD  do_manual_hi_low_stops
             status1 = send_value(ids[9], MEMBER_ID(SUPPLY_PRESSURE_MIN));
         }
 
-#if 1
+
         if(status == BLTIN_SUCCESS) {
             /*Check the result of the Auto Stop Limits procedure,by reading the
               COMPLETE_STATUS.FIND_STOPS_FAILD and present the result to the
@@ -261,14 +263,14 @@ METHOD  do_manual_hi_low_stops
             id = ITEM_ID(PARAM.COMPLETE_STATUS);
             mb = MEMBER_ID(CURRENT_STATUS_1_C);
             READ_PARAM(id, mb, "COMPLETE_STATUS.CURRENT_STATUS_1_C");
-            status = get_unsigned_value(id, mb, &us8_buf);
+            get_unsigned_value(id, mb, &us8_buf);
             /* IF_ERROR_ABORT_MACRO_INFO("READ_STATUS:"); */
             if ( 0 != (us8_buf & FBIT1 )) {
                 get_acknowledgement("|en|Stop(s) not accepted.\n",dummy,dummy,0);
                 status = -1;
             }
         }
-#endif
+
 
         if(status == BLTIN_SUCCESS) {
             /* At this point, the damage is done already,
@@ -333,7 +335,7 @@ METHOD  do_manual_hi_low_stops
             }
         }
         else {
-            get_acknowledgement("|en|Method failed\n\nPossible causes:\n"
+            get_acknowledgement("|en|Method failed.\n\nPossible causes:\n"
                             "1. Open and closed stops are too close\n"
                             "2. Device is write-locked\n"
                                 , dummy, dummy, 0);
