@@ -225,13 +225,14 @@ METHOD  do_manual_hi_low_stops
         if(status == BLTIN_SUCCESS) {
             status = send_value( ids[3], mbs[3]);
             get_acknowledgement("|en|Stop(s) confirmed.\n",dummy,dummy,0);
-
+#if 0
             /* This crashes the method in reference environment RRTE */
             if(status == BLTIN_FAIL_RESPONSE_CODE) {
                 unsigned long code;
                 get_response_code(&code, &ids[3], &mbs[3]);
                 display_response_code(code, ids[3], mbs[3]);
             }
+#endif            
         }
 
         /* Regardless of status, restore what was saved */
