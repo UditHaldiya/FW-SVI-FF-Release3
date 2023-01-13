@@ -97,6 +97,8 @@ ErrorCode_t nvmem_LaunchFactoryRestore(u8 volid, u8 mask_flags, u8 match_flags, 
 //lint -emacro({826}, CRC_ADDR)  area too small:  The checksum is the two bytes beyond (dst + len)
 #define CRC_ADDR(addr, len) ((u16 *)((u8*)(addr) + (len)))
 #define NVM_H_MAXSIZE ((NVM_MAXSIZE+(sizeof(u16)-1U))/sizeof(u16)) //size in halfwords
+static u16 nvbuf[NVM_H_MAXSIZE]; //size in halfwords
+
 
 CONST_ASSERT(NVM_H_MAXSIZE < (1U<<DIAG_BUFFER_LOGSIZE));
 
@@ -108,7 +110,7 @@ static procresult_t nvmem_SaveAsFactoryDefaults_Naked(s16 *procdetails)
     UNUSED_OK(procdetails);
     procresult_t procresult = PROCRESULT_FAILED;
 
-    u16 *nvbuf = (u16 *)buffer_GetXDiagnosticBuffer(DIAGBUF_DEFAULT);
+    //u16 *nvbuf = (u16 *)buffer_GetXDiagnosticBuffer(DIAGBUF_DEFAULT);
 
     const u8 fullid = LOGF_FULL_ID(NVMBACKUP_LOGFILE_ID, 0U);
     u16 len;
@@ -225,7 +227,7 @@ procresult_t nvmem_RestoreFactoryDefaults(s16 *procdetails)
     UNUSED_OK(procdetails);
     procresult_t procresult = PROCRESULT_FAILED;
 
-    u16 *nvbuf = (u16 *)buffer_GetXDiagnosticBuffer(DIAGBUF_DEFAULT);
+    //u16 *nvbuf = (u16 *)buffer_GetXDiagnosticBuffer(DIAGBUF_DEFAULT);
 
     const u8 fullid = LOGF_FULL_ID(NVMBACKUP_LOGFILE_ID, 0U);
     u16 len;
