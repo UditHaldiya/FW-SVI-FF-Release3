@@ -2521,7 +2521,7 @@ MENU grp_ui_access_control
 MENU mnu_advanced_valve_configuration
 {
 	LABEL "|en|Advanced Configuration";
-	STYLE(PAGE)
+	STYLE(GROUP)
 	ITEMS
 	{
 		grp_accessory
