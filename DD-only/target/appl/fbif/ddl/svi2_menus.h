@@ -3229,7 +3229,7 @@ MENU mnu_options
 MENU mnu_fDiagmap
 {
 LABEL "|en|FD Alert Map";
-STYLE(PAGE)
+STYLE(GROUP)
 ITEMS
 {
 	    __fd_fail_map
@@ -3254,7 +3254,7 @@ ITEMS
 MENU mnu_fDiagmask
 {
 	LABEL "|en|FD Alert Mask";
-STYLE(PAGE)
+STYLE(GROUP)
 ITEMS
 {
 	    __fd_fail_mask
@@ -3270,7 +3270,7 @@ ITEMS
 MENU mnu_fd_simulate
 {
 LABEL "|en|FD Simulate";
-STYLE(PAGE)
+STYLE(GROUP)
 ITEMS
 	{
 	PARAM.FD_SIMULATE.ENABLE_DISABLE
@@ -3283,7 +3283,7 @@ ITEMS
 MENU mnu_fDiagAlertpriorities
 {
 LABEL "|en|FD Alert Priorities";
-STYLE(PAGE)
+STYLE(GROUP)
 ITEMS
 	{
 	    __fd_fail_pri
@@ -3490,7 +3490,7 @@ MENU mnu_fDiag
 MENU mnu_fd_version
 {
 LABEL "|en|FD Version";
-STYLE(PAGE)
+STYLE(GROUP)
 ITEMS
 	{
 	PARAM.FD_VER
@@ -3507,7 +3507,7 @@ MENU device_root_menu_rb
         mnu_alarm_in_device_setup
         mnu_options
 		mnu_tb_exconfig_page
-		mnu_fDiag
+		mnu_fDiag 
     }
 }
 
