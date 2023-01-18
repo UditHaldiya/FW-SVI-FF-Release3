@@ -3135,6 +3135,10 @@ MENU mnu_hardware
         EDD(COLUMNBREAK)
         PARAM.NV_CYCLE_T
         EDD(ROWBREAK)
+#ifndef DD4
+		"|en|Restart may make DD out of sync\nwith the device, please close\nand re-open DD if needed"
+        EDD(ROWBREAK)
+#endif
         PARAM.RESTART
         EDD(COLUMNBREAK)
         PARAM.WRITE_LOCK
