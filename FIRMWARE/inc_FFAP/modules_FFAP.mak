@@ -39,6 +39,7 @@ SUBMODULES+=asciiutils_1-0.mak,55618
 
 #Build environment
 MOD_OVERRIDE+=ewarm8.x.mak #new version support out of modules for now
+MOD_OVERRIDE+=buildexec.mak
 SUBMODULES+=lint_3-0.mak,72784 \
     buildutils_1-0.mak,76118 \
     ideutils_1-0.mak,70660 \
