@@ -113,7 +113,7 @@ OFFWIT:="$(ProgramFiles)\Microsoft Team Foundation Server 2010 Power Tools\tfpt.
 # -- End Do not change --
 
 VCSmodroot :="$$/Core/FIRMWARE"
-OFFlogin:=/login:$(OFFuser),$(OFFpass)
+OFFlogin:=/login:"$(OFFuser),$(OFFpass)"
 OFFWITFields:="Title=*SVI FF 3.1.0.x test build $(buildname) $(OFFver);Assigned To=$(OFFTester);Discipline=Testing Task;Estimated Time=5;Description=Ready for testing"
 
 #Version control system root - we'll discover it
