@@ -1,7 +1,7 @@
 OFFVCS ?= "$(ProgramFiles)\Microsoft Visual Studio 10.0\Common7\IDE\tf.exe"
 TFPT = "$(ProgramFiles)\Microsoft Team Foundation Server 2010 Power Tools\tfpt.exe"
 
-export OFFlogin=/login:$(OFFuser),$(OFFpass)
+export OFFlogin=/login:"$(OFFuser),$(OFFpass)"
 
 #latest CS number extracted from 1st word of appserverc.txt
 ifeq ($(strip $(appserverc)),)
