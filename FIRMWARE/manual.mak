@@ -53,8 +53,8 @@ all : appserverc.txt
 
 appserverc.txt : force
     $(OFFVCS) history . /noprompt /sort:descending /recursive /stopafter:1 | sed --text -e "$$!d" >$@
-    $(OFFVCS) history ..\FD-SW /noprompt /sort:descending /recursive /stopafter:1 | sed --text -e "$$!d" >>$@
-    $(OFFVCS) history $(TokenizerDir) /noprompt /sort:descending /recursive /stopafter:1 | sed --text -e "$$!d" >>$@
+#    $(OFFVCS) history ..\FD-SW /noprompt /sort:descending /recursive /stopafter:1 | sed --text -e "$$!d" >>$@
+#    $(OFFVCS) history $(TokenizerDir) /noprompt /sort:descending /recursive /stopafter:1 | sed --text -e "$$!d" >>$@
 	type appserverc.txt
 
 force : ;
