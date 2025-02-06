@@ -2356,7 +2356,7 @@ static void Integral_Control(const ctlExtData_t *data)
     ctltrace.m_diagCalcPeriod = nCalcFreq;
 }
 
-bool_t control_CheckFaultsAndShutoff(const ctlExtData_t *data)
+static bool_t control_CheckFaultsAndShutoff(const ctlExtData_t *data)
 {
     bool_t m_bRegularControl = control_IsModeClosedLoop(cstate.m_n1ControlMode);
 

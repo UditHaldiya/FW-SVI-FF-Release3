@@ -28,6 +28,8 @@ typedef struct CutoffConf_t
     u16 output[Xends];
 } CutoffConf_t;
 
+extern CutoffConf_t CutoffConf[];   
+
 #endif // CUTOFF_H_
 
 /* This line marks the end of the source */

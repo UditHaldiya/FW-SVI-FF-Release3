@@ -73,7 +73,7 @@ bool_t cutoff_IsActive(void)
     \param indicator of closed-loop control
     \return  true iff cutoff (either low or high)
 */
-bool_t cutoff_Eval(bool_t closed_loop)
+static bool_t cutoff_Eval(bool_t closed_loop)
 {
     CtlLimits_t         ctlLimits;
 
