@@ -22,13 +22,15 @@ demand.
 extern bool_t cutoff_IsActive(void);
 bool_t cutoff_Eval(bool_t closed_loop);
 
+#define Xends 2U
+
 typedef struct CutoffConf_t
 {
     faultcode_t fcode;
     u16 output[Xends];
 } CutoffConf_t;
 
-extern CutoffConf_t CutoffConf[];   
+extern CutoffConf_t CutoffConf[Xends];   
 
 #endif // CUTOFF_H_
 
