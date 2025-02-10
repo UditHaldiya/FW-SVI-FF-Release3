@@ -37,6 +37,12 @@ LINT_PURE(pneu_IsSensorInvalid)
 #define SLOW_APPROACH    FIVE_PCT_819
 #define TSO_HYSTERESIS   HALF_PCT_82
 
+typedef struct CutoffConf_t
+{
+    faultcode_t fcode;
+    u16 output[Xends];
+} CutoffConf_t;
+
 static const CutoffConf_t CutoffConf[Xends] =
 {
     [Xlow] = //cutoff lo
