@@ -2393,7 +2393,7 @@ static bool_t control_CheckFaultsAndShutoff(const ctlExtData_t *data)
 
     \param[in] data: a pointer to the data structure that holds position limits
 */
-/*
+
 static bool_t control_Prepare(const ctlExtData_t *data)
 {
 
@@ -2442,7 +2442,7 @@ static bool_t control_Prepare(const ctlExtData_t *data)
     }
     return m_bRegularControl;
 }
-*/
+
 static bool_t control_Prepare(const ctlExtData_t *data)
 {
     if (data->OutputLim <= MIN_DA_VALUE)
@@ -2458,6 +2458,16 @@ static bool_t control_Prepare(const ctlExtData_t *data)
         /* startup */
         cstate.m_n2CSigPos_p = m_bATO ? 0 : (data->m_pCPS->ExtraPosHigh + THREE_PCT_491);
         cstate.start_count++;
+    }
+
+    bool_t m_bRegularControl = control_IsModeClosedLoop(cstate.m_n1ControlMode);
+    if(m_bRegularControl)
+    {
+        calcSP_Err(data);
+    }
+    if(data->OutputLim <= MIN_DA_VALUE)
+    {
+        m_bRegularControl = false;
     }
 
     // New function to check faults & shutoff
