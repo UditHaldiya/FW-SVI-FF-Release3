@@ -37,12 +37,6 @@ LINT_PURE(pneu_IsSensorInvalid)
 #define SLOW_APPROACH    FIVE_PCT_819
 #define TSO_HYSTERESIS   HALF_PCT_82
 
-typedef struct CutoffConf_t
-{
-    faultcode_t fcode;
-    u16 output[Xends];
-} CutoffConf_t;
-
 static const CutoffConf_t CutoffConf[Xends] =
 {
     [Xlow] = //cutoff lo
@@ -79,7 +73,7 @@ bool_t cutoff_IsActive(void)
     \param indicator of closed-loop control
     \return  true iff cutoff (either low or high)
 */
-bool_t cutoff_Eval(bool_t closed_loop)
+static bool_t cutoff_Eval(bool_t closed_loop)
 {
     CtlLimits_t         ctlLimits;
 

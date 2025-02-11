@@ -2356,27 +2356,27 @@ static void Integral_Control(const ctlExtData_t *data)
     ctltrace.m_diagCalcPeriod = nCalcFreq;
 }
 
-// static bool_t control_CheckFaultsAndShutoff(const ctlExtData_t *data)
-// {
-//     bool_t m_bRegularControl = control_IsModeClosedLoop(cstate.m_n1ControlMode);
+static bool_t control_CheckFaultsAndShutoff(const ctlExtData_t *data)
+{
+    bool_t m_bRegularControl = control_IsModeClosedLoop(cstate.m_n1ControlMode);
 
-//     if (data->OutputLim <= MIN_DA_VALUE)
-//     {
-//         m_bRegularControl = false;
-//     }
+    if (data->OutputLim <= MIN_DA_VALUE)
+    {
+        m_bRegularControl = false;
+    }
 
-//     // Check for faults (Replacing full_BypassControl logic)
-//     for (u8_least x = Xlow; x < Xends; x++)
-//     {
-//         if (error_IsFault(CutoffConf[x].fcode))
-//         {
-//             m_bRegularControl = false;
-//             break;
-//         }
-//     }
+    // Check for faults (Replacing full_BypassControl logic)
+    for (u8_least x = Xlow; x < Xends; x++)
+    {
+        if (error_IsFault(CutoffConf[x].fcode))
+        {
+            m_bRegularControl = false;
+            break;
+        }
+    }
 
-//     return m_bRegularControl;
-// }
+    return m_bRegularControl;
+}
 
 /**
      DZ: 8/22/06
@@ -2388,7 +2388,7 @@ static void Integral_Control(const ctlExtData_t *data)
 
     \param[in] data: a pointer to the data structure that holds position limits
 */
-
+/*
 static bool_t control_Prepare(const ctlExtData_t *data)
 {
 
@@ -2437,44 +2437,44 @@ static bool_t control_Prepare(const ctlExtData_t *data)
     }
     return m_bRegularControl;
 }
+*/
+static bool_t control_Prepare(const ctlExtData_t *data)
+{
+    if (data->OutputLim <= MIN_DA_VALUE)
+    {
+        control_ResetRateLimitsLogic();
+    }
+    control_RateLimitsGuard();
 
-// static bool_t control_Prepare(const ctlExtData_t *data)
-// {
-//     if (data->OutputLim <= MIN_DA_VALUE)
-//     {
-//         control_ResetRateLimitsLogic();
-//     }
-//     control_RateLimitsGuard();
+    cstate.m_n1ControlMode = mode_GetEffectiveControlMode(&m_n4Setpoint);
 
-//     cstate.m_n1ControlMode = mode_GetEffectiveControlMode(&m_n4Setpoint);
+    if (cstate.start_count == 0)
+    {
+        /* startup */
+        cstate.m_n2CSigPos_p = m_bATO ? 0 : (data->m_pCPS->ExtraPosHigh + THREE_PCT_491);
+        cstate.start_count++;
+    }
 
-//     if (cstate.start_count == 0)
-//     {
-//         /* startup */
-//         cstate.m_n2CSigPos_p = m_bATO ? 0 : (data->m_pCPS->ExtraPosHigh + THREE_PCT_491);
-//         cstate.start_count++;
-//     }
+    // New function to check faults & shutoff
+    bool_t m_bRegularControl = control_CheckFaultsAndShutoff(data);
 
-//     // New function to check faults & shutoff
-//     bool_t m_bRegularControl = control_CheckFaultsAndShutoff(data);
+    cstate.m_bShutZone = !m_bRegularControl; // Keep track of shutoff state
 
-//     cstate.m_bShutZone = !m_bRegularControl; // Keep track of shutoff state
+    if (m_bRegularControl && !cstate.m_bRegularControl)
+    {
+        // Entering closed-loop for the first time
+        control_EnterClosedLoop(data);
+    }
 
-//     if (m_bRegularControl && !cstate.m_bRegularControl)
-//     {
-//         // Entering closed-loop for the first time
-//         control_EnterClosedLoop(data);
-//     }
+    cstate.m_bRegularControl = m_bRegularControl;
 
-//     cstate.m_bRegularControl = m_bRegularControl;
+    if (!m_bRegularControl)
+    {
+        cstate.i_count = 0; // Reset integral interval counter
+    }
 
-//     if (!m_bRegularControl)
-//     {
-//         cstate.i_count = 0; // Reset integral interval counter
-//     }
-
-//     return m_bRegularControl;
-// }
+    return m_bRegularControl;
+}
 
 /* -------------------------------------------------------- */
 
