@@ -2366,13 +2366,18 @@ static bool_t control_CheckFaultsAndShutoff(const ctlExtData_t *data)
     }
 
     // Check for faults (Replacing full_BypassControl logic)
-    for (u8_least x = Xlow; x < Xends; x++)
+    // for (u8_least x = Xlow; x < Xends; x++)
+    // {
+    //     if (error_IsFault(CutoffConf[x].fcode))
+    //     {
+    //         m_bRegularControl = false;
+    //         break;
+    //     }
+    // }
+
+    if (error_IsFault( FAULT_POS_CUTOFF_LO) || error_IsFault(FAULT_POS_CUTOFF_HI))
     {
-        if (error_IsFault(CutoffConf[x].fcode))
-        {
-            m_bRegularControl = false;
-            break;
-        }
+        m_bRegularControl = false;
     }
 
     return m_bRegularControl;
