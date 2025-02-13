@@ -2358,11 +2358,11 @@ static void Integral_Control(const ctlExtData_t *data)
 
 static bool_t control_CheckFaultsAndShutoff(const ctlExtData_t *data)
 {
-    bool_t m_bRegularControl = control_IsModeClosedLoop(cstate.m_n1ControlMode);
+    bool_t m_bRegularControlmode = control_IsModeClosedLoop(cstate.m_n1ControlMode);
 
     if (data->OutputLim <= MIN_DA_VALUE)
     {
-        m_bRegularControl = false;
+        m_bRegularControlmode = false;
     }
 
     // Check for faults (Replacing full_BypassControl logic)
@@ -2377,10 +2377,10 @@ static bool_t control_CheckFaultsAndShutoff(const ctlExtData_t *data)
 
     if (error_IsFault( FAULT_POS_CUTOFF_LO) || error_IsFault(FAULT_POS_CUTOFF_HI))
     {
-        m_bRegularControl = false;
+        m_bRegularControlmode = false;
     }
 
-    return m_bRegularControl;
+    return m_bRegularControlmode;
 }
 
 /**
@@ -2460,35 +2460,35 @@ static bool_t control_Prepare(const ctlExtData_t *data)
         cstate.start_count++;
     }
 
-    bool_t m_bRegularControl = control_IsModeClosedLoop(cstate.m_n1ControlMode);
-    if(m_bRegularControl)
+    bool_t m_bRegularControlmode = control_IsModeClosedLoop(cstate.m_n1ControlMode);
+    if(m_bRegularControlmode)
     {
         calcSP_Err(data);
     }
     if(data->OutputLim <= MIN_DA_VALUE)
     {
-        m_bRegularControl = false;
+        m_bRegularControlmode = false;
     }
 
     // New function to check faults & shutoff
-    bool_t m_bRegularControl = control_CheckFaultsAndShutoff(data);
+    bool_t m_bRegularControlmode = control_CheckFaultsAndShutoff(data);
 
-    cstate.m_bShutZone = !m_bRegularControl; // Keep track of shutoff state
+    cstate.m_bShutZone = !m_bRegularControlmode; // Keep track of shutoff state
 
-    if (m_bRegularControl && !cstate.m_bRegularControl)
+    if (m_bRegularControlmode && !cstate.m_bRegularControl)
     {
         // Entering closed-loop for the first time
         control_EnterClosedLoop(data);
     }
 
-    cstate.m_bRegularControl = m_bRegularControl;
+    cstate.m_bRegularControl = m_bRegularControlmode;
 
-    if (!m_bRegularControl)
+    if (!m_bRegularControlmode)
     {
         cstate.i_count = 0; // Reset integral interval counter
     }
 
-    return m_bRegularControl;
+    return m_bRegularControlmode;
 }
 
 /* -------------------------------------------------------- */
