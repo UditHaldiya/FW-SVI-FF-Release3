@@ -43,7 +43,7 @@ typedef struct CutoffConf_t
     u16 output[Xends];
 } CutoffConf_t;
 
-const CutoffConf_t CutoffConf[Xends] =
+static const CutoffConf_t CutoffConf[Xends] =
 {
     [Xlow] = //cutoff lo
     {
