@@ -2364,6 +2364,10 @@ static bool_t control_CheckFaultsAndShutoff(const ctlExtData_t *data)
     {
         m_bRegularControl = false;
     }
+    else
+    {
+        calcSP_Err(data);
+    }
 
     // Check for faults (Replacing full_BypassControl logic)
     // for (u8_least x = Xlow; x < Xends; x++)
@@ -2462,18 +2466,8 @@ static bool_t control_Prepare(const ctlExtData_t *data)
         cstate.start_count++;
     }
 
-    bool_t m_bRegularControl = control_IsModeClosedLoop(cstate.m_n1ControlMode);
-    if(m_bRegularControl)
-    {
-        calcSP_Err(data);
-    }
-    if(data->OutputLim <= MIN_DA_VALUE)
-    {
-        m_bRegularControl = false;
-    }
-
     // New function to check faults & shutoff
-    m_bRegularControl = control_CheckFaultsAndShutoff(data);
+    bool_t m_bRegularControl = control_CheckFaultsAndShutoff(data);
 
     cstate.m_bShutZone = !m_bRegularControl; // Keep track of shutoff state
 
