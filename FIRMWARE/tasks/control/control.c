@@ -2469,13 +2469,21 @@ static bool_t control_Prepare(const ctlExtData_t *data)
     // New function to check faults & shutoff
     bool_t m_bRegularControl = control_CheckFaultsAndShutoff(data);
 
-    cstate.m_bShutZone = !m_bRegularControl; // Keep track of shutoff state
+    // cstate.m_bShutZone = !m_bRegularControl; // Keep track of shutoff state
 
     if (m_bRegularControl && !cstate.m_bRegularControl)
     {
         // Entering closed-loop for the first time
         control_EnterClosedLoop(data);
     }
+
+    bool_t m_bShutZone = cutoff_Eval(m_bRegularControl); //NOTE: If in cutoff, writes output directly
+
+    if(m_bShutZone)
+    {
+        m_bRegularControl = false;
+    }
+    cstate.m_bShutZone = m_bShutZone; //need for output control for now
 
     cstate.m_bRegularControl = m_bRegularControl;
 
