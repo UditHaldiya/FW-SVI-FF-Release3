@@ -79,7 +79,7 @@ bool_t cutoff_IsActive(void)
     \param indicator of closed-loop control
     \return  true iff cutoff (either low or high)
 */
-bool_t cutoff_Eval(void)
+void cutoff_Eval(void)
 {
     CtlLimits_t         ctlLimits;
 
@@ -92,7 +92,7 @@ bool_t cutoff_Eval(void)
     bool_t bATO = pos_GetPositionConf(NULL)->bATO;
     ctlmode_t ctlmode = mode_GetIntendedControlMode(NULL);
 
-    bool_t ret = false;
+    //bool_t ret = false;
 
     s32 testval1 = Setpoint;
     s32 thresh1 = ctlLimits.TightShutoff[Xlow];
@@ -139,7 +139,7 @@ bool_t cutoff_Eval(void)
                     Position >= ctlLimits.TightShutoff[Xhi] - SLOW_APPROACH
                     */
                     error_SetFault(CutoffConf[x].fcode);
-                    ret = true;
+                    //ret = true;
                 }
             }
             if(error_IsFault(CutoffConf[x].fcode))
@@ -153,7 +153,7 @@ bool_t cutoff_Eval(void)
         thresh2 = testval2;
         testval2 = testval1;
     }
-    return ret;
+    //return ret;
 }
 
 

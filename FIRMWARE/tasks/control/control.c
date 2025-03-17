@@ -2430,20 +2430,20 @@ static bool_t control_Prepare(const ctlExtData_t *data)
         m_bRegularControl = false;
     }
 
-    bool_t m_bShutZone = cutoff_Eval(); //NOTE: If in cutoff, writes output directly
+    //bool_t m_bShutZone = cutoff_Eval(); //NOTE: If in cutoff, writes output directly
 
-    if(m_bShutZone)
-    {
-        m_bRegularControl = false;
-    }
-    cstate.m_bShutZone = m_bShutZone; //need for output control for now
+    // if(m_bShutZone)
+    // {
+    //     m_bRegularControl = false;
+    // }
+    // cstate.m_bShutZone = m_bShutZone; //need for output control for now
 
-	if(m_bRegularControl && !cstate.m_bRegularControl)
-	{
-		//Entering closed-loop for the first time
-        control_EnterClosedLoop(data);
-	}
-    cstate.m_bRegularControl = m_bRegularControl;
+	// if(m_bRegularControl && !cstate.m_bRegularControl)
+	// {
+	// 	//Entering closed-loop for the first time
+    //     control_EnterClosedLoop(data);
+	// }
+    // cstate.m_bRegularControl = m_bRegularControl;
     if(!m_bRegularControl)
     {
             cstate.i_count = 0;                    // reset integral interval counter
@@ -3016,9 +3016,16 @@ void control_Control(void)
     //Call PID algorithm only in closed-loop control
     s32 lVal; //control output
     if ( m_bRegularControl )
-    {        
+    {    
+        if (!cutoff_IsActive())
+        {
         // call the PID algorithm
         lVal = control_PID(data);
+        } 
+        else
+        {
+            lVal = 0;
+        }   
     }
     //Ugly!
     else

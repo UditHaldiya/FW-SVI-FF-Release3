@@ -33,6 +33,7 @@ demand.
 #include "datahog.h"
 #include "dhogtrigger.h"
 #include "sysiolopwr.h"
+#include "cutoff.h"
 
 #if FEATURE_LOCAL_UI == FEATURE_LOCAL_UI_SIMPLE
 //-------------------------------------------------------
@@ -70,6 +71,7 @@ void control_ControlTask(void *arg)
 
         mode_GuardControlMode(); //to take care of disasters that happened since last checked
         (void)bios_MeasureAd();
+        cutoff_Eval();
         sysio_Handle_LowPowerLimiting(); //FBO interface layer, needs to run no matter what Control is doing
         control_Control();
 #if FEATURE_LOCAL_UI == FEATURE_LOCAL_UI_SIMPLE
