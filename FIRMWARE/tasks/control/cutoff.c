@@ -31,7 +31,7 @@ demand.
 LINT_PURE(pneu_IsSensorInvalid)
 #include "position.h"
 #include "cutoff.h"
-
+#include "posctlmode.h"
 
 /** private defines */
 #define SLOW_APPROACH    FIVE_PCT_819
@@ -102,7 +102,7 @@ bool_t cutoff_Eval(bool_t closed_loop)
     for(u8_least x=Xlow; x<Xends; x++)
     {
         //Cutoff works only in closed-loop mode (where setpoint makes sense)
-        if((ctlLimits.EnableTightShutoff[x] == 0) || !closed_loop)
+        if((ctlLimits.EnableTightShutoff[x] == 0) || (ctlmode != CONTROL_MANUAL_POS))
         {
             error_ClearFault(CutoffConf[x].fcode);
         }
