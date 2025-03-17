@@ -560,7 +560,7 @@ void control_ResetBiasChangeFlag(void)
 #if STARTUP_FORCE_JIGGLE_TEST
         storeMemberBool(&ictest, startup, true);
 #endif
-    MN_EXIT_CRITICAL();
+    MN_EXIT_CRITICAL(); 
 }
 
 
@@ -2356,9 +2356,11 @@ static void Integral_Control(const ctlExtData_t *data)
     ctltrace.m_diagCalcPeriod = nCalcFreq;
 }
 
+#if 0
 static bool_t control_CheckFaultsAndShutoff(const ctlExtData_t *data)
 {
     bool_t m_bRegularControl = control_IsModeClosedLoop(cstate.m_n1ControlMode);
+    
 
     if (data->OutputLim <= MIN_DA_VALUE)
     {
@@ -2386,8 +2388,9 @@ static bool_t control_CheckFaultsAndShutoff(const ctlExtData_t *data)
 
     return m_bRegularControl;
 }
+#endif
 
-#if 0
+
 /**
      DZ: 8/22/06
     \brief This function is internally called each cycle to prepare for control. This is called before
@@ -2447,8 +2450,8 @@ static bool_t control_Prepare(const ctlExtData_t *data)
     }
     return m_bRegularControl;
 }
-#endif
 
+#if 0
 static bool_t control_Prepare(const ctlExtData_t *data)
 {
     if (data->OutputLim <= MIN_DA_VALUE)
@@ -2494,6 +2497,7 @@ static bool_t control_Prepare(const ctlExtData_t *data)
 
     return m_bRegularControl;
 }
+#endif
 
 /* -------------------------------------------------------- */
 

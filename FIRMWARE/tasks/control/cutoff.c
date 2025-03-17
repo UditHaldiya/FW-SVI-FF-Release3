@@ -90,6 +90,7 @@ bool_t cutoff_Eval(bool_t closed_loop)
     s32 Setpoint = ctllim_GetRangeBoundedSetpoint();
     s32 Position = vpos_GetScaledPosition(); //implicit cast is safe (s16 --> s32)
     bool_t bATO = pos_GetPositionConf(NULL)->bATO;
+    ctlmode_t ctlmode = mode_GetIntendedControlMode(NULL);
 
     bool_t ret = false;
 
