@@ -3019,8 +3019,8 @@ void control_Control(void)
     {    
         if (!cutoff_IsActive())
         {
-        // call the PID algorithm
-        lVal = control_PID(data);
+            // call the PID algorithm
+            lVal = control_PID(data);
         } 
         else
         {
