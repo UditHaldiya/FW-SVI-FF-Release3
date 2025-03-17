@@ -2430,7 +2430,7 @@ static bool_t control_Prepare(const ctlExtData_t *data)
         m_bRegularControl = false;
     }
 
-    bool_t m_bShutZone = cutoff_Eval(m_bRegularControl); //NOTE: If in cutoff, writes output directly
+    bool_t m_bShutZone = cutoff_Eval(); //NOTE: If in cutoff, writes output directly
 
     if(m_bShutZone)
     {
