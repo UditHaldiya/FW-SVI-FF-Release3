@@ -20,7 +20,7 @@ demand.
 #define CUTOFF_H_
 
 extern bool_t cutoff_IsActive(void);
-extern bool_t cutoff_Eval(void);
+extern void cutoff_Eval(void);
 
 #endif // CUTOFF_H_
 

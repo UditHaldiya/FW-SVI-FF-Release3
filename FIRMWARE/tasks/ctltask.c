@@ -33,6 +33,7 @@ demand.
 #include "datahog.h"
 #include "dhogtrigger.h"
 #include "sysiolopwr.h"
+#include "cutoff.h"
 
 #if FEATURE_LOCAL_UI == FEATURE_LOCAL_UI_SIMPLE
 //-------------------------------------------------------
