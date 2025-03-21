@@ -2356,41 +2356,6 @@ static void Integral_Control(const ctlExtData_t *data)
     ctltrace.m_diagCalcPeriod = nCalcFreq;
 }
 
-#if 0
-static bool_t control_CheckFaultsAndShutoff(const ctlExtData_t *data)
-{
-    bool_t m_bRegularControl = control_IsModeClosedLoop(cstate.m_n1ControlMode);
-    
-
-    if (data->OutputLim <= MIN_DA_VALUE)
-    {
-        m_bRegularControl = false;
-    }
-    else
-    {
-        calcSP_Err(data);
-    }
-
-    // Check for faults (Replacing full_BypassControl logic)
-    // for (u8_least x = Xlow; x < Xends; x++)
-    // {
-    //     if (error_IsFault(CutoffConf[x].fcode))
-    //     {
-    //         m_bRegularControl = false;
-    //         break;
-    //     }
-    // }
-
-    if (error_IsFault( FAULT_POS_CUTOFF_LO) || error_IsFault(FAULT_POS_CUTOFF_HI))
-    {
-        m_bRegularControl = false;
-    }
-
-    return m_bRegularControl;
-}
-#endif
-
-
 /**
      DZ: 8/22/06
     \brief This function is internally called each cycle to prepare for control. This is called before
@@ -2430,74 +2395,12 @@ static bool_t control_Prepare(const ctlExtData_t *data)
         m_bRegularControl = false;
     }
 
-    //bool_t m_bShutZone = cutoff_Eval(); //NOTE: If in cutoff, writes output directly
-
-    // if(m_bShutZone)
-    // {
-    //     m_bRegularControl = false;
-    // }
-    // cstate.m_bShutZone = m_bShutZone; //need for output control for now
-
-	// if(m_bRegularControl && !cstate.m_bRegularControl)
-	// {
-	// 	//Entering closed-loop for the first time
-    //     control_EnterClosedLoop(data);
-	// }
-    // cstate.m_bRegularControl = m_bRegularControl;
     if(!m_bRegularControl)
     {
             cstate.i_count = 0;                    // reset integral interval counter
     }
     return m_bRegularControl;
 }
-
-#if 0
-static bool_t control_Prepare(const ctlExtData_t *data)
-{
-    if (data->OutputLim <= MIN_DA_VALUE)
-    {
-        control_ResetRateLimitsLogic();
-    }
-    control_RateLimitsGuard();
-
-    cstate.m_n1ControlMode = mode_GetEffectiveControlMode(&m_n4Setpoint);
-
-    if (cstate.start_count == 0)
-    {
-        /* startup */
-        cstate.m_n2CSigPos_p = m_bATO ? 0 : (data->m_pCPS->ExtraPosHigh + THREE_PCT_491);
-        cstate.start_count++;
-    }
-
-    // New function to check faults & shutoff
-    bool_t m_bRegularControl = control_CheckFaultsAndShutoff(data);
-
-    // cstate.m_bShutZone = !m_bRegularControl; // Keep track of shutoff state
-
-    if (m_bRegularControl && !cstate.m_bRegularControl)
-    {
-        // Entering closed-loop for the first time
-        control_EnterClosedLoop(data);
-    }
-
-    bool_t m_bShutZone = cutoff_Eval(m_bRegularControl); //NOTE: If in cutoff, writes output directly
-
-    if(m_bShutZone)
-    {
-        m_bRegularControl = false;
-    }
-    cstate.m_bShutZone = m_bShutZone; //need for output control for now
-
-    cstate.m_bRegularControl = m_bRegularControl;
-
-    if (!m_bRegularControl)
-    {
-        cstate.i_count = 0; // Reset integral interval counter
-    }
-
-    return m_bRegularControl;
-}
-#endif
 
 /* -------------------------------------------------------- */
 
