@@ -1,0 +1,7 @@
+This file is a bypass for current build issue.
+
+Currently, the latest build in the FIRMWARE folder dictates the build for the rest of the folders.
+Therefore, if a change is made to another folder but none to the FIRMWARE folder, the change does not get pulled in.
+
+Simply update this file to force a changeset in the FIRMWARE folder so that it is also included with or dictates the latest changeset.
+This can be addressed and fixed at a future time.
