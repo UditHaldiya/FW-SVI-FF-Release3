@@ -1,0 +1,698 @@
+#
+# Symbols file for Advanced Parameters File
+# Filename: symbols.txt
+# Date of last change: 14 JUL 2010
+#
+# Items:    0x80020D10 -> 0x80020F0F
+# Members:  0xC0010D10 -> 0xC0010F0F
+#
+variable      __status_output_r_nd           enumerated              0x80020D10
+variable      __discrete_output_r_nd         enumerated              0x80020D11
+variable      __discrete_output              enumerated              0x80020D12
+variable      __float_input_r_nd             float                   0x80020D13
+variable      __status_input_r_nd            enumerated              0x80020D14
+variable      __float_input_r                float                   0x80020D15
+variable      __status_input_r               enumerated              0x80020D16
+variable      __device_opts                  bit-string              0x80020D17
+record        __in_d                                                 0x80020D18
+variable      __fail_pri                     unsigned                0x80020D19
+variable      __accept_pri                   unsigned                0x80020D1A
+variable      __ignore_pri                   unsigned                0x80020D1B
+record        __fail_alm                                             0x80020D1C
+record        __accept_alm                                           0x80020D1D
+record        __ignore_alm                                           0x80020D1E
+record        __shutdown_d                                           0x80020D1F
+record        __interlock_d                                          0x80020D20
+record        __permissive_d                                         0x80020D21
+variable      __reset_d                      enumerated              0x80020D22
+variable      __accept_d                     enumerated              0x80020D23
+variable      __dc_state                     enumerated              0x80020D24
+variable      __travel_timer                 float                   0x80020D25
+variable      __cfm_pass_time                float                   0x80020D26
+variable      __cfm_act1_time                float                   0x80020D27
+variable      __trip_time                    float                   0x80020D28
+variable      __ignore                       bit-string              0x80020D29
+variable      __fail                         enumerated              0x80020D2A
+record        __bkcal_in_d                                           0x80020D2B
+variable      __crack_timer                  float                   0x80020D2C
+variable      __delay_timer                  float                   0x80020D2D
+variable      __cfm_act2_time                float                   0x80020D2E
+variable      __crack_time                   float                   0x80020D2F
+variable      __delay_time                   float                   0x80020D30
+variable      __restart_time                 float                   0x80020D31
+record        __out_1_range                                          0x80020D32
+record        __out_2_range                                          0x80020D33
+array         __in_array                                             0x80020D34
+variable      __in_array_elem                float                   0x80020D35
+array         __out_array                                            0x80020D36
+variable      __out_array_elem               float                   0x80020D37
+variable      __lockval                      enumerated              0x80020D38
+record        __bkcal_in_1                                           0x80020D39
+record        __bkcal_in_2                                           0x80020D3A
+variable      __hystval                      float                   0x80020D3B
+record        __x_range                                              0x80020D3C
+record        __y_range                                              0x80020D3D
+variable      __swap_2                       enumerated              0x80020D3E
+array         __curve_x                                              0x80020D3F
+variable      __curve_x_elem                 float                   0x80020D40
+array         __curve_y                                              0x80020D41
+variable      __curve_y_elem                 float                   0x80020D42
+record        __out_range                                            0x80020D43
+record        __follow                                               0x80020D44
+variable      __lag_time                     float                   0x80020D45
+variable      __lead_time                    float                   0x80020D46
+variable      __outage_lim                   float                   0x80020D47
+record        __dead_time                                            0x80020D48
+variable      __total_sp                     float                   0x80020D49
+record        __out_trip                                             0x80020D4A
+record        __out_ptrip                                            0x80020D4B
+variable      __time_unit1                   enumerated              0x80020D4C
+variable      __time_unit2                   enumerated              0x80020D4D
+variable      __unit_conv                    float                   0x80020D4E
+variable      __pulse_val1                   float                   0x80020D4F
+variable      __pulse_val2                   float                   0x80020D50
+record        __rev_flow1                                            0x80020D51
+record        __rev_flow2                                            0x80020D52
+record        __reset_in                                             0x80020D53
+variable      __stotal                       float                   0x80020D54
+variable      __rtotal                       float                   0x80020D55
+variable      __srtotal                      float                   0x80020D56
+variable      __ssp                          float                   0x80020D57
+variable      __integ_type                   enumerated              0x80020D58
+variable      __integ_opts                   bit-enumerated          0x80020D59
+variable      __clock_per                    float                   0x80020D5A
+variable      __pre_trip                     float                   0x80020D5B
+variable      __n_reset                      float                   0x80020D5C
+variable      __pct_incl                     float                   0x80020D5D
+variable      __good_lim                     float                   0x80020D5E
+variable      __uncert_lim                   float                   0x80020D5F
+variable      __op_cmd_int                   enumerated              0x80020D60
+record        __reset_confirm                                        0x80020D61
+array         __start_val                                            0x80020D62
+variable      __start_val_elem               float                   0x80020D63
+array         __time_duration                                        0x80020D64
+variable      __time_duration_elem           float                   0x80020D65
+variable      __time_units                   enumerated              0x80020D66
+record        __start                                                0x80020D67
+variable      __start_type                   enumerated              0x80020D68
+record        __pause                                                0x80020D69
+variable      __pause_cause                  enumerated              0x80020D6A
+variable      __auto_cycle                   enumerated              0x80020D6B
+record        __step_posn                                            0x80020D6C
+record        __time_posn                                            0x80020D6D
+record        __time_posn_t                                          0x80020D6E
+variable      __op_cmd_spg                   enumerated              0x80020D6F
+variable      __spg_state                    enumerated              0x80020D70
+record        __pre_out                                              0x80020D71
+record        __disable_1                                            0x80020D72
+record        __disable_2                                            0x80020D73
+record        __disable_3                                            0x80020D74
+record        __disable_4                                            0x80020D75
+variable      __select_type                  enumerated              0x80020D76
+variable      __min_good                     unsigned                0x80020D77
+record        __selected                                             0x80020D78
+record        __op_select                                            0x80020D79
+variable      __input_opts                   bit-enumerated          0x80020D7A
+record        __in_lo                                                0x80020D7B
+variable      __range_hi                     float                   0x80020D7C
+variable      __range_lo                     float                   0x80020D7D
+variable      __bias_in_1                    float                   0x80020D7E
+variable      __gain_in_1                    float                   0x80020D7F
+variable      __bias_in_2                    float                   0x80020D80
+variable      __gain_in_2                    float                   0x80020D81
+variable      __bias_in_3                    float                   0x80020D82
+variable      __gain_in_3                    float                   0x80020D83
+variable      __comp_hi_lim                  float                   0x80020D84
+variable      __comp_lo_lim                  float                   0x80020D85
+variable      __arith_type                   enumerated              0x80020D86
+variable      __timer_sp                     float                   0x80020D87
+variable      __invert_opts                  bit-enumerated		0x80020D88
+variable      __comb_type                    enumerated              0x80020D89
+variable      __timer_type                   enumerated              0x80020D8A
+record        __pre_out_d                                            0x80020D8B
+variable      __n_start                      unsigned                0x80020D8C
+record        __out_exp                                              0x80020D8D
+record        __out_rem                                              0x80020D8E
+variable      __quies_opt                    enumerated              0x80020D8F
+record        __psp                                                  0x80020D90
+variable      __hi_gain                      float                   0x80020D91
+variable      __lo_gain                      float                   0x80020D92
+variable      __hi_hi_bias                   float                   0x80020D93
+variable      __hi_bias                      float                   0x80020D94
+variable      __lo_bias                      float                   0x80020D95
+variable      __lo_lo_bias                   float                   0x80020D96
+record        __pre_out_alm                                          0x80020D97
+record        __out_alm                                              0x80020D98
+variable      __out_alm_sum                  enumerated              0x80020D99
+variable      __alm_rate_up                  float                   0x80020D9A
+variable      __alm_rate_dn                  float                   0x80020D9B
+variable      __expand_up                    float                   0x80020D9C
+variable      __expand_dn                    float                   0x80020D9D
+variable      __ignore_time                  float                   0x80020D9E
+variable      __hi_hi_limx                   float                   0x80020D9F
+variable      __hi_limx                      float                   0x80020DA0
+variable      __lo_limx                      float                   0x80020DA1
+variable      __lo_lo_limx                   float                   0x80020DA2
+record        __pre_out_1                                            0x80020DA3
+record        __pre_out_2                                            0x80020DA4
+record        __temp_1                                               0x80020DA5
+record        __temp_2                                               0x80020DA6
+record        __temp_3                                               0x80020DA7
+record        __temp_4                                               0x80020DA8
+variable      __out_1_units                  enumerated                0x80020DA9
+variable      __out_2_units                  enumerated                0x80020DAA
+record        __pre_out_d1                                           0x80020DAB
+record        __pre_out_d2                                           0x80020DAC
+record        __temp_d1                                              0x80020DAD
+record        __temp_d2                                              0x80020DAE
+record        __temp_d3                                              0x80020DAF
+record        __temp_d4                                              0x80020DB0
+variable      __out_1_state                  enumerated              0x80020DB1
+variable      __out_2_state                  enumerated              0x80020DB2
+variable      __inst_ex_lim                  unsigned                0x80020DB3
+variable      __prop_lims                    enumerated              0x80020DB4
+variable      __calc_errs                    bit-enumerated          0x80020DB5
+variable      __inst_err_no                  unsigned                0x80020DB6
+variable      __err_latch                    enumerated              0x80020DB7
+array         __inst_list1                                           0x80020DB8
+variable      __inst_list1_elem              bit-string              0x80020DB9
+record        __out_accum                                            0x80020DBA
+record        __simulate_p                                           0x80020DBB
+variable      __pulse_val                    float                   0x80020DBC
+variable      __fsafe_time                   float                   0x80020DBD
+variable      __fsafe_val                    float                   0x80020DBE
+record        __safeguard_op                                         0x80020DBF
+record        __safeguard_cl                                         0x80020DC0
+record        __binary_op                                            0x80020DC1
+record        __binary_cl                                            0x80020DC2
+variable      __op_cmd_cxo                   bit-enumerated          0x80020DC3
+record        __en_open                                              0x80020DC4
+record        __en_close                                             0x80020DC5
+variable      __checkback                    bit-enumerated          0x80020DC6
+variable      __fsafe_val_d                  unsigned                0x80020DC7
+variable      __jog_time                     float                   0x80020DC8
+variable      __travel_time                  float                   0x80020DC9
+variable      __pulse_dur                    float                   0x80020DCA
+variable      __dead_band                    float                   0x80020DCB
+variable      __hysteresis                   float                   0x80020DCC
+variable      __cond_type                    enumerated              0x80020DCD
+variable      __cond_time                    float                   0x80020DCE
+variable      __disc_cond                    enumerated              0x80020DCF
+record        __iv_1                                                 0x80020DD0
+record        __iv_2                                                 0x80020DD1
+record        __iv_3                                                 0x80020DD2
+record        __iv_4                                                 0x80020DD3
+record        __iv_scale_1                                           0x80020DD4
+record        __iv_scale_2                                           0x80020DD5
+record        __iv_scale_3                                           0x80020DD6
+record        __iv_scale_4                                           0x80020DD7
+record        __init_val_1                                           0x80020DD8
+record        __init_val_2                                           0x80020DD9
+record        __init_val_3                                           0x80020DDA
+record        __init_val_4                                           0x80020DDB
+variable      __iv_desc_1                    visiblestring           0x80020DDC
+variable      __iv_desc_2                    visiblestring           0x80020DDD
+variable      __iv_desc_3                    visiblestring           0x80020DDE
+variable      __iv_desc_4                    visiblestring           0x80020DDF
+record        __iv_d1                                                0x80020DE0
+record        __iv_d2                                                0x80020DE1
+record        __iv_d3                                                0x80020DE2
+record        __iv_d4                                                0x80020DE3
+variable      __iv_state_1                   unsigned                0x80020DE4
+variable      __iv_state_2                   unsigned                0x80020DE5
+variable      __iv_state_3                   unsigned                0x80020DE6
+variable      __iv_state_4                   unsigned                0x80020DE7
+record        __init_val_d1                                          0x80020DE8
+record        __init_val_d2                                          0x80020DE9
+record        __init_val_d3                                          0x80020DEA
+record        __init_val_d4                                          0x80020DEB
+record        __in_d9                                                0x80020DEC
+record        __in_d10                                               0x80020DED
+record        __in_d11                                               0x80020DEE
+record        __in_d12                                               0x80020DEF
+record        __in_d13                                               0x80020DF0
+record        __in_d14                                               0x80020DF1
+record        __in_d15                                               0x80020DF2
+record        __in_d16                                               0x80020DF3
+record        __pre_out_d3                                           0x80020DF4
+record        __pre_out_d4                                           0x80020DF5
+record        __temp_d5                                              0x80020DF6
+record        __temp_d6                                              0x80020DF7
+record        __temp_d7                                              0x80020DF8
+record        __temp_d8                                              0x80020DF9
+variable      __out_3_state                  enumerated              0x80020DFA
+variable      __out_4_state                  enumerated              0x80020DFB
+variable      __disable_input                enumerated              0x80020DFC
+variable      __discrete_input_op_select     enumerated              0x80020DFD
+variable      __discrete_input_reset_confirm enumerated              0x80020DFE
+variable      __discrete_input_rev_flow      enumerated              0x80020DFF
+variable      __failure_opts                 enumerated          0x80020E00
+record        __preset_in                                            0x80020E01
+variable      __totalizer_opts               enumerated          0x80020E02
+record        __xd_range                                             0x80020E03
+variable      __status_input_op     enumerated              0x80020E04
+variable	__reset_in_value	enumerated	0x80020E05	
+
+member        DEVICE_OPTS                    parameter               0xC0010D10
+member        VL_DEVICE_OPTS                 variable-list           0xC0010D11
+member        IN_D                           parameter               0xC0010D12
+member        VL_IN_D                        variable-list           0xC0010D13
+member        FAIL_PRI                       parameter               0xC0010D14
+member        VL_FAIL_PRI                    variable-list           0xC0010D15
+member        ACCEPT_PRI                     parameter               0xC0010D16
+member        VL_ACCEPT_PRI                  variable-list           0xC0010D17
+member        IGNORE_PRI                     parameter               0xC0010D18
+member        VL_IGNORE_PRI                  variable-list           0xC0010D19
+member        FAIL_ALM                       parameter               0xC0010D1A
+member        ACCEPT_ALM                     parameter               0xC0010D1B
+member        IGNORE_ALM                     parameter               0xC0010D1C
+member        SHUTDOWN_D                     parameter               0xC0010D1D
+member        VL_SHUTDOWN_D                  variable-list           0xC0010D1E
+member        INTERLOCK_D                    parameter               0xC0010D1F
+member        VL_INTERLOCK_D                 variable-list           0xC0010D20
+member        PERMISSIVE_D                   parameter               0xC0010D21
+member        VL_PERMISSIVE_D                variable-list           0xC0010D22
+member        RESET_D                        parameter               0xC0010D23
+member        VL_RESET_D                     variable-list           0xC0010D24
+member        ACCEPT_D                       parameter               0xC0010D25
+member        VL_ACCEPT_D                    variable-list           0xC0010D26
+member        DC_STATE                       parameter               0xC0010D27
+member        VL_DC_STATE                    variable-list           0xC0010D28
+member        TRAVEL_TIMER                   parameter               0xC0010D29
+member        VL_TRAVEL_TIMER                variable-list           0xC0010D2A
+member        CFM_PASS_TIME                  parameter               0xC0010D2B
+member        VL_CFM_PASS_TIME               variable-list           0xC0010D2C
+member        CFM_ACT1_TIME                  parameter               0xC0010D2D
+member        VL_CFM_ACT1_TIME               variable-list           0xC0010D2E
+member        TRIP_TIME                      parameter               0xC0010D2F
+member        VL_TRIP_TIME                   variable-list           0xC0010D30
+member        IGNORE                         parameter               0xC0010D31
+member        VL_IGNORE                      variable-list           0xC0010D32
+member        FAIL                           parameter               0xC0010D33
+member        VL_FAIL                        variable-list           0xC0010D34
+member        BKCAL_IN_D                     parameter               0xC0010D35
+member        VL_BKCAL_IN_D                  variable-list           0xC0010D36
+member        CRACK_TIMER                    parameter               0xC0010D37
+member        VL_CRACK_TIMER                 variable-list           0xC0010D38
+member        DELAY_TIMER                    parameter               0xC0010D39
+member        VL_DELAY_TIMER                 variable-list           0xC0010D3A
+member        CFM_ACT2_TIME                  parameter               0xC0010D3B
+member        VL_CFM_ACT2_TIME               variable-list           0xC0010D3C
+member        CRACK_TIME                     parameter               0xC0010D3D
+member        VL_CRACK_TIME                  variable-list           0xC0010D3E
+member        DELAY_TIME                     parameter               0xC0010D3F
+member        VL_DELAY_TIME                  variable-list           0xC0010D40
+member        RESTART_TIME                   parameter               0xC0010D41
+member        VL_RESTART_TIME                variable-list           0xC0010D42
+member        OUT_1_RANGE                    parameter               0xC0010D43
+member        VL_OUT_1_RANGE                 variable-list           0xC0010D44
+member        OUT_2_RANGE                    parameter               0xC0010D45
+member        VL_OUT_2_RANGE                 variable-list           0xC0010D46
+member        IN_ARRAY                       parameter               0xC0010D47
+member        VL_IN_ARRAY                    variable-list           0xC0010D48
+member        OUT_ARRAY                      parameter               0xC0010D49
+member        VL_OUT_ARRAY                   variable-list           0xC0010D4A
+member        LOCKVAL                        parameter               0xC0010D4B
+member        VL_LOCKVAL                     variable-list           0xC0010D4C
+member        BKCAL_IN_1                     parameter               0xC0010D4D
+member        VL_BKCAL_IN_1                  variable-list           0xC0010D4E
+member        BKCAL_IN_2                     parameter               0xC0010D4F
+member        VL_BKCAL_IN_2                  variable-list           0xC0010D50
+member        HYSTVAL                        parameter               0xC0010D51
+member        VL_HYSTVAL                     variable-list           0xC0010D52
+member        X_RANGE                        parameter               0xC0010D53
+member        VL_X_RANGE                     variable-list           0xC0010D54
+member        Y_RANGE                        parameter               0xC0010D55
+member        VL_Y_RANGE                     variable-list           0xC0010D56
+member        SWAP_2                         parameter               0xC0010D57
+member        VL_SWAP_2                      variable-list           0xC0010D58
+member        CURVE_X                        parameter               0xC0010D59
+member        CURVE_Y                        parameter               0xC0010D5A
+member        OUT_RANGE                      parameter               0xC0010D5B
+member        VL_OUT_RANGE                   variable-list           0xC0010D5C
+member        FOLLOW                         parameter               0xC0010D5D
+member        VL_FOLLOW                      variable-list           0xC0010D5E
+member        LAG_TIME                       parameter               0xC0010D5F
+member        VL_LAG_TIME                    variable-list           0xC0010D60
+member        LEAD_TIME                      parameter               0xC0010D61
+member        VL_LEAD_TIME                   variable-list           0xC0010D62
+member        OUTAGE_LIM                     parameter               0xC0010D63
+member        VL_OUTAGE_LIM                  variable-list           0xC0010D64
+member        DEAD_TIME                      parameter               0xC0010D65
+member        VL_DEAD_TIME                   variable-list           0xC0010D66
+member        TOTAL_SP                       parameter               0xC0010D67
+member        VL_TOTAL_SP                    variable-list           0xC0010D68
+member        OUT_TRIP                       parameter               0xC0010D69
+member        VL_OUT_TRIP                    variable-list           0xC0010D6A
+member        OUT_PTRIP                      parameter               0xC0010D6B
+member        VL_OUT_PTRIP                   variable-list           0xC0010D6C
+member        TIME_UNIT1                     parameter               0xC0010D6D
+member        VL_TIME_UNIT1                  variable-list           0xC0010D6E
+member        TIME_UNIT2                     parameter               0xC0010D6F
+member        VL_TIME_UNIT2                  variable-list           0xC0010D70
+member        UNIT_CONV                      parameter               0xC0010D71
+member        VL_UNIT_CONV                   variable-list           0xC0010D72
+member        PULSE_VAL1                     parameter               0xC0010D73
+member        VL_PULSE_VAL1                  variable-list           0xC0010D74
+member        PULSE_VAL2                     parameter               0xC0010D75
+member        VL_PULSE_VAL2                  variable-list           0xC0010D76
+member        REV_FLOW1                      parameter               0xC0010D77
+member        VL_REV_FLOW1                   variable-list           0xC0010D78
+member        REV_FLOW2                      parameter               0xC0010D79
+member        VL_REV_FLOW2                   variable-list           0xC0010D7A
+member        RESET_IN                       parameter               0xC0010D7B
+member        VL_RESET_IN                    variable-list           0xC0010D7C
+member        STOTAL                         parameter               0xC0010D7D
+member        VL_STOTAL                      variable-list           0xC0010D7E
+member        RTOTAL                         parameter               0xC0010D7F
+member        VL_RTOTAL                      variable-list           0xC0010D80
+member        SRTOTAL                        parameter               0xC0010D81
+member        VL_SRTOTAL                     variable-list           0xC0010D82
+member        SSP                            parameter               0xC0010D83
+member        VL_SSP                         variable-list           0xC0010D84
+member        INTEG_TYPE                     parameter               0xC0010D85
+member        VL_INTEG_TYPE                  variable-list           0xC0010D86
+member        INTEG_OPTS                     parameter               0xC0010D87
+member        VL_INTEG_OPTS                  variable-list           0xC0010D88
+member        CLOCK_PER                      parameter               0xC0010D89
+member        VL_CLOCK_PER                   variable-list           0xC0010D8A
+member        PRE_TRIP                       parameter               0xC0010D8B
+member        VL_PRE_TRIP                    variable-list           0xC0010D8C
+member        N_RESET                        parameter               0xC0010D8D
+member        VL_N_RESET                     variable-list           0xC0010D8E
+member        PCT_INCL                       parameter               0xC0010D8F
+member        VL_PCT_INCL                    variable-list           0xC0010D90
+member        GOOD_LIM                       parameter               0xC0010D91
+member        VL_GOOD_LIM                    variable-list           0xC0010D92
+member        UNCERT_LIM                     parameter               0xC0010D93
+member        VL_UNCERT_LIM                  variable-list           0xC0010D94
+member        OP_CMD_INT                     parameter               0xC0010D95
+member        VL_OP_CMD_INT                  variable-list           0xC0010D96
+member        RESET_CONFIRM                  parameter               0xC0010D97
+member        VL_RESET_CONFIRM               variable-list           0xC0010D98
+member        START_VAL                      parameter               0xC0010D99
+member        VL_START_VAL                   variable-list           0xC0010D9A
+member        TIME_DURATION                  parameter               0xC0010D9B
+member        VL_TIME_DURATION               variable-list           0xC0010D9C
+member        TIME_UNITS                     parameter               0xC0010D9D
+member        VL_TIME_UNITS                  variable-list           0xC0010D9E
+member        START                          parameter               0xC0010D9F
+member        VL_START                       variable-list           0xC0010DA0
+member        START_TYPE                     parameter               0xC0010DA1
+member        VL_START_TYPE                  variable-list           0xC0010DA2
+member        PAUSE                          parameter               0xC0010DA3
+member        VL_PAUSE                       variable-list           0xC0010DA4
+member        PAUSE_CAUSE                    parameter               0xC0010DA5
+member        VL_PAUSE_CAUSE                 variable-list           0xC0010DA6
+member        AUTO_CYCLE                     parameter               0xC0010DA7
+member        VL_AUTO_CYCLE                  variable-list           0xC0010DA8
+member        STEP_POSN                      parameter               0xC0010DA9
+member        VL_STEP_POSN                   variable-list           0xC0010DAA
+member        TIME_POSN                      parameter               0xC0010DAB
+member        VL_TIME_POSN                   variable-list           0xC0010DAC
+member        TIME_POSN_T                    parameter               0xC0010DAD
+member        VL_TIME_POSN_T                 variable-list           0xC0010DAE
+member        OP_CMD_SPG                     parameter               0xC0010DAF
+member        VL_OP_CMD_SPG                  variable-list           0xC0010DB0
+member        SPG_STATE                      parameter               0xC0010DB1
+member        VL_SPG_STATE                   variable-list           0xC0010DB2
+member        PRE_OUT                        parameter               0xC0010DB3
+member        VL_PRE_OUT                     variable-list           0xC0010DB4
+member        DISABLE_1                      parameter               0xC0010DB5
+member        VL_DISABLE_1                   variable-list           0xC0010DB6
+member        DISABLE_2                      parameter               0xC0010DB7
+member        VL_DISABLE_2                   variable-list           0xC0010DB8
+member        DISABLE_3                      parameter               0xC0010DB9
+member        VL_DISABLE_3                   variable-list           0xC0010DBA
+member        DISABLE_4                      parameter               0xC0010DBB
+member        VL_DISABLE_4                   variable-list           0xC0010DBC
+member        SELECT_TYPE                    parameter               0xC0010DBD
+member        VL_SELECT_TYPE                 variable-list           0xC0010DBE
+member        MIN_GOOD                       parameter               0xC0010DBF
+member        VL_MIN_GOOD                    variable-list           0xC0010DC0
+member        SELECTED                       parameter               0xC0010DC1
+member        VL_SELECTED                    variable-list           0xC0010DC2
+member        OP_SELECT                      parameter               0xC0010DC3
+member        VL_OP_SELECT                   variable-list           0xC0010DC4
+member        INPUT_OPTS                     parameter               0xC0010DC5
+member        VL_INPUT_OPTS                  variable-list           0xC0010DC6
+member        IN_LO                          parameter               0xC0010DC7
+member        VL_IN_LO                       variable-list           0xC0010DC8
+member        RANGE_HI                       parameter               0xC0010DC9
+member        VL_RANGE_HI                    variable-list           0xC0010DCA
+member        RANGE_LO                       parameter               0xC0010DCB
+member        VL_RANGE_LO                    variable-list           0xC0010DCC
+member        BIAS_IN_1                      parameter               0xC0010DCD
+member        VL_BIAS_IN_1                   variable-list           0xC0010DCE
+member        GAIN_IN_1                      parameter               0xC0010DCF
+member        VL_GAIN_IN_1                   variable-list           0xC0010DD0
+member        BIAS_IN_2                      parameter               0xC0010DD1
+member        VL_BIAS_IN_2                   variable-list           0xC0010DD2
+member        GAIN_IN_2                      parameter               0xC0010DD3
+member        VL_GAIN_IN_2                   variable-list           0xC0010DD4
+member        BIAS_IN_3                      parameter               0xC0010DD5
+member        VL_BIAS_IN_3                   variable-list           0xC0010DD6
+member        GAIN_IN_3                      parameter               0xC0010DD7
+member        VL_GAIN_IN_3                   variable-list           0xC0010DD8
+member        COMP_HI_LIM                    parameter               0xC0010DD9
+member        VL_COMP_HI_LIM                 variable-list           0xC0010DDA
+member        COMP_LO_LIM                    parameter               0xC0010DDB
+member        VL_COMP_LO_LIM                 variable-list           0xC0010DDC
+member        ARITH_TYPE                     parameter               0xC0010DDD
+member        VL_ARITH_TYPE                  variable-list           0xC0010DDE
+member        TIMER_SP                       parameter               0xC0010DDF
+member        VL_TIMER_SP                    variable-list           0xC0010DE0
+member        INVERT_OPTS                    parameter               0xC0010DE1
+member        VL_INVERT_OPTS                 variable-list           0xC0010DE2
+member        COMB_TYPE                      parameter               0xC0010DE3
+member        VL_COMB_TYPE                   variable-list           0xC0010DE4
+member        TIMER_TYPE                     parameter               0xC0010DE5
+member        VL_TIMER_TYPE                  variable-list           0xC0010DE6
+member        PRE_OUT_D                      parameter               0xC0010DE7
+member        VL_PRE_OUT_D                   variable-list           0xC0010DE8
+member        N_START                        parameter               0xC0010DE9
+member        VL_N_START                     variable-list           0xC0010DEA
+member        OUT_EXP                        parameter               0xC0010DEB
+member        VL_OUT_EXP                     variable-list           0xC0010DEC
+member        OUT_REM                        parameter               0xC0010DED
+member        VL_OUT_REM                     variable-list           0xC0010DEE
+member        QUIES_OPT                      parameter               0xC0010DEF
+member        VL_QUIES_OPT                   variable-list           0xC0010DF0
+member        PSP                            parameter               0xC0010DF1
+member        VL_PSP                         variable-list           0xC0010DF2
+member        HI_GAIN                        parameter               0xC0010DF3
+member        VL_HI_GAIN                     variable-list           0xC0010DF4
+member        LO_GAIN                        parameter               0xC0010DF5
+member        VL_LO_GAIN                     variable-list           0xC0010DF6
+member        HI_HI_BIAS                     parameter               0xC0010DF7
+member        VL_HI_HI_BIAS                  variable-list           0xC0010DF8
+member        HI_BIAS                        parameter               0xC0010DF9
+member        VL_HI_BIAS                     variable-list           0xC0010DFA
+member        LO_BIAS                        parameter               0xC0010DFB
+member        VL_LO_BIAS                     variable-list           0xC0010DFC
+member        LO_LO_BIAS                     parameter               0xC0010DFD
+member        VL_LO_LO_BIAS                  variable-list           0xC0010DFE
+member        PRE_OUT_ALM                    parameter               0xC0010DFF
+member        VL_PRE_OUT_ALM                 variable-list           0xC0010E00
+member        OUT_ALM                        parameter               0xC0010E01
+member        VL_OUT_ALM                     variable-list           0xC0010E02
+member        OUT_ALM_SUM                    parameter               0xC0010E03
+member        VL_OUT_ALM_SUM                 variable-list           0xC0010E04
+member        ALM_RATE_UP                    parameter               0xC0010E05
+member        VL_ALM_RATE_UP                 variable-list           0xC0010E06
+member        ALM_RATE_DN                    parameter               0xC0010E07
+member        VL_ALM_RATE_DN                 variable-list           0xC0010E08
+member        EXPAND_UP                      parameter               0xC0010E09
+member        VL_EXPAND_UP                   variable-list           0xC0010E0A
+member        EXPAND_DN                      parameter               0xC0010E0B
+member        VL_EXPAND_DN                   variable-list           0xC0010E0C
+member        IGNORE_TIME                    parameter               0xC0010E0D
+member        VL_IGNORE_TIME                 variable-list           0xC0010E0E
+member        HI_HI_LIMX                     parameter               0xC0010E0F
+member        VL_HI_HI_LIMX                  variable-list           0xC0010E10
+member        HI_LIMX                        parameter               0xC0010E11
+member        VL_HI_LIMX                     variable-list           0xC0010E12
+member        LO_LIMX                        parameter               0xC0010E13
+member        VL_LO_LIMX                     variable-list           0xC0010E14
+member        LO_LO_LIMX                     parameter               0xC0010E15
+member        VL_LO_LO_LIMX                  variable-list           0xC0010E16
+member        PRE_OUT_1                      parameter               0xC0010E17
+member        VL_PRE_OUT_1                   variable-list           0xC0010E18
+member        PRE_OUT_2                      parameter               0xC0010E19
+member        VL_PRE_OUT_2                   variable-list           0xC0010E1A
+member        TEMP_1                         parameter               0xC0010E1B
+member        VL_TEMP_1                      variable-list           0xC0010E1C
+member        TEMP_2                         parameter               0xC0010E1D
+member        VL_TEMP_2                      variable-list           0xC0010E1E
+member        TEMP_3                         parameter               0xC0010E1F
+member        VL_TEMP_3                      variable-list           0xC0010E20
+member        TEMP_4                         parameter               0xC0010E21
+member        VL_TEMP_4                      variable-list           0xC0010E22
+member        OUT_1_UNITS                    parameter               0xC0010E23
+member        VL_OUT_1_UNITS                 variable-list           0xC0010E24
+member        OUT_2_UNITS                    parameter               0xC0010E25
+member        VL_OUT_2_UNITS                 variable-list           0xC0010E26
+member        PRE_OUT_D1                     parameter               0xC0010E27
+member        VL_PRE_OUT_D1                  variable-list           0xC0010E28
+member        PRE_OUT_D2                     parameter               0xC0010E29
+member        VL_PRE_OUT_D2                  variable-list           0xC0010E2A
+member        TEMP_D1                        parameter               0xC0010E2B
+member        VL_TEMP_D1                     variable-list           0xC0010E2C
+member        TEMP_D2                        parameter               0xC0010E2D
+member        VL_TEMP_D2                     variable-list           0xC0010E2E
+member        TEMP_D3                        parameter               0xC0010E2F
+member        VL_TEMP_D3                     variable-list           0xC0010E30
+member        TEMP_D4                        parameter               0xC0010E31
+member        VL_TEMP_D4                     variable-list           0xC0010E32
+member        OUT_1_STATE                    parameter               0xC0010E33
+member        VL_OUT_1_STATE                 variable-list           0xC0010E34
+member        OUT_2_STATE                    parameter               0xC0010E35
+member        VL_OUT_2_STATE                 variable-list           0xC0010E36
+member        INST_EX_LIM                    parameter               0xC0010E37
+member        VL_INST_EX_LIM                 variable-list           0xC0010E38
+member        PROP_LIMS                      parameter               0xC0010E39
+member        VL_PROP_LIMS                   variable-list           0xC0010E3A
+member        CALC_ERRS                      parameter               0xC0010E3B
+member        VL_CALC_ERRS                   variable-list           0xC0010E3C
+member        INST_ERR_NO                    parameter               0xC0010E3D
+member        VL_INST_ERR_NO                 variable-list           0xC0010E3E
+member        ERR_LATCH                      parameter               0xC0010E3F
+member        VL_ERR_LATCH                   variable-list           0xC0010E40
+member        INST_LIST1                     parameter               0xC0010E41
+member        OUT_ACCUM                      parameter               0xC0010E42
+member        VL_OUT_ACCUM                   variable-list           0xC0010E43
+member        SIMULATE_P                     parameter               0xC0010E44
+member        PULSE_VAL                      parameter               0xC0010E45
+member        VL_PULSE_VAL                   variable-list           0xC0010E46
+member        FSAFE_TIME                     parameter               0xC0010E47
+member        VL_FSAFE_TIME                  variable-list           0xC0010E48
+member        FSAFE_VAL                      parameter               0xC0010E49
+member        VL_FSAFE_VAL                   variable-list           0xC0010E4A
+member        SAFEGUARD_OP                   parameter               0xC0010E4B
+member        VL_SAFEGUARD_OP                variable-list           0xC0010E4C
+member        SAFEGUARD_CL                   parameter               0xC0010E4D
+member        VL_SAFEGUARD_CL                variable-list           0xC0010E4E
+member        BINARY_OP                      parameter               0xC0010E4F
+member        VL_BINARY_OP                   variable-list           0xC0010E50
+member        BINARY_CL                      parameter               0xC0010E51
+member        VL_BINARY_CL                   variable-list           0xC0010E52
+member        OP_CMD_CXO                     parameter               0xC0010E53
+member        VL_OP_CMD_CXO                  variable-list           0xC0010E54
+member        EN_OPEN                        parameter               0xC0010E55
+member        VL_EN_OPEN                     variable-list           0xC0010E56
+member        EN_CLOSE                       parameter               0xC0010E57
+member        VL_EN_CLOSE                    variable-list           0xC0010E58
+member        CHECKBACK                      parameter               0xC0010E59
+member        VL_CHECKBACK                   variable-list           0xC0010E5A
+member        FSAFE_VAL_D                    parameter               0xC0010E5B
+member        VL_FSAFE_VAL_D                 variable-list           0xC0010E5C
+member        JOG_TIME                       parameter               0xC0010E5D
+member        VL_JOG_TIME                    variable-list           0xC0010E5E
+member        TRAVEL_TIME                    parameter               0xC0010E5F
+member        VL_TRAVEL_TIME                 variable-list           0xC0010E60
+member        PULSE_DUR                      parameter               0xC0010E61
+member        VL_PULSE_DUR                   variable-list           0xC0010E62
+member        DEAD_BAND                      parameter               0xC0010E63
+member        VL_DEAD_BAND                   variable-list           0xC0010E64
+member        HYSTERESIS                     parameter               0xC0010E65
+member        VL_HYSTERESIS                  variable-list           0xC0010E66
+member        COND_TYPE                      parameter               0xC0010E67
+member        VL_COND_TYPE                   variable-list           0xC0010E68
+member        COND_TIME                      parameter               0xC0010E69
+member        VL_COND_TIME                   variable-list           0xC0010E6A
+member        DISC_COND                      parameter               0xC0010E6B
+member        VL_DISC_COND                   variable-list           0xC0010E6C
+member        IV_1                           parameter               0xC0010E6D
+member        VL_IV_1                        variable-list           0xC0010E6E
+member        IV_2                           parameter               0xC0010E6F
+member        VL_IV_2                        variable-list           0xC0010E70
+member        IV_3                           parameter               0xC0010E71
+member        VL_IV_3                        variable-list           0xC0010E72
+member        IV_4                           parameter               0xC0010E73
+member        VL_IV_4                        variable-list           0xC0010E74
+member        IV_SCALE_1                     parameter               0xC0010E75
+member        VL_IV_SCALE_1                  variable-list           0xC0010E76
+member        IV_SCALE_2                     parameter               0xC0010E77
+member        VL_IV_SCALE_2                  variable-list           0xC0010E78
+member        IV_SCALE_3                     parameter               0xC0010E79
+member        VL_IV_SCALE_3                  variable-list           0xC0010E7A
+member        IV_SCALE_4                     parameter               0xC0010E7B
+member        VL_IV_SCALE_4                  variable-list           0xC0010E7C
+member        INIT_VAL_1                     parameter               0xC0010E7D
+member        VL_INIT_VAL_1                  variable-list           0xC0010E7E
+member        INIT_VAL_2                     parameter               0xC0010E7F
+member        VL_INIT_VAL_2                  variable-list           0xC0010E80
+member        INIT_VAL_3                     parameter               0xC0010E81
+member        VL_INIT_VAL_3                  variable-list           0xC0010E82
+member        INIT_VAL_4                     parameter               0xC0010E83
+member        VL_INIT_VAL_4                  variable-list           0xC0010E84
+member        IV_DESC_1                      parameter               0xC0010E85
+member        IV_DESC_2                      parameter               0xC0010E86
+member        IV_DESC_3                      parameter               0xC0010E87
+member        IV_DESC_4                      parameter               0xC0010E88
+member        IV_D1                          parameter               0xC0010E89
+member        VL_IV_D1                       variable-list           0xC0010E8A
+member        IV_D2                          parameter               0xC0010E8B
+member        VL_IV_D2                       variable-list           0xC0010E8C
+member        IV_D3                          parameter               0xC0010E8D
+member        VL_IV_D3                       variable-list           0xC0010E8E
+member        IV_D4                          parameter               0xC0010E8F
+member        VL_IV_D4                       variable-list           0xC0010E90
+member        IV_STATE_1                     parameter               0xC0010E91
+member        VL_IV_STATE_1                  variable-list           0xC0010E92
+member        IV_STATE_2                     parameter               0xC0010E93
+member        VL_IV_STATE_2                  variable-list           0xC0010E94
+member        IV_STATE_3                     parameter               0xC0010E95
+member        VL_IV_STATE_3                  variable-list           0xC0010E96
+member        IV_STATE_4                     parameter               0xC0010E97
+member        VL_IV_STATE_4                  variable-list           0xC0010E98
+member        INIT_VAL_D1                    parameter               0xC0010E99
+member        VL_INIT_VAL_D1                 variable-list           0xC0010E9A
+member        INIT_VAL_D2                    parameter               0xC0010E9B
+member        VL_INIT_VAL_D2                 variable-list           0xC0010E9C
+member        INIT_VAL_D3                    parameter               0xC0010E9D
+member        VL_INIT_VAL_D3                 variable-list           0xC0010E9E
+member        INIT_VAL_D4                    parameter               0xC0010E9F
+member        VL_INIT_VAL_D4                 variable-list           0xC0010EA0
+member        IN_D9                          parameter               0xC0010EA1
+member        VL_IN_D9                       variable-list           0xC0010EA2
+member        IN_D10                         parameter               0xC0010EA3
+member        VL_IN_D10                      variable-list           0xC0010EA4
+member        IN_D11                         parameter               0xC0010EA5
+member        VL_IN_D11                      variable-list           0xC0010EA6
+member        IN_D12                         parameter               0xC0010EA7
+member        VL_IN_D12                      variable-list           0xC0010EA8
+member        IN_D13                         parameter               0xC0010EA9
+member        VL_IN_D13                      variable-list           0xC0010EAA
+member        IN_D14                         parameter               0xC0010EAB
+member        VL_IN_D14                      variable-list           0xC0010EAC
+member        IN_D15                         parameter               0xC0010EAD
+member        VL_IN_D15                      variable-list           0xC0010EAE
+member        IN_D16                         parameter               0xC0010EAF
+member        VL_IN_D16                      variable-list           0xC0010EB0
+member        PRE_OUT_D3                     parameter               0xC0010EB1
+member        VL_PRE_OUT_D3                  variable-list           0xC0010EB2
+member        PRE_OUT_D4                     parameter               0xC0010EB3
+member        VL_PRE_OUT_D4                  variable-list           0xC0010EB4
+member        TEMP_D5                        parameter               0xC0010EB5
+member        VL_TEMP_D5                     variable-list           0xC0010EB6
+member        TEMP_D6                        parameter               0xC0010EB7
+member        VL_TEMP_D6                     variable-list           0xC0010EB8
+member        TEMP_D7                        parameter               0xC0010EB9
+member        VL_TEMP_D7                     variable-list           0xC0010EBA
+member        TEMP_D8                        parameter               0xC0010EBB
+member        VL_TEMP_D8                     variable-list           0xC0010EBC
+member        OUT_3_STATE                    parameter               0xC0010EBD
+member        VL_OUT_3_STATE                 variable-list           0xC0010EBE
+member        OUT_4_STATE                    parameter               0xC0010EBF
+member        VL_OUT_4_STATE                 variable-list           0xC0010EC0
+member        FAILURE_OPTS                   parameter               0xC0010EC1
+member        VL_FAILURE_OPTS                variable-list           0xC0010EC2
+member        PRESET_IN                      parameter               0xC0010EC3
+member        VL_PRESET_IN                   variable-list           0xC0010EC4
+member        TOTALIZER_OPTS                 parameter               0xC0010EC5
+member        VL_TOTALIZER_OPTS              variable-list           0xC0010EC6
+member        XD_RANGE                       parameter               0xC0010EC7
+member        VL_XD_RANGE                    variable-list           0xC0010EC8
+
+

@@ -1,0 +1,17 @@
+#
+# %W% %G%
+#
+# rio hart xducer block symbols
+#
+# Items:        0x80023400 -> 0x800234FF
+# Members:      0xC0013400 -> 0xC00134FF
+#
+
+block           __rio_hart_xdcr_block		    0x80023400
+var-list        __rio_hart_xdcr_view_1		    0x80023401
+var-list        __rio_hart_xdcr_view_2		    0x80023402
+var-list        __rio_hart_xdcr_view_3		    0x80023403
+var-list        __rio_hart_xdcr_view_4		    0x80023404
+record          __rio_hart_xdcr_character		0x80023405
+collection      no_download_rio_hart_xdcr	RESERVED	0x800234FE
+collection      upload_wanted_rio_hart_xdcr	RESERVED	0x800234FF

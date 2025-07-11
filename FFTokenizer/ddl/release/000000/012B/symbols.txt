@@ -1,0 +1,16 @@
+#
+# %W% %G%
+#
+# DAL block symbols
+#
+# Items:	0x80020910 -> 0x8002092F
+# Members:	0xC0020910 -> 0xC002092F
+#
+block		__discrete_alarm	0x80020910
+var-list	__dal_view_1			0x80020911
+var-list	__dal_view_2			0x80020912
+var-list	__dal_view_3			0x80020913
+var-list	__dal_view_4			0x80020914
+record		__dal_character			0x80020915
+collection      no_download_dal	RESERVED	0x8002092E
+collection      upload_wanted_dal	RESERVED	0x8002092F

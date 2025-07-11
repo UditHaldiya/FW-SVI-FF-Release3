@@ -1,0 +1,16 @@
+#
+# %W% %G%
+#
+# positioner discrete transducer block symbols
+#
+# Items:        0x80022800 -> 0x800228FF
+# Members:      0xC0012800 -> 0xC00128FF
+#
+block           __pos_d_xdcr_block		0x80022800
+var-list        __pos_d_xdcr_view_1		0x80022801
+var-list        __pos_d_xdcr_view_2		0x80022802
+var-list        __pos_d_xdcr_view_3		0x80022803
+var-list        __pos_d_xdcr_view_4		0x80022804
+record          __pos_d_xdcr_character		0x80022805
+collection      no_download_pos_d_xdcr	RESERVED	0x800228FE
+collection      upload_wanted_pos_d_xdcr	RESERVED	0x800228FF

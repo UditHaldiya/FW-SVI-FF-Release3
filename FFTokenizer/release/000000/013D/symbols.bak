@@ -1,0 +1,17 @@
+#
+# %W% %G%
+#
+# complex transducer block symbols
+#
+# Items:        0x80021600 -> 0x800216FF
+# Members:      0xC0011600 -> 0xC00116FF
+#
+block           __complex_transducer_block	0x80021600
+var-list        __cmplx_xdcr_view_1		0x80021601
+var-list        __cmplx_xdcr_view_2		0x80021602
+var-list        __cmplx_xdcr_view_3		0x80021603
+var-list        __cmplx_xdcr_view_4		0x80021604
+array		__cmplx_xdcr_directory		0x80021605
+record          __cmplx_xdcr_character		0x80021606
+collection      no_download_cmplx_xdcr	RESERVED	0x800216FE
+collection      upload_wanted_cmplx_xdcr	RESERVED	0x800216FF

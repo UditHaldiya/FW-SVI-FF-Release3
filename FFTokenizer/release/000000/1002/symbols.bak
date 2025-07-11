@@ -1,0 +1,16 @@
+#
+# %W% %G%
+#
+# SIF Analog Input block symbols
+#
+# Items:        0x80022000 -> 0x800220FF
+# Members:      0xC0012000 -> 0xC00120FF
+#
+block           __sif_analog_input_block       0x80022000
+var-list        __sif_ai_view_1                0x80022001
+var-list        __sif_ai_view_2                0x80022002
+var-list        __sif_ai_view_3                0x80022003
+var-list        __sif_ai_view_4                0x80022004
+record          __sif_ai_character             0x80022005
+collection      no_download_sif_ai	RESERVED	0x800220FE
+collection      upload_wanted_sif_ai	RESERVED	0x800220FF

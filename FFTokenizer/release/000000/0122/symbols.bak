@@ -1,0 +1,17 @@
+#
+# %W% %G%
+#
+# CAO block symbols
+#
+# Items:	0x800207F0 -> 0x8002080F
+# Members:	0xC00207F0 -> 0xC002080F
+#
+block		__complex_ao	0x800207F0
+var-list	__cao_view_1			0x800207F1
+var-list	__cao_view_2			0x800207F2
+var-list	__cao_view_3			0x800207F3
+var-list	__cao_view_4			0x800207F4
+unit            __unit_cao_pv                  0x800207F5
+record		__cao_character			0x800207F6
+collection      no_download_cao	RESERVED	0x8002080E
+collection      upload_wanted_cao	RESERVED	0x8002080F

@@ -1,0 +1,20 @@
+#
+# %W% %G%
+#
+# Temperature with Calibration for Basic Device 2 block symbols
+#
+# Items:	0x80024200 -> 0x800242FF
+# Members:	0xC0014200 -> 0xC00142FF
+#
+block		__temperature_cal_basic2			0x80024200
+var-list	__tcb2_view_1					0x80024201
+var-list	__tcb2_view_2					0x80024202
+var-list	__tcb2_view_3					0x80024203
+var-list	__tcb2_view_4					0x80024204
+unit		__unit_tcb2_cal_unit				0x80024205
+unit		__unit_tcb2_sensor_range  		0x80024206
+unit		__unit_tcb2_primary_val_unit 	0x80024207
+unit		__unit_tcb2_second_val_unit		0x80024208
+record		__tcb2_character					0x80024209
+collection      no_download_tcb2	RESERVED	0x8002420A
+collection      upload_wanted_tcb2	RESERVED	0x8002420B

@@ -1,0 +1,20 @@
+#
+# %W% %G%
+#
+# PD block symbols
+#
+# Items:	0x80020290 -> 0x800202AF
+# Members:	0xC0010290 -> 0xC0010290
+#
+block		__proportional_derivative_block	0x80020290
+var-list	__pd_view_1						0x80020291
+var-list	__pd_view_2						0x80020292
+var-list	__pd_view_3						0x80020293
+var-list	__pd_view_4						0x80020294
+unit		__unit_pd_pv						0x80020295
+unit		__unit_pd_out						0x80020296
+unit		__unit_pd_trk						0x80020297
+unit		__unit_pd_ff						0x80020298
+record		__pd_character			0x80020299
+collection      no_download_pd	RESERVED	0x800202AE
+collection      upload_wanted_pd	RESERVED	0x800202AF

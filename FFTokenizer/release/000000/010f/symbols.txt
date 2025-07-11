@@ -1,0 +1,17 @@
+#
+# %W% %G%
+#
+# Basic Positioner Valve Basic Device block symbols
+#
+# Items:	0x80020570 -> 0x8002058F
+# Members:	0xC0010570 -> 0xC0010570
+#
+block		__basic_pv_basic		0x80020570
+var-list	__bpvb_view_1			0x80020571
+var-list	__bpvb_view_2			0x80020572
+var-list	__bpvb_view_3			0x80020573
+var-list	__bpvb_view_4			0x80020574
+unit		__unit_bpvb_fvr 		0x80020575
+record		__bpvb_character		0x80020576
+collection      no_download_bpvb	RESERVED	0x8002058E
+collection      upload_wanted_bpvb	RESERVED	0x8002058F

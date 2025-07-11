@@ -1,0 +1,17 @@
+#
+# %W% %G%
+#
+# AAL block symbols
+#
+# Items:	0x800208F0 -> 0x8002090F
+# Members:	0xC00208F0 -> 0xC002090F
+#
+block		__analog_alarm	0x800208F0
+var-list	__aal_view_1			0x800208F1
+var-list	__aal_view_2			0x800208F2
+var-list	__aal_view_3			0x800208F3
+var-list	__aal_view_4			0x800208F4
+unit            __unit_aal_out                  0x800208F5
+record		__aal_character			0x800208F6
+collection      no_download_aal	RESERVED	0x8002090E
+collection      upload_wanted_aal	RESERVED	0x8002090F

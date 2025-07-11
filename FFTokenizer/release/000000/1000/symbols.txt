@@ -1,0 +1,47 @@
+#
+# Symbols file for SIF Parameters File
+# Filename: symbols.txt
+# Date of last change: 02 OCT 2000
+# HISTORY:
+#
+# Items:      0x80021D00 -> 0x80021DFF
+# Members:    0xC0011D00 -> 0xC0011DFF
+#
+variable      __sif_det_comm_err           unsigned                0x80021D00
+variable      __macro_cycle_t              unsigned                0x80021D01
+variable      __sif_error                  bit-enumerated          0x80021D02
+variable      __sif_sync_drift             unsigned                0x80021D03
+variable      __sif_sync_jitter            unsigned                0x80021D04
+variable      __stale_data_t               float                   0x80021D05
+record        __clear_latch_d                                      0x80021D06
+variable      __sif_sync_tot_err           integer                 0x80021D07
+variable      __config_sig                 unsigned                0x80021D08
+variable      __config_sig_calc            unsigned                0x80021D09
+variable      __firmware_sig               unsigned                0x80021D0A
+variable      __sif_itk_ver               unsigned                0x80021D0B
+variable      __status_opts_sai		bit-enumerated		0x80021D0C
+
+member        SIF_DET_COMM_ERR             parameter               0xC0011D00
+member        MACRO_CYCLE_T                parameter               0xC0011D01
+member        SIF_ERROR                    parameter               0xC0011D02
+member        SIF_SYNC_DRIFT               parameter               0xC0011D03
+member        SIF_SYNC_JITTER              parameter               0xC0011D04
+member        STALE_DATA_T                 parameter               0xC0011D05
+member        CLEAR_LATCH_D                parameter               0xC0011D06
+member        SIF_SYNC_TOT_ERR             parameter               0xC0011D07
+member        CONFIG_SIG                   parameter               0xC0011D08
+member        CONFIG_SIG_CALC              parameter               0xC0011D09
+member        FIRMWARE_SIG              parameter               0xC0011D0A
+member        VL_SIF_DET_COMM_ERR          variable-list           0xC0011D0B
+member        VL_SIF_ERROR                 variable-list           0xC0011D0C
+member        VL_MACRO_CYCLE_T             variable-list           0xC0011D0D
+member        VL_SIF_SYNC_DRIFT            variable-list           0xC0011D0E
+member        VL_SIF_SYNC_JITTER           variable-list           0xC0011D0F
+member        VL_STALE_DATA_T              variable-list           0xC0011D10
+member        VL_CLEAR_LATCH_D             variable-list           0xC0011D11
+member        VL_SIF_SYNC_TOT_ERR          variable-list           0xC0011D12
+member        VL_CONFIG_SIG                variable-list           0xC0011D13
+member        VL_CONFIG_SIG_CALC           variable-list           0xC0011D14
+member        VL_FIRMWARE_SIG              variable-list           0xC0011D15
+member      VL_SIF_ITK_VER          variable-list       0xC0011D16
+member		SIF_ITK_VER             parameter	0xC0011D17     

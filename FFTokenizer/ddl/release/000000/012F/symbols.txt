@@ -1,0 +1,16 @@
+#
+# %W% %G%
+#
+# MDO block symbols
+#
+# Items:        0x80020990 -> 0x800209AF
+# Members:      0xC0010990 -> 0xC00109AF
+#
+block           __mdo_block                      0x80020990
+var-list        __mdo_view_1                     0x80020991
+var-list        __mdo_view_2                     0x80020992
+var-list        __mdo_view_3                     0x80020993
+var-list        __mdo_view_4                     0x80020994
+record          __mdo_character                  0x80020997
+collection      no_download_mdo	RESERVED	0x800209AE
+collection      upload_wanted_mdo	RESERVED	0x800209AF

@@ -1,0 +1,16 @@
+#
+# %W% %G%
+#
+# MDI block symbols
+#
+# Items:        0x80020970 -> 0x8002098F
+# Members:      0xC0010970 -> 0xC001098F
+#
+block           __mdi_block                      0x80020970
+var-list        __mdi_view_1                     0x80020971
+var-list        __mdi_view_2                     0x80020972
+var-list        __mdi_view_3                     0x80020973
+var-list        __mdi_view_4                     0x80020974
+record          __mdi_character                  0x80020977
+collection      no_download_mdi	RESERVED	0x8002098E
+collection      upload_wanted_mdi	RESERVED	0x8002098F

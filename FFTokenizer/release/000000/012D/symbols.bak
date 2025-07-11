@@ -1,0 +1,16 @@
+#
+# %W% %G%
+#
+# DHI block symbols
+#
+# Items:	0x80020950 -> 0x8002096F
+# Members:	0xC0020950 -> 0xC002096F
+#
+block		__discrete_human_interface	0x80020950
+var-list	__dhi_view_1			0x80020951
+var-list	__dhi_view_2			0x80020952
+var-list	__dhi_view_3			0x80020953
+var-list	__dhi_view_4			0x80020954
+record		__dhi_character			0x80020955
+collection      no_download_dhi	RESERVED	0x8002096E
+collection      upload_wanted_dhi	RESERVED	0x8002096F

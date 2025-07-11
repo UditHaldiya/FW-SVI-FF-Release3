@@ -1,0 +1,16 @@
+#
+# %W% %G%
+#
+# custom input block symbols
+#
+# Items:        0x80021800 -> 0x800218FF
+# Members:      0xC0011800 -> 0xC00118FF
+#
+block           __custom_in_block		0x80021800
+var-list        __custom_in_view_1		0x80021801
+var-list        __custom_in_view_2		0x80021802
+var-list        __custom_in_view_3		0x80021803
+var-list        __custom_in_view_4		0x80021804
+record          __custom_in_character		0x80021805
+collection      no_download_custom_in	RESERVED	0x800218FE
+collection      upload_wanted_custom_in	RESERVED	0x800218FF

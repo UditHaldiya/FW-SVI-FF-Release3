@@ -1,0 +1,20 @@
+#
+# %W% %G%
+#
+# Pressure with Calibration for Basic Device 2 block symbols
+#
+# Items:	0x80024000 -> 0x800240FF
+# Members:	0xC0014000 -> 0xC00140FF
+#
+block		__pressure_cal_basic2		0x80024000
+var-list	__pcb2_view_1				0x80024001
+var-list	__pcb2_view_2				0x80024002
+var-list	__pcb2_view_3				0x80024003
+var-list	__pcb2_view_4				0x80024004
+unit		__unit_pcb2_cal_unit 		0x80024005
+unit		__unit_pcb2_sensor_range		0x80024006
+unit		__unit_pcb2_primary_val_unit	0x80024007
+unit		__unit_pcb2_second_val_unit	0x80024008
+record		__pcb2_character				0x80024009
+collection      no_download_pcb2	RESERVED	0x8002400A
+collection      upload_wanted_pcb2	RESERVED	0x8002400B

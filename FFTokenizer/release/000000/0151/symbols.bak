@@ -1,0 +1,17 @@
+#
+# %W% %G%
+#
+# rio extended vfd xducer block symbols
+#
+# Items:        0x80023900 -> 0x800239FF
+# Members:      0xC0013900 -> 0xC00139FF
+#
+
+block           __rio_vfd_xdcr_block		    0x80023900
+var-list        __rio_vfd_xdcr_view_1		    0x80023901
+var-list        __rio_vfd_xdcr_view_2		    0x80023902
+var-list        __rio_vfd_xdcr_view_3		    0x80023903
+var-list        __rio_vfd_xdcr_view_4		    0x80023904
+record          __rio_vfd_xdcr_character		0x80023905
+collection      no_download_rio_vfd_xdcr	RESERVED	0x800239FE
+collection      upload_wanted_rio_vfd_xdcr	RESERVED	0x800239FF

@@ -1,0 +1,17 @@
+#
+# %W% %G%
+#
+# positioner analog/discrete transducer block symbols
+#
+# Items:        0x80022900 -> 0x800229FF
+# Members:      0xC0012900 -> 0xC00129FF
+#
+block           __pos_a_d_xdcr_block		0x80022900
+var-list        __pos_a_d_xdcr_view_1		0x80022901
+var-list        __pos_a_d_xdcr_view_2		0x80022902
+var-list        __pos_a_d_xdcr_view_3		0x80022903
+var-list        __pos_a_d_xdcr_view_4		0x80022904
+record          __pos_a_d_xdcr_character	0x80022905
+unit		__unit_pos_a_d_fvr_unit		0x80022906
+collection      no_download_pos_a_d_xdcr	RESERVED	0x800229FE
+collection      upload_wanted_pos_a_d_xdcr	RESERVED	0x800229FF

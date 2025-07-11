@@ -1,0 +1,16 @@
+#
+#
+# Programable Resource Block symbols
+#
+# Items:        0x80021C00 -> 0x80021CFF
+# Members:      0xC0011C00 -> 0xC0011CFF
+#
+
+block           __programmable_res_block	0x80021C00
+var-list        __prog_res_view_1               0x80021C01
+var-list        __prog_res_view_2               0x80021C02
+var-list        __prog_res_view_3               0x80021C03
+var-list        __prog_res_view_4               0x80021C04
+record          __prog_res_character            0x80021C05
+collection      no_download_prog_res	RESERVED	0x80021CFE
+collection      upload_wanted_prog_res	RESERVED	0x80021CFF

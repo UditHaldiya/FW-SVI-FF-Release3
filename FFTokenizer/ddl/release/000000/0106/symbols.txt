@@ -1,0 +1,19 @@
+#
+# %W% %G%
+#
+# ML block symbols
+#
+# Items:	0x80020270 -> 0x8002028F
+# Members:	0xC0010270 -> 0xC0010270
+#
+block		__manual_loader_block			0x80020270
+var-list	__ml_view_1					0x80020271
+var-list	__ml_view_2					0x80020272
+var-list	__ml_view_3					0x80020273
+var-list	__ml_view_4					0x80020274
+unit		__unit_ml_pv					0x80020275
+unit		__unit_ml_out					0x80020276
+unit		__unit_ml_trk					0x80020277
+record		__ml_character					0x80020278
+collection      no_download_ml	RESERVED	0x8002028E
+collection      upload_wanted_ml	RESERVED	0x8002028F

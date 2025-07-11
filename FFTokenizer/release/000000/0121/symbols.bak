@@ -1,0 +1,17 @@
+#
+# %W% %G%
+#
+# PI block symbols
+#
+# Items:	0x800207D0 -> 0x800207EF
+# Members:	0xC00207D0 -> 0xC00207EF
+#
+block		__pulse_input	0x800207D0
+var-list	__pi_view_1			0x800207D1
+var-list	__pi_view_2			0x800207D2
+var-list	__pi_view_3			0x800207D3
+var-list	__pi_view_4			0x800207D4
+unit            __unit_pi_out                  0x800207D5
+record		__pi_character			0x800207D6
+collection      no_download_pi	RESERVED	0x800207EE
+collection      upload_wanted_pi	RESERVED	0x800207EF

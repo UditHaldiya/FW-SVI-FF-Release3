@@ -1,0 +1,16 @@
+#
+# %W% %G%
+#
+# custom calculation block symbols
+#
+# Items:        0x80021B00 -> 0x80021BFF
+# Members:      0xC0011B00 -> 0xC0011BFF
+#
+block           __custom_calc_block		0x80021B00
+var-list        __custom_calc_view_1		0x80021B01
+var-list        __custom_calc_view_2		0x80021B02
+var-list        __custom_calc_view_3		0x80021B03
+var-list        __custom_calc_view_4		0x80021B04
+record          __custom_calc_character		0x80021B05
+collection      no_download_custom_calc	RESERVED	0x80021BFE
+collection      upload_wanted_custom_calc	RESERVED	0x80021BFF

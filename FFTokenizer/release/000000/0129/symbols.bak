@@ -1,0 +1,16 @@
+#
+# %W% %G%
+#
+# TMR block symbols
+#
+# Items:	0x800208D0 -> 0x800208EF
+# Members:	0xC00208D0 -> 0xC00208EF
+#
+block		__timer	0x800208D0
+var-list	__tmr_view_1			0x800208D1
+var-list	__tmr_view_2			0x800208D2
+var-list	__tmr_view_3			0x800208D3
+var-list	__tmr_view_4			0x800208D4
+record		__tmr_character			0x800208D5
+collection      no_download_tmr	RESERVED	0x800208EE
+collection      upload_wanted_tmr	RESERVED	0x800208EF

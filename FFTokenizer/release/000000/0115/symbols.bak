@@ -1,0 +1,20 @@
+#
+# %W% %G%
+#
+# Pressure with Calibration for Basic Device block symbols
+#
+# Items:	0x80020630 -> 0x8002064F
+# Members:	0xC0010630 -> 0xC0010639
+#
+block		__pressure_cal_basic		0x80020630
+var-list	__pcb_view_1				0x80020631
+var-list	__pcb_view_2				0x80020632
+var-list	__pcb_view_3				0x80020633
+var-list	__pcb_view_4				0x80020634
+unit		__unit_pcb_cal_unit 		0x80020635
+unit		__unit_pcb_sensor_range		0x80020636
+unit		__unit_pcb_primary_val_unit	0x80020637
+unit		__unit_pcb_second_val_unit	0x80020638
+record		__pcb_character				0x80020639
+collection      no_download_pcb	RESERVED	0x8002064E
+collection      upload_wanted_pcb	RESERVED	0x8002064F

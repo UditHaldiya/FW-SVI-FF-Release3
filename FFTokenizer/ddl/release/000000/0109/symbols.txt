@@ -1,0 +1,19 @@
+#
+# %W% %G%
+#
+# RA block symbols
+#
+# Items:	0x800202D0 -> 0x800202EF
+# Members:	0xC00102D0 -> 0xC00102D0
+#
+block		__ratio_block		0x800202D0
+var-list	__ra_view_1		0x800202D1
+var-list	__ra_view_2		0x800202D2
+var-list	__ra_view_3		0x800202D3
+var-list	__ra_view_4		0x800202D4
+unit		__unit_ra_pv		0x800202D5
+unit		__unit_ra_out		0x800202D6
+unit		__unit_ra_trk		0x800202D7
+record		__ra_character			0x800202D8
+collection      no_download_ra	RESERVED	0x800202EE
+collection      upload_wanted_ra	RESERVED	0x800202EF
