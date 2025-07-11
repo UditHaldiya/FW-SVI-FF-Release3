@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<HART Version="1.0">
+  <Include></Include>
+  <Commands>
+    <Command CmdNum="190" SubCmdOnly="1">
+      <SubCommands>
+        <Command Name="Step Test" CmdNum="3" CmdType="Process" AllowedModes="HC_ALLOWED_MODE_OOS" CmdFlags="HC_PROCESS_COMMAND">
+          <RequestParams>
+            <Param>Start Position</Param>
+            <Param>End Position</Param>
+            <Param>Sampling Time</Param>
+          </RequestParams>
+        </Command>
+        <Command Name="Ramp Test" CmdNum="4" CmdType="Process" AllowedModes="HC_ALLOWED_MODE_OOS" CmdFlags="HC_PROCESS_COMMAND">
+          <RequestParams>
+            <Param>Start Position</Param>
+            <Param>End Position</Param>
+            <Param>Setpoint Ramp Speed</Param>
+            <Param>Diag Direction</Param>
+          </RequestParams>
+        </Command>
+      </SubCommands>
+    </Command>
+  </Commands>
+  <Variables>
+    <Variable Name="Setpoint Ramp Speed" DataType="H_FLOAT" Printf="%.3f" Description="Setpoint Ramp Speed in %/s" />
+    <Variable Name="Diag Direction" DataType="H_UCHAR" Description="Direction of signature - up, down or both">
+      <EnumValues v0="HC_DIAGDIR_UPDOWN" v1="HC_DIAGDIR_ONEWAY" />
+    </Variable>
+    <Variable Name="Start Position" DataType="H_FLOAT" Printf="%.3f" Description="Where the test begins" />
+    <Variable Name="End Position" DataType="H_FLOAT" Printf="%.3f" Description="Where the test ends" />
+    <Variable Name="Sampling Time" DataType="H_UINT" Printf="%u" Description="Sampling Time in s" />
+  </Variables>
+  <Structs></Structs>
+</HART>

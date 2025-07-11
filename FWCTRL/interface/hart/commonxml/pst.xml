@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<HART Version="1.0">
+  <Include></Include>
+  <Commands>
+    <SubCmdOnly CmdNum="190">
+      <SubCommands>
+        <Command Name="Run Partial Stroke Test" CmdNum="5" CmdType="Command" AllowedModes="HC_ALLOWED_MODE_NORMAL|HC_ALLOWED_MODE_MAN|HC_ALLOWED_MODE_OOS" CmdFlags="HC_PROCESS_COMMAND" Description="Run PST">
+          <RequestParams></RequestParams>
+          <ResponseParams></ResponseParams>
+        </Command>
+      </SubCommands>
+    </SubCmdOnly>
+    <SubCmdOnly CmdNum="170">
+      <SubCommands>
+        <Command Name="Read Partial Stroke Test Configuration" CmdNum="195" CmdType="Read" AllowedModes="HC_ALLOWED_MODE_ALL | HC_ALLOWED_MODE_FS" CmdFlags="HC_READ_COMMAND" Description="Write Partial Stroke Test Configuration">
+          <RequestParams></RequestParams>
+          <ResponseParams>
+            <Struct>H PST Configuration</Struct>
+          </ResponseParams>
+        </Command>
+      </SubCommands>
+    </SubCmdOnly>
+    <SubCmdOnly CmdNum="171">
+      <SubCommands>
+        <Command Name="Write Partial Stroke Test Configuration" CmdNum="195" CmdType="Write" AllowedModes="HC_ALLOWED_MODE_ALL | HC_ALLOWED_MODE_FS" CmdFlags="HC_WRITE_COMMAND" Description="Write Partial Stroke Test Configuration">
+          <RequestParams>
+            <Struct>H PST Configuration</Struct>
+          </RequestParams>
+          <ResponseParams>
+            <Struct>H PST Configuration</Struct>
+          </ResponseParams>
+        </Command>
+      </SubCommands>
+    </SubCmdOnly>
+  </Commands>
+  <Structs>
+    <Struct Name="H PST Configuration">
+      <Param>PST setpoint Change Threshold</Param>
+      <Param>PST travel</Param>
+      <Param>PST Max Time</Param>
+      <Param>PST Setpoint Rate</Param>
+      <Param>PST Lead Time</Param>
+      <Param>PST Pilot Pressure Threshold</Param>
+      <Param>PST Actuator Pressure Threshold</Param>
+      <Param>PST Dwell Time</Param>
+      <Param>PST Stroke Timeout</Param>
+      <Param>PST datamap</Param>
+      <Param>PST Skip Count</Param>
+      <Param>PST Freeze Options</Param>
+      <Param>PST pattern</Param>
+    </Struct>
+  </Structs>
+  <Variables>
+    <Variable Name="PST Pilot Pressure Threshold" DataType="H_FLOAT" Description="Deviation beyond threshold aborts PST" Printf="%.2f" Units="PresUnits">
+      <Range Model="Standard" MinValue="-150.0" MaxValue="150.0" />
+    </Variable>
+    <Variable Name="PST Actuator Pressure Threshold" DataType="H_FLOAT" Description="Deviation beyond threshold aborts PST" Printf="%.2f" Units="PresUnits">
+      <Range Model="Standard" MinValue="-150.0" MaxValue="150.0" />
+    </Variable>
+    <Variable Name="PST travel" DataType="H_FLOAT" Description="Amplitude of PST step" Printf="%.2f" Units="%">
+      <Range Model="Standard" MinValue="0.8" MaxValue="25" />
+    </Variable>
+    <Variable Name="PST setpoint Change Threshold" DataType="H_FLOAT" Description="Abort PST if (external) setpoint changes by more than threshold" Printf="%.2f">
+      <Range Model="Standard" MinValue="0.8" MaxValue="25" />
+    </Variable>
+    <Variable Name="PST Setpoint Rate" DataType="H_FLOAT" Units="%/s" Printf="%.2f" Description="Position Rate Limit; in effect only if enabled\n&#xD;&#xA;Units are % of adjusted position range per second">
+      <Range Model="Standard" MinValue="0.8" MaxValue="199.9" />
+    </Variable>
+    <Variable Name="PST Max Time" DataType="H_UINT4" Description="Aborts PST if running time exceeds" Units="ms">
+      <Range Model="Standard" MinValue="0" MaxValue="60000000" />
+    </Variable>
+    <Variable Name="PST Stroke Timeout" DataType="H_UINT4" Description="Limit on how long to wait for a single ramp to complete. If 0, will be computed automatically according to magnitude and rate of setpoint" Units="ms">
+      <Range Model="Standard" MinValue="0" MaxValue="600000" />
+    </Variable>
+    <Variable Name="PST pattern" DataType="H_UCHAR" Description="Pattern/sequence of setpont ramps">
+      <Range Model="Standard" MinValue="0" MaxValue="6" />
+      <EnumValues v0="PST Dn Up" v1="PST Dn Up Dn" v2="PST Dn Up Dn Up" v3="PST Up Dn" v4="PST Up Dn Up" v5="PST Up Dn Up Dn"></EnumValues>
+    </Variable>
+    <Variable Name="PST Dwell Time" DataType="H_UINT" Units="ms" Description="Minimum guaranteed wait time between ramps">
+      <Range Model="Standard" MinValue="60" MaxValue="60000" />
+    </Variable>
+    <Variable Name="PST Lead Time" DataType="H_UINT" Units="ms" Description="Max time to stabilize the valve before ramping">
+      <Range Model="Standard" MinValue="60" MaxValue="60000" />
+    </Variable>
+    <Variable Name="PST datamap" DataType="H_UINT" Description="Bitmap of variables collected, in the same format as Data Collection bitmap">
+      <Range Model="TypeRange" />
+    </Variable>
+    <Variable Name="PST Skip Count" DataType="H_UINT" Description="For a value n, n samples will be skipped between collections, and sample n+1 collected again">
+      <Range Model="TypeRange" />
+    </Variable>
+    <Variable Name="PST Freeze Options" DataType="H_UINT" Description="A bitmap of suppressing value and/or status of certain output variables and control limits(TBD)"></Variable>
+  </Variables>
+</HART>

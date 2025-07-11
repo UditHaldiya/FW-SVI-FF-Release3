@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<HART Version="1.0">
+  <Include></Include>
+  <Commands>
+    <Command CmdNum="190" SubCmdOnly="1">
+      <SubCommands>
+        <Command Name="Clone Nvmem To Opposite Bank" CmdNum="131" CmdType="Process" AllowedModes="HC_ALLOWED_MODE_FS | HC_ALLOWED_MODE_ALL" CmdFlags="HC_PROCESS_COMMAND" Description="Support of NVMEM cloning/translation for firmware download"></Command>
+      </SubCommands>
+    </Command>
+  </Commands>
+  <Variables>
+    <Variable Name="Cloning Completion Code" DataType="H_UCHAR" Description="0 indicates success; non-0 failure" />
+    <Variable Name="NVMEM bank" DataType="H_UCHAR" Description="Where to read from /write to in NVMEM">
+      <EnumValues v0="NV Active Bank" v1="NV Inactive Bank" v2="NV Bank 0" v3="NV Bank 1" />
+    </Variable>
+  </Variables>
+  <Structs></Structs>
+  <Commands>
+    <SubCmdOnly CmdNum="190">
+      <DisabledSubCommands>
+        <DisabledCommand Name="Commit NVMEM Image From Diagnostic Buffer" CmdNum="192" CmdType="Process" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_PROCESS_COMMAND" Description="A process to write the NVMEM image from the buffer to a NVMEM bank. What and where to write must be spelled out in the header of the buffer">
+          <RequestParams>
+            <Param>Buffer Id</Param>
+            <Param>NVMEM bank</Param>
+          </RequestParams>
+        </DisabledCommand>
+        <DisabledCommand Name="Read NVMEM To Diagnostic Buffer" CmdNum="194" CmdType="Process" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_PROCESS_COMMAND" Description="Start a process to commit diagnostic buffer as NVMEM image.">
+          <RequestParams>
+            <Param>Buffer Id</Param>
+            <Param>NVMEM bank</Param>
+          </RequestParams>
+        </DisabledCommand>
+      </DisabledSubCommands>
+      <SubCommands>
+        <Command Name="Enable External Writes To Diagnostic Buffer" CmdNum="193" CmdType="Process" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_PROCESS_COMMAND" Description="Just a dummy process to lock out other buffer clients.\nTo unlock, cancel the process, however, the intended use is to leave the process running and force replace it with Commit.">
+          <RequestParams>
+            <Param>Buffer Id</Param>
+          </RequestParams>
+        </Command>
+      </SubCommands>
+    </SubCmdOnly>
+    <SubCmdOnly CmdNum="130">
+      <SubCommands>
+        <Command Name="External Write To Diagnostic Buffer" CmdNum="193" CmdType="Write" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_COMMAND_COMMAND" Description="If external writes are not enabled, the command will be rejected\nThe command is non-compliant (doesn't return the values). So what?">
+          <RequestParams>
+            <Param>Buffer Id</Param>
+            <Param>Data Offset</Param>
+            <Param>Data Sample Count</Param>
+            <Param>Raw Data Samples</Param>
+          </RequestParams>
+        </Command>
+      </SubCommands>
+    </SubCmdOnly>
+  </Commands>
+</HART>
