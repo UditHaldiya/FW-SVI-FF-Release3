@@ -1,0 +1,217 @@
+//--------- lint bugs (9.00h, 9.00i) ---------------------
+-emacro(546,CONST_ASSERT)
+-emacro(866,CONST_ASSERT)
+
+//-------- codebase-specific ------------
+-esym(960,4.1) //hex escape sequence - needed for Sitronix character map
+-efile(766, *config.h) //this one OK not to be used
+-efile(766, *projectdef.h) //this one OK not to be used - may be intended so that doesn't compile as project-independent
+-esym(962,NEED_NVMEM_END) -esym(767,NEED_NVMEM_END) //it is a flag defining visibility of certain things
+-esym(755,UNITS_*_N_ENTRY) //higher-res units conversion is optional
+-esym(756,*_least_t) -esym(756,*_least) -esym(756,*_fast_t) //fast types are optional
+-esym(755,std2f) //we'd love to remove it from the module but it may be used in other projects
+-esym(755,CANCELPROC_POWERMARGIN) // marginal power monitoring may not be supported
+
+//---------- thread safety --------------
+-atomic( any_type Atomic_ )
+-atomic( any_scalar Atomic_ [*])
+-etype(458,*Atomic_)
+-etype(457,*Atomic_)
+//-etype(457,*Atomic_ [*])
+-esym(457, passthrough) //The boolean that wasn't picked up (although the code may be improved for reuse)
+//--
+-sem(main,no_thread) //semantics
+-atomic( bool_t )
+-atomic( any_scalar )
+
+//Lint is rather dumb in treating address taking as access
+-estring(458,tcb_base)
+
+-atomic(any_type *)
+-esym(457, Atomic_) -esym(458, Atomic_)
+-sem(OS_SDI,thread_lock)
+-sem(OS_RI,thread_unlock)
+-sem(OS_Use,thread_lock)
+-sem(OS_Unuse,thread_unlock)
+-esym(456, rsrc_AcquireMutex) //(different mutex paths) - embOS model of mutex as restricted resource semaphore is too hard to explain to Lint
+
+-sem(DISABLE_INTERRUPTS,thread_lock)
+-sem(RESTORE_INTERRUPTS,thread_unlock)
+-sem(osif_disable_all_tasks,thread_lock)
+-sem(osif_enable_all_tasks,thread_unlock)
+-sem(osif_disable_all_tasks,thread_safe)
+-sem(osif_enable_all_tasks,thread_safe)
+
+-sem(rsrc_AcquireMutex,thread_lock)
+-sem(rsrc_FreeMutex,thread_unlock)
+-sem(rsrc_AcquireMutex,thread_safe)
+-sem(rsrc_FreeMutex,thread_safe)
+
+-sem(cpu_save_psw_and_disable, thread_lock,pure)
+-sem(cpu_restore_psw, thread_unlock)
+//--
+//Add what we don't have the source for:
+-sem(eep_task_main,thread_mono)				//Task 0 "EEP Task", pty=0x05
+-sem(dummy_appl_task,thread_mono)			//Task_1 "APPL Task", pty=0x0D
+-sem(dummy_FB_exec_task,thread_mono)		//Task_2 "FB Exec Task", pty=0x32
+											//Task 3 not initialized, pty=
+-sem(task_hm_base_routine,thread_mono)		//Task 4 "HM Task", pty=0x09
+-sem(dummy_FDC_task,thread_mono)			//Task_5 "FDC Task", pty=0x14
+//Task_6 "SBCR Task" (task_data_subscription), pty=0x19
+//Task_7 "MVC Task" (task_send_mvc), pty=0x14
+//Task_8 "BGD50 Task" (task_fdc_background50), pty=0x0C
+-sem(dummy_Background_task,thread_mono)		//Task_9 "BGD Task", pty=0x0A
+//Task 10 "LAS Task" , pty=0x5A
+//=============== RTOS API wrap functions deemed thread-safe =============
+-estring(458,Task) //reading pieces of it at runtime is OK but the code is too convoluted for Lint
+-estring(457,osif_*_event) //modifying events/mailboxes is done by trusted RTOS
+-emacro(970, OS_LeaveNestableInterrupt)
+-emacro(534, OS_LeaveNestableInterrupt)
+//OS types can be #defined instead of typedefed as they please
+-emacro(970, OS_*)
+
+//********** Softing thread bugs ********************
+-estring(457,xcp_dscr) -estring(458,xcp_dscr) //See bug 21914 and meek workaround C37408
+//***************************************************
+//********** Softing thread weaknesses ********************
+-estring(458,ffbl_fd_alarm_bits) //OK since only used one atomic at a time
+-estring(458,ffbl_fd_alarm_source) //OK since only used one atomic at a time
+-estring(458,ffbl_fd_pri) //OK since only used one atomic at a time
+//***************************************************
+
+//-------------- RTOS and RTOS interface ------------
+//RTOS awareness
+-sem(main,no_thread) //semantics
+
+//---------------- Compiler -------------------
+-d__sfe(a)=0 //let Lint ignore the linker interface
+
+//Imported from "fault matrix"
+-efile(755,*\uilabels.h) //not referenced OK
+-efile(755,*\faultdef.h) //not referenced OK
+//Other automatically generated
+-esym(755, ROMEND)
+
+//--------------- lint overreach --------------------------
+--emacro((546),CONST_ASSERT) //Suspicious use of &
+-emacro(866,CONST_ASSERT) //Unusual use of '&' in argument to sizeof
+
+
+//----------------- thread safety issues misunderstood by Lint -------------------------
+//------------------- lint (9.00h) gets it wrong - review! -------------
+
+//----------------- optional system headers (OK if unused) ------------------
+-efile(766,*\mnassert.h) //not referenced OK
+
+//There is no requiement (yet?) that all or any enumerations in hcimport_enum.h derived
+//from XML be used: XML enumerations may be useful sometimes but their primary use is
+//in tools/documentation
+-efile(769,*hcimport_enum.h)
+
+//------------------- ignore instrumentation hooks ---------------
+-efile(766,*instrum.h) //OK if unused
+
+//------------------- unused harmless provisions for future -------------------
+-esym(768, SubCommandInfo_t::length_offset) //one way of doing variable-length subcommands
+
+
+//------------------- stuff of optional use -------------------------------
+-esym(769, ErrorCode_t::*) //some error codes might not be applicable
+-esym(755, HART_COMMAND_0*)
+-esym(755, HART_COMMAND_1*)
+-esym(755, HART_COMMAND_2*)
+-esym(755, HART_COMMAND_6*)
+-esym(755, HART_COMMAND_3*) //seldom if ever used; the automatically made definitions are for backward compatibility
+
+//-------------------- stuff for use by external tools analyzing the firmware image -----------------
+-esym(768, VerInfo_t::*) //no field is required to be accessed
+
+//------------------ OK now but keep an eye on these -------------------------
+-esym(755, SWOPTION_UI_LOWCOST_ENABLE_SPLIT_RANGE) //option may or may not be used in a project
+-esym(755, SWOPTION_UI_LOWCOST_ENABLE_CUSTOM_CHARACT) //option may or may not be used in a project
+
+//------------------ NEEDS CLEANUP minding sister projects -------------------
+-efile(755, *\hartcmd.h) //unused legacy commands macros
+-efile(755, *\hartfunc.h) //unused response codes etc.
+-efile(769, *\process.h) //global enumeration of processes
+
+
+//------------------ bad masking of potential bugs -------------------
+
+//================== Relaxation for FFP ===========================
+-e717 //do ... while(0); - allowed for executing once
+-efile(768, *\ctllimits.h) //global struct member not referenced
+-efile(768, *\position.h) //global struct member not referenced
+-esym(768, *::CheckWord)
+//For HART framework
+-esym(754, Req_*::endmark)
+-esym(754, Rsp_*::endmark)
+
+// ********** blanket for now; will fine-grain it later ***********
+-e526 //symbol not defined !
+-e755 //global macro not referenced
+-e756 //global typedef not referenced
+-e757 //global declarator not referenced
+-e758 //global struct not referenced
+//doesn't work -elib(766) //Header file not used (OK in foreign files only)
+-e766 //Header file not used
+-e768 //global struct member not referenced
+-e769 //global enumeration constant not referenced
+-e714 -e765 -e759 //function not referenced !
+-elib(818) //Pointer parameter could be declared as pointing to const
+// -- pending
+-esym(961,19.1) //declaration before #include; must wait until lint provides more granularity
+
+//================ Info for FFP ===================
+-sem(mn_assert, r_no) //work on better map to default_exception_handler
+-emacro(923, SCB) //cast from unsigned long to pointer
+-emacro(923, NVIC) //cast from unsigned long to pointer
+-emacro(923, SysTick) //cast from unsigned long to pointer
+-emacro(923, CoreDebug) //cast from unsigned long to pointer
+-emacro(923, ITM) //cast from unsigned long to pointer
+
+//---------------- Softing-ism stuff ---------------------------
+-esym(767 962, MODULE_ID) //defined differently or identically - local identification
+-esym(750, MODULE_ID) //local macro not referenced (not worth removing)
+-e659 //Nothing follows '}' on line terminating struct/union/enum definition
+-esym(849,ERR_TIM_STATUS) //same enum value as another
+-esym(849,XCP_PFBS_WRN_UPD_EXNV_FAILED) //same enum value as another
+-esym(849,XCP_FFBS_WRN_UPD_EXNV_FAILED) //same enum value as another
+-elib(640) //Expected strong type 'bool_t' in Boolean context
+-emacro(640, *FATAL) // lint picks on do...while(0)
+-efile(766, *\inc\segm\*) //Softing segment management exempt from unused headers
+-efile(451, *\inc\segm\*) //Softing segment management exempt from standard guards
+-esym(767, VAR_EXTERN) //defined differently - stupid "clever" variable instantiation
+
+//---------- More Softing --------------------
+-esym(552 729, default_interrupt_count) //Not explicitly init not accessed (debug variable)
+-esym(552, Sema_init) //not accessed - used in library
+
+//Watch even for "library modules":
++elib(415) +elib(661) +elib(796) //Possible access of out-of-bounds pointer
++elib(416) +elib(662) +elib(797) //Possible creation of out-of-bounds pointer
+
+
+//---------------- lint bugs -----------------------
+-esym(960,14.3) //null statement not in line by itself - because lint ate __asm now !
+-e726 //Extraneous comma ignored - it is perfect C99 !
+-estring(458, hm_GetAPPHeader) //taking address is NOT access!
+
+
+//------- Misc. Delegated to PCLP ---------------
+-estring(923, "*unsigned int*") //we delegate 923 to PCLP where we are able to exempt uintptr_t
+-estring(923, "*unsigned long*") //we delegate 923 to PCLP where we are able to exempt uintptr_t
+
+//---------------- compiler adapation --------------------
+-emacro(950,NO_INIT)
+-emacro(413, offsetof) //Likely use of null pointer
+-emacro(923, offsetof) //cast from pointer to unsigned int [MISRA 2004 Rule 11.3]
+-emacro(545, offsetof) //Suspicious use of &
+-d"__get_LR()=0" //(undeclared intrisic) no argument information provided for function
+-rw_asgn( __asm, _to_brackets ) -esym(950, __asm) //Non-ANSI keyword
++rw( __weak, _to_brackets ) -esym(950, __weak, __interwork, __irq) //Non-ANSI keyword
+-esym(950,__root) //Non-ANSI keyword
+
+//---------------- tools interface only ----------------------
+-esym(754, domdesc_t::*) //local structure member not referenced
+-esym(768, private_header_t::*)

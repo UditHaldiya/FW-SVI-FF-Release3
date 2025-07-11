@@ -1,0 +1,10 @@
+redirects.lnt //Automatically generated redirects
++libh(fbif_id.h)
++libdir(*\inc\segm)
++libdir(*\STM32F10x_StdPeriph_Driver\inc)
+
++libm(*\fbif\src\*.c)
+
+-emacro(767, EOP, WRPRTERR, PGERR, BSY, RNG) // different/identical redef with stm_flash.c FIXME
+-estring(767, EOP, WRPRTERR, PGERR, BSY, RNG)
+-emacro(962, EOP, WRPRTERR, PGERR, BSY, RNG) // different/identical redef with stm_flash.c FIXME

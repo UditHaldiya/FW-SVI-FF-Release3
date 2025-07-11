@@ -1,0 +1,97 @@
+#MP If 0 ;tombstone header
+/*
+Copyright 2016 by Dresser, Inc., as an unpublished trade secret.  All rights reserved.
+
+This document and all information herein are the property of Dresser, Inc.
+It and its contents are  confidential and have been provided as a part of
+a confidential relationship.  As such, no part of it may be made public,
+decompiled, reverse engineered or copied and it is subject to return upon
+demand.
+*/
+/**
+    \file dynlist.u
+    \brief Generator of a simple list of TB ids to jam to BAD status in TB OOS.
+
+    CPU: Any
+
+    OWNER: AK
+*/
+#MP Endif
+#MP Include "gwtypes.inc"
+#MP Include "paramstubs.inc"
+#MP dyncount=0
+#MP Undef BeginStdRecordParam {MAC}
+#MP Macro BeginStdRecordParam ;[type, name, attributes]
+    #MP If (#3# & MN_DYN) != 0
+        #MP Setstr dynparam_%ddyncount = {#2#}
+        #MP dyncount = dyncount+1
+    #MP Endif
+#MP Endm
+#MP Undef BeginRecordParam {MAC}
+#MP Macro BeginRecordParam ;[type, name, attributes]
+    #MP BeginStdRecordParam[[1:#0#]]
+#MP Endm
+#MP Include "ptb_custom.inc"
+                        #MP ;Header
+#MP Export (0) "dynlist.h"
+/*
+Copyright 2016 by Dresser, Inc., as an unpublished trade secret.  All rights reserved.
+
+This document and all information herein are the property of Dresser, Inc.
+It and its contents are  confidential and have been provided as a part of
+a confidential relationship.  As such, no part of it may be made public,
+decompiled, reverse engineered or copied and it is subject to return upon
+demand.
+*/
+/**
+    \file dynlist.h
+    \brief Interfaces of a simple list of TB ids to jam to BAD status in TB OOS.
+
+    CPU: Any
+
+    OWNER: dynlist.u
+*/
+#ifndef DYNLIST_H_
+#define DYNLIST_H_
+#define NUM_DYNPARAMS_JAM #mp%ddyncount
+#if NUM_DYNPARAMS_JAM != 0
+extern const u8 dyn_param_list[NUM_DYNPARAMS_JAM];
+#endif
+#endif //DYNLIST_H_
+/* This line marks the end of the source */
+                        #MP ;C source
+#MP Export (0) "dynlist.c"
+/*
+Copyright 2016 by Dresser, Inc., as an unpublished trade secret.  All rights reserved.
+
+This document and all information herein are the property of Dresser, Inc.
+It and its contents are  confidential and have been provided as a part of
+a confidential relationship.  As such, no part of it may be made public,
+decompiled, reverse engineered or copied and it is subject to return upon
+demand.
+*/
+/**
+    \file dynlist.c
+    \brief A simple list of TB ids to jam to BAD status in TB OOS.
+
+    CPU: Any
+
+    OWNER: dynlist.u
+*/
+#include "mnwrap.h"
+#include "dynlist.h"
+#include <fbif_idx.h>
+
+#if NUM_DYNPARAMS_JAM != 0
+/* REVIEW ITEM: Only parameters of FLOAT_S or DISCRETE_S can go into
+this table
+*/
+const u8 dyn_param_list[NUM_DYNPARAMS_JAM] = //type matches Softing's
+{
+#MP For x=0, dyncount-1
+    REL_IDX_PTB_#mp%sdynparam_%dx,
+#MP Endfor
+};
+#endif
+/* This line marks the end of the source */
+#MP ;/* This line marks the end of the source */

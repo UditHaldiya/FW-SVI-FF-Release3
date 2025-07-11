@@ -1,0 +1,166 @@
+# root level
+
+include $(scripts)
+$(info scripts=$(scripts))
+
+DDL_root := $(PROJDIR)\target\appl\fbif
+cff:=$(DDL_root)\ddl\$(DEVICE_TYPE)\$(DEVICE_REV)$(DD_REV)01.cff
+ifneq ($(filter REQIMPORT,$(MAKECMDGOALS)),)
+# Causes endless loop. Not worth finding it because it is rebuilt always anyway.
+#So, we just say so. include $(cff).ud
+$(cff) : force;
+endif
+
+#FORCED_DEPENDENCY_LOCAL :=$(cff) includes\havenv.h
+REQIMPORT: $(cff)  $(cff).ud includes\havenv.h $(FORCED_DEPENDENCY_LOCAL)
+
+#The order of include search is important: Local directories must go first
+ISUBDIR:= includes inc_$(PROJ)
+
+#For correct replacement of FFAP headers with the same name, put them in
+# a separate folder so that the first . search folder doesn't confuse
+# compiler or lint
+ISUBDIR+=includes\replace
+
+#Supported HART versions
+export hart_versions=5
+export ExtraXml=inc_$(PROJ)/extras.xml
+export ExtraDoc=inc_$(PROJ)/extras.xml
+export ExtraTxt=inc_$(PROJ)/extras.txt
+
+PREFIX:=..\/FIRMWARE\/
+$(ExtraTxt) : ..\FIRMWARE\inc_FFAP\HARTCommands5.candidate
+    if not exist $< ($(MN_RM) $@ && $(helpers)/touch $@) else type $< | $(ONEPERLINE) | $(MN_SED) --text -e "s/\b\(.*\)/$(PREFIX)\1\ /g"> $@
+
+
+hcimport=$(PROJDIR)/../FIRMWARE/$(HELPERS)/hcimportn.mak
+hcgenerate : $(ExtraTxt)
+
+FORCED_DEPENDENCY_LOCAL+=hcgenerate
+hcgenerate:force;$(MAKE) -f $(hcimport) fname=inc_$(PROJ)/ffhartdef
+force:;
+
+
+#And the rest go here
+ISUBDIR1:= ..\FIRMWARE\includes ../FIRMWARE/mn_instrum/noinstrum \
+    ..\FIRMWARE\inc_FFAP \
+    target/sys/osif.emb/inc \
+    target/inc target/inc/segm target/inc/ff target/cfg \
+    _embOS_CortexM_IAR\Start\Inc
+
+
+# ------------ project adaptation -------------------
+# - Device identification
+include $(settings)
+
+#top-level components - here (not in inc_$(PROJ)\conf.mak) because Softing part of the build needs it and is here
+component_configuration = inc_$(PROJ)\TBALERTS_config inc_$(PROJ)\HISTOGRAM_config
+
+# - Softing compatibility
+include forsofting.mak
+CFLAGS_PROJ+= $(CCFLAGS)
+
+CFLAGS_PROJ+=--section .noinit=mn_noinit --section .bss=mn_bss --section .data=mn_data
+
+#To control NVMEMDUMP-generated compilation for embedded vertran
+CFLAGS_PROJ+=-DNO_INLINE_VOLUME_IDS
+
+export CFLAGS_PROJ
+
+#---- Firmware hardening effort: const-ize
+linker_redirect=$(join $(patsubst %,%=mn,$(1)),$(1))
+
+Redirected = fbs_call_fdev_funct
+#Doesn't work: Redirected += smdl_call_fdev_funct
+Redirected += fdc_wd_reset_wd_counter
+
+Redirected += Read_handler
+
+Redirected += tmp_hi_adjust_time
+
+LDFLAGS_PROJ+= $(addprefix --redirect , $(call linker_redirect, $(Redirected)))
+
+#rombank?=0
+#LDFLAGS_PROJ += --config_def rombank=$(rombank)
+#This is common for all MNCB projects and replaces Softing's rombank switch
+LDFLAGS_PROJ += $(foreach m,ROMSTART ROMEND RAMSTART RAMEND,--config_def $m=0x$(MEMMAP_$m))
+
+$(info LDFLAGS_PROJ=$(LDFLAGS_PROJ))
+export LDFLAGS_PROJ
+
+#linker redirects for Lint
+LintDirArg += $(addprefix -d, $(call linker_redirect, $(Redirected)))
+REQIMPORT: redirects.lnt 
+redirects.lnt : $(LOCAL_CONF)
+    echo //Redirects > $@
+    cmd /C for %%v in ($(addsuffix ",$(addprefix -d", $(call linker_redirect, $(Redirected))))) do @echo %%v >> $@
+#---- End Firmware hardening
+
+#We don't care about system headers' compliance w.r.t. standard guards
+comma=,
+LintDirArg += -estring(451, "$(TOOLDIR)\*") /*System headers standard guards */
+LintDirArg += -estring(451, *\cs_def.h) /*Softing segment management may not have standard guards */
+LintDirArg += -estring(962, MODULE_ID) -estring(767, MODULE_ID) /* Softing module management for their exception handling */
+
+
+# ------------ end project adaptation -------------------
+
+SUBDIR:= nvram tasks interface base target diagnostics utilities framework sysio services inc_$(PROJ)
+
+#SUBDIR+=includes
+
+#Supported instrumentation
+ifneq (,$(wildcard mn_instrum/$(MN_INSTRUM)/conf.mak))
+SUBDIR+=mn_instrum
+endif
+ifneq (noinstrum,$(MN_INSTRUM))
+ISUBDIR+=mn_instrum/$(MN_INSTRUM)
+endif
+
+ISUBDIR+=$(ISUBDIR1)
+#$(error ISUBDIR=$(ISUBDIR))
+
+#DDL_root := $(PROJDIR)\target\appl\fbif
+cffdir:=$(DDL_root)\ddl
+cff:=$(DDL_root)\ddl\$(DEVICE_TYPE)\$(DEVICE_REV)$(DD_REV)01.cff
+ucffbase:=$(cffdir)\cff
+
+
+date:=$(shell echo %DATE% %TIME%)
+cffdate1:=$(subst /, ,$(date))
+cffdate:=$(word 4, $(cffdate1)),$(word 2, $(cffdate1)),$(word 3, $(cffdate1))
+
+$(cff) $(cff).ud: $(ucffbase).inc $(ucffbase).u
+    $(UNIMAL) -I. $(addprefix -I,$(ISUBDIR)) -O. -Soutfile="$(cff).tmp" -d$(cff).ud_ $(DDL_root)\ddl\cff.u
+    $(Hide)$(MN_SED) -e "s/__TIME_STAMP__/$(subst /,\/,$(date))/g" -e "s/__FILEDATE__/$(cffdate)/g" $(cff).tmp >$(cff)
+    $(Hide)echo $(cff) : \>$(cff).tmp
+    $(Hide)$(FIXDEP) $(cff).ud_>>$(cff).tmp
+    $(Hide)echo $< $(LOCAL_CONF) $(local_topdep)>>$(cff).tmp
+    $(Hide)$(MN_MV) $(cff).tmp $(cff).ud
+
+symfile:=$(TARGET_BINARY_DD)\$(DEVICE_REV)$(DD_REV).sy5
+
+$(ucffbase).inc : tok
+    $(MN_SED) -n -e "s/^block[ \t]\+_*\([_0-9A-Za-z]\+\)[ \t]\+\(0x[0-9A-Fa-f]\+\).*/#MP Setstr dd_block_id_\1 = \"\2\"/gp" $(symfile) >$@
+
+
+includes\havenv.h : includes\havenv.bat
+    echo /* Automatically generated by parsing automatically> $@
+	echo   generated Softing block interface header files.>>$@
+	echo   Indicates whether a block X has object of type T_FBIF_X_NV defined>>$@
+	echo */>>$@
+	echo #ifndef HAVENV_H_>>$@
+	echo #define HAVENV_H_>>$@
+    $< >>$@
+	echo #endif //HAVENV_H_>>$@
+
+fbifdir := target/appl/fbif/inc/
+blocks = $(wildcard $(fbifdir)*fb.h) $(addprefix $(fbifdir), ptb.h resb.h)
+blockn = $(subst .h,,$(notdir $(blocks)))
+
+$(blocks) : GenVFD
+
+includes\havenv.bat : GenVFD $(blocks) $(MAKEFILE_LIST)
+    echo rem Temporary batch file >$@
+    cmd /C for %%f in ($(blockn)) do @echo $(MN_SED) -n -e s/.*T_FBIF_\(%%f\)_NV.*/"#define HAVE_NV_"\1/igp $(fbifdir)%%f.h >>$@
+

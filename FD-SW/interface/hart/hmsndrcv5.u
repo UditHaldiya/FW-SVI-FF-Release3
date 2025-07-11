@@ -1,0 +1,106 @@
+#MP If 0 ;Tombstone header
+/*
+Copyright 2007 by Dresser, Inc., as an unpublished trade secret.  All rights reserved.
+Based on Unimal application note 4 Copyright 2005-2007 MacroExpressions.
+Replaces previous version based on CompressedLookup.u Copyright 2000-2004 MacroExpressions.
+
+This document and all information herein are the property of Dresser, Inc.
+It and its contents are  confidential and have been provided as a part of
+a confidential relationship.  As such, no part of it may be made public,
+decompiled, reverse engineered or copied and it is subject to return upon
+demand.
+*/
+/**
+    \file hmsndrcv5.u
+    \brief Generator of master commands wrappers
+
+    CPU: Any
+
+    OWNER: AK
+
+    \ingroup mnhartcmd
+*/
+#MP Endif ;Tombstone header
+#MP
+#MP ;========= Transitional stuff (will go away ASAP)
+#MP Include #@projectdef.inc#
+#MP ;========= End transitional stuff
+#MP Setstr basename = uAutoLine
+#MP Include "ustd.inc"
+#MP Include "hcparse5.inc"
+#MP Include "hcout.inc"
+#MP Include "hcimport.inc"
+#MP
+#MP Include #@lookup.inc#
+#MP dummy(".c")
+#MP
+#MP ;Export the commands definitions
+#MP Macro SendReceive
+#MPIfdef CommandCount ;to remove later; for now hcimport.inc may be empty
+#MP For c=0, CommandCount-1
+#MP     cmd = Command_%dc
+#MP     If !Defined(SubCommandCount_%dcmd {NUM})
+MN_INLINE fferr_t hmsndrcv5_#mp{%sHCName_%dcmd}(Req_#mp{%sHCName_%dcmd}_t *req, Rsp_#mp{%sHCName_%dcmd}_t *rsp)
+{
+    u8 *src = (void *)req;
+    u8 *dst = (void *)rsp;
+    return mn_HART_acyc_cmd(#mp%dcmd, src, sizeof(*req), dst-2);
+}
+
+#MP     Else
+#MP         For i=0, SubCommandCount_%dcmd-1
+#MP             subcmd = SubCommand_%dcmd%n_%di
+MN_INLINE fferr_t hmsndrcv5_#mp{%sHCName_%dcmd%n_%dsubcmd}(Req_#mp{%sHCName_%dcmd%n_%dsubcmd}_t *req, Rsp_#mp{%sHCName_%dcmd%n_%dsubcmd}_t *rsp)
+{
+    u8 *src = (void *)req;
+    *--src = #mp%dsubcmd;
+    u8 *dst = (void *)rsp;
+    --dst;
+    return mn_HART_acyc_cmd(#mp%dcmd, src, 1+sizeof(*req), dst-2);
+}
+#MP         Endfor
+#MP     Endif
+#MP Endfor
+#MPEndif ;to remove later; for now hcimport.inc may be empty
+#MP Endm
+
+#MP Setstr outfile = {uJoin, basename, #@.h#}
+#MP toupper[basename]
+#MP Setstr guard = toupper "_H_"
+#MP Export (0) outfile
+#MP
+/*
+Copyright 2016 by Dresser, Inc., as an unpublished trade secret.  All rights reserved.
+This document and all information herein are the property of Dresser, Inc.
+It and its contents are  confidential and have been provided as a part of
+a confidential relationship.  As such, no part of it may be made public,
+decompiled, reverse engineered or copied and it is subject to return upon
+demand.
+*/
+/**
+    \file #mp%soutfile
+    \brief HART master send-receive implementation of asyncronous commands
+    as an abstraction layer for command numbers
+
+    This file is created automatically from #mp%sbasename.u.
+    DO NOT EDIT it by hand!!! Edit hclookup5.u and its includes instead.
+
+    CPU: Any
+
+    OWNER: #mp%sbasename.u
+
+    \ingroup mnhartcmd
+*/
+#ifndef #mp%sguard
+#define #mp%sguard
+#include <base.h>
+#include "mnwrap.h"
+#include "hartfunc.h"
+#include "hartcmd.h"
+#include "hartdef.h"
+#include "mnhart2ff.h"
+
+#MP SendReceive
+#endif //#mp%sguard
+/* This line marks the end of the source */
+#MP ; This line marks the end of the source

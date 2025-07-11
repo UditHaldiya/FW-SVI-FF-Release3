@@ -1,0 +1,65 @@
+#MP Include "ustd.inc"
+#MP Include "htmltoc.inc"
+#MP ;Export (0) outfile
+#MP Setstr Title = "SVI FF Custom PTB Parameters"
+#MP Setstr Version = "Version 1.0"
+<html>
+    <head>
+        <title>#mp%sTitle</title>
+    </head>
+<style
+ type="text/css">
+body { margin-left: 5%;  font-family: sans-serif}
+P.breakhere {page-break-before: always}
+div.mymargin {margin-left: +5%}
+div.commands {margin-left: +2%}
+div.box { border: solid; border-width: thin; width: 70% }
+div.boxcc { border: solid; border-width: thin; width: 50% }
+</style>
+<body>
+<br /><br /><br />
+<h1 align= "center">
+    <a name="#mp%sTitle" >#mp%sTitle</a>
+</h1>
+<h2 align= "center">
+    <a name="#mp%sVersion" >#mp%sVersion</a>
+</h2>
+<br />
+<br />
+<h2 align= "center">
+    Table of Contents
+</h2>
+<br />
+#MP Include "ptb_custom.inc"
+                #MP
+#MP ;---------------- now, on to body ------------------
+<br />
+<br />
+<br />
+
+<h1 align= "center">
+    Description of Parameters
+</h1>
+<br />
+<br />
+                #MP
+#MP ;For the benefit of the second pass, clean up any leftover globals:
+#MP Undef DDHelp
+#MP Undef DDLabel
+#MP Undef valnote
+                #MP
+#MP Include "htmlbody.inc" ;Use different macros now
+#MP Include "ptb_custom.inc" ;Re-process with different macros
+#MP Include "rb_custom.inc"
+
+<h1 align= "center">
+    Orphaned Types
+</h1>
+<br />
+These types are defined within the parameters automation system except DD paramter definitions.
+They are likely defined in man-made sources.
+<br>
+
+#MP AllOrphans[]
+</body>
+</html>

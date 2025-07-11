@@ -1,0 +1,277 @@
+#MP If 0 ;Tombstone header
+/*
+Copyright 2007 by Dresser, Inc., as an unpublished trade secret.  All rights reserved.
+Based on Unimal application note 4 Copyright 2005-2007 MacroExpressions.
+Replaces previous version based on CompressedLookup.u Copyright 2000-2004 MacroExpressions.
+
+This document and all information herein are the property of Dresser, Inc.
+It and its contents are  confidential and have been provided as a part of
+a confidential relationship.  As such, no part of it may be made public,
+decompiled, reverse engineered or copied and it is subject to return upon
+demand.
+*/
+/**
+    \file ffhclookup5.u
+    \brief HART commands lookup table generator
+
+    This file yields hclookup.c which implements a very fast and compact
+    lookup table to convert command id to the corresponding service
+    function. Processing may take some time... Be patient!
+
+    Uses hartdef.inc as a source of knowledge about HART commands
+
+    Uses general-purpose lookup generator lookup.inc. Provides necessary
+    hooks and generates the access function.
+
+    CPU: Any
+
+    OWNER: AK
+    $Archive: /MNCB/Dev/FIRMWARE/interface/hart/hclookup.u $
+    $Date: 3/30/11 1:39p $
+    $Revision: 19 $
+    $Author: Arkkhasin $
+
+    \ingroup mnhartcmd
+*/
+#MP Endif ;Tombstone header
+#MP
+#MP ;========= Transitional stuff (will go away ASAP)
+#MP Include #@projectdef.inc#
+#MP ;========= End transitional stuff
+#MP Setstr basename = uAutoLine
+#MP Setstr import_compat = "ffhartdef5.inc"
+#MP ;Include "hartdef.u"
+#MP Include "ustd.inc"
+#MP Include "hcparse5.inc"
+#MP Include "hcout.inc"
+#MP Include "hcimport.inc"
+#MP
+#MP Include #@lookup.inc#
+#MP dummy(".h")
+#MP
+#MP ;Export the commands definitions for lookup purposes into a temporary file
+#MP Export (0) #@Untitled#
+#MPIfdef CommandCount ;to remove later; for now hcimport.inc may be empty
+#MP For c=0, CommandCount-1
+#MP     cmd = Command_%dc
+#MP     HCLookupContent[cmd, HCName_%dcmd]
+#MP Endfor
+#MPEndif ;to remove later; for now hcimport.inc may be empty
+#MP
+#MP Export (0) {uJoin, basename, ".c"}
+#MP
+/*
+Copyright 2015 by Dresser, Inc., as an unpublished trade secret.  All rights reserved.
+This document and all information herein are the property of Dresser, Inc.
+It and its contents are  confidential and have been provided as a part of
+a confidential relationship.  As such, no part of it may be made public,
+decompiled, reverse engineered or copied and it is subject to return upon
+demand.
+*/
+/**
+    \file ffhclookup5.c
+    \brief HART services lookup table and function
+
+    This file is created automatically from hclookup5.u.
+    DO NOT EDIT it by hand!!! Edit hclookup5.u and its includes instead.
+
+    CPU: Any
+
+    OWNER: ffhclookup5.u
+
+    \ingroup mnhartcmd
+*/
+
+#include "mnwrap.h"
+#include "hartfunc.h"
+#include "hartcmd.h"
+#include "ffhartdef5.h"
+#include "hartdef5.h" //for legacy commands intercepted in FFP
+
+#MP ;===== Deal with subcommands first ============
+#MP cmd_with_subs=0
+#MPIfdef CommandCount ;to remove later; for now hcimport.inc may be empty
+#MP For i=0, CommandCount-1
+#MP     cmd = Command_%di
+#MP     If Defined(SubCommandCount_%dcmd)
+#MP       If SubCommandCount_%dcmd != 0
+#MP         cmd_with_subs = cmd_with_subs+1
+#MP       Endif
+#MP     Endif
+#MP Endfor
+#MPEndif ;to remove later; for now hcimport.inc may be empty
+#MP If cmd_with_subs!=0
+/* Commands with subcommands and subcommands therein are relatively few.
+It is simpler and probably more efficient to do simple switch statements
+and let the compiler optimize them than to invent compressed lookup tables
+for each of them separately.
+*/
+#MP     For i=0, CommandCount-1
+#MP       cmd = Command_%di
+#MP       If Defined(SubCommandCount_%dcmd)
+#MP         If SubCommandCount_%dcmd != 0
+// -------- subcommands of command #mp%dcmd ----------
+static const hartDispatch_t disp_#mp%dcmd[#mp%dSubCommandCount_%dcmd] =
+{
+        #MP     For c = 0, SubCommandCount_%dcmd - 1
+        #MP         subcmd = SubCommand_%dcmd%n_%dc
+    [#mp%dc] =
+    {
+        #mp%dsubcmd,
+        MN_OFFSETOF(Rsp_#mp{%sHCName_%dcmd%n_%dsubcmd}_t, endmark),
+        MN_OFFSETOF(Req_#mp{%sHCName_%dcmd%n_%dsubcmd}_t, endmark),
+        #MP         Setstr cmdname = HCName_%dcmd%n_%dsubcmd
+        #mp%sHCFlags_%scmdname | #mp%sHCModes_%scmdname,
+        hartcmd_#mp{%sHCName_%dcmd%n_%dsubcmd}
+    },
+        #MP     Endfor
+};
+//access method
+static const hartDispatch_t *HART_cmdlookup_#mp%dcmd(u8_least key)
+{
+    u8_least index;
+    switch(key)
+    {
+        #MP     For c = 0, SubCommandCount_%dcmd - 1
+        #MP         subcmd = SubCommand_%dcmd%n_%dc
+        case (#mp%dsubcmd):
+            index = #mp%dc;
+            break;
+        #MP     Endfor
+        default:
+            return NULL;
+    }
+    return &disp_#mp%dcmd[index];
+}
+#MP         Endif ;SubCommandCount_
+#MP       Endif ;Defined SubCommandCount_
+#MP     Endfor ;Commands
+#MP     ;Finally, put them all in the table with the access table
+static const SubCommandInfo_t subcommands_table[#mp%dcmd_with_subs] =
+{
+#MP     subc = 0
+#MP     For i=0, CommandCount-1
+#MP       cmd = Command_%di
+#MP       If Defined(SubCommandCount_%dcmd)
+#MP         If SubCommandCount_%dcmd != 0
+    [#mp%dsubc] =
+    {
+    #MP Ifdef Disambig_%dcmd%nReq2
+        .type_offset = MN_OFFSETOF(Req_#mp{%sHCName_%dcmd}_t, #mp%sDisambig_%dcmd%nReq2), //0-based
+    #MP Else
+    #MP    Fatal["Subcommand Disambiguator not defined"]
+    #MP Endif
+    #MP Ifdef Disambig_%dcmd%nReq3
+        .length_offset = 1U + MN_OFFSETOF(Req_#mp{%sHCName_%dcmd}_t, #mp%sDisambig_%dcmd%nReq3), //1-based
+    #MP Else
+        .length_offset = 0U, //absent
+    #MP Endif
+        .data_offset = MN_OFFSETOF(Req_#mp{%sHCName_%dcmd}_t, endmark),
+        .lookup_func = HART_cmdlookup_#mp%dcmd,
+    },
+#MP             subc = subc + 1
+#MP         Endif
+#MP       Endif ;Defined SubCommandCount_
+#MP     Endfor ;commands
+};
+const SubCommandInfo_t *hart_GetSubCommandInfo(u8_least cmd)
+{
+    u8_least index;
+    switch(cmd)
+    {
+#MP     subc = 0
+#MP     For i=0, CommandCount-1
+#MP       cmd = Command_%di
+#MP       If Defined(SubCommandCount_%dcmd)
+#MP         If SubCommandCount_%dcmd != 0
+        case (#mp%dcmd):
+            index = #mp%dsubc;
+            break;
+#MP             subc = subc + 1
+#MP         Endif
+#MP       Endif ;Defined SubCommandCount_
+#MP     Endfor ;commands
+        default:
+            return NULL;
+    }
+    return &subcommands_table[index];
+}
+#MP Else ;i.e. cmd_with_subs==0
+//No centrally supported subcommands
+const SubCommandInfo_t *hart_GetSubCommandInfo(u8_least cmd)
+{
+    UNUSED_OK(cmd);
+    return NULL;
+}
+#MP Endif ;cmd_with_subs
+
+
+#MP ;========== temporary wrapper ================
+#MP Macro DefineOb ;convert string to name
+#MP DefineEntry(#1#, %s#2#)
+#MP Endm
+#MP
+#MP ;=======Application-level table heads/entries definition expected by common macros====
+#MP Macro AppPrintTableEntry;(index, ob_name, ...)
+    {
+        #mp{%u#1#}U, HC#mp{%u#1#}_LENGTH, HC#mp{%u#1#}_REQ_LENGTH, HC#mp{%u#1#}_FLAGS,
+        hart_Command_#mp{%u#1#}_#mp%n#2#
+    },
+#MP Endm
+#MP Macro AppPrintTableHead ;(name etc.)
+static const hartDispatch_t  disp[] =     //This is the table definition
+#MP Endm
+#MP Macro AppPrintLookupHead ;(name etc.)
+
+//Compressed lookup table
+#MP     If TableSize > 127
+static const s16 LookupTable[] =
+#MP     Else
+static const s8 LookupTable[] =
+#MP     Endif
+#MP Endm
+#MP
+#MP divisor = 8
+#MP Include #@projectdef.inc#
+#MP ;============ Command Table with Lookup Table ============
+#MP ObjectTableBegin
+#MP Include "Untitled" ;slurp the definitions from the temporary file
+#MP ;========= Transitional stuff (will go away ASAP)
+#MP Include "hartdef_common.inc" ;where the common definitions are
+#MP ;========= End transitional stuff
+#MP ObjectTableEnd
+
+//access method
+const hartDispatch_t *HART_cmdlookup(u8_least key)
+{
+    s32 Object; //reference to the object in values table
+    s32 ObIndex; //index to the object reference
+    s32 base; //base index of the secondary sub-table
+    u32 quotient = key/#mp{%udivisor}U;
+    s32 remainder = key%#mp{%udivisor}U;
+
+    quotient = quotient-#mp{%umin_q}U; //back by leading 0's in quotients
+    if(quotient>=#mp{%uTableSize}U)
+    {
+        return NULL; //out of range
+    }
+    base = LookupTable[quotient]; //start of sub-table
+    ObIndex = base+remainder; //object reference index
+    if(ObIndex>=#mp{%uTableSize})
+    {
+        return NULL; /* index out of range */
+    }
+    Object = LookupTable[ObIndex]; //object reference
+    if((u32)Object>=NELEM(disp)) //Covers negative numbers
+    {
+        return NULL; //out of range
+    }
+    if(disp[Object].cmd != key)
+    {
+        return NULL; //check failed
+    }
+    return &disp[Object];
+}
+
+/* This line marks the end of the source */
+#MP ; This line marks the end of the source

@@ -1,0 +1,47 @@
+//Teach Lint the IAR implementation of stdint.h
+-d__INT_LEAST8_T_TYPE__{int}
+-d__INT_LEAST16_T_TYPE__{int}
+-d__INT_LEAST32_T_TYPE__{int}
+-d__UINT_LEAST8_T_TYPE__{unsigned}
+-d__UINT_LEAST16_T_TYPE__{unsigned}
+-d__UINT_LEAST32_T_TYPE__{unsigned}
+
+-d__INT_FAST8_T_TYPE__{int}
+-d__INT_FAST16_T_TYPE__{int}
+-d__INT_FAST32_T_TYPE__{int}
+-d__UINT_FAST8_T_TYPE__{unsigned}
+-d__UINT_FAST16_T_TYPE__{unsigned}
+-d__UINT_FAST32_T_TYPE__{unsigned}
+
+-d__INTMAX_T_TYPE__{long long}
+-d__UINTMAX_T_TYPE__{unsigned long long}
+
+-d__INTPTR_T_TYPE__{long}
+-d__UINTPTR_T_TYPE__{unsigned long}
+
+-d__INT8_T_TYPE__{signed char}
+-d__UINT8_T_TYPE__{unsigned char}
+-d__INT16_T_TYPE__{short}
+-d__UINT16_T_TYPE__{unsigned short}
+-d__INT32_T_TYPE__{int}
+-d__UINT32_T_TYPE__{unsigned}
+-d__INT64_T_TYPE__{long long}
+-d__UINT64_T_TYPE__{unsigned long long}
+
+-d__INT8_T_MAX__{0x7F}
+-d__INT8_T_MIN__{(-0x7F-1)}
+-d__UINT8_T_MAX__{0xFF}
+
+-d__INT16_T_MAX__{0x7FFF}
+-d__INT16_T_MIN__{(-0x7FFF-1)}
+-d__UINT16_T_MAX__{0xFFFF}
+
+-d__INT32_T_MAX__{0x7FFFFFFF}
+-d__INT32_T_MIN__{(-0x7FFFFFFF-1)}
+-d__UINT32_T_MAX__{0xFFFFFFFF}
+
+-d__INT64_T_MAX__{0x7FFFFFFFFFFFFFFFLL}
+-d__INT64_T_MIN__{(-0x7FFFFFFFFFFFFFFFLL-1)}
+-d__UINT64_T_MAX__{0xFFFFFFFFFFFFFFFFULL}
+
+//-d__SIGNED_INT_MAX__{0x7FFFFFFF}

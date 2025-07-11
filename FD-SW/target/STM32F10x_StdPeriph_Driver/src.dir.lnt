@@ -1,0 +1,9 @@
+-e838 //previous value not used (placeholder for volatile access coded wrong)
+-e960 //all MISRA
+-e962 //defined identically
+-e818 //could  be a pointer to const
+-e641 //convert pointer to int
+-e701 //signed shift
+-e734 //loss of precision
+-e438 //last assigned value not used
+-e740 //unusual pointer cast (of our doing, may need to fix it)

@@ -1,0 +1,131 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--    $Archive: /MNCB/Dev/FIRMWARE/interface/hart/commonxml/cmd129_130.xml $
+    $Date: 1/27/12 5:15p $
+    $Revision: 53 $
+    $Author: Arkkhasin $
+
+-->
+<HART Version="1.0">
+  <Include></Include>
+  <Commands>
+    <XCommand Name="Read Factory Values" CmdNum="129" CmdType="Read" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_READ_COMMAND">
+      <!--Read factory values selectively by a subcommand-->
+      <RequestParams>
+        <Param>SubCmdNum</Param>
+      </RequestParams>
+      <ResponseParams>
+        <Param>SubCmdNum</Param>
+      </ResponseParams>
+      <SubCommands>
+        <Command Name="Read Position Smoothing Coefficient" CmdNum="100" CmdType="Read" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_READ_COMMAND" Description="Read position/level smoothing coefficient (exponential forgetting value)">
+          <ResponseParams>
+            <Param>SmoothCoefPosition</Param>
+          </ResponseParams>
+        </Command>
+        <Command Name="Read Expected NVMEM Signature" CmdNum="126" CmdType="Read" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_READ_COMMAND" Description="Read Expected NVMEM Signature">
+          <RequestParams>
+            <Param>NVMEM Volume Id</Param>
+          </RequestParams>
+          <ResponseParams>
+            <Param>NVMEM Signature</Param>
+          </ResponseParams>
+        </Command>
+        <Command Name="Read RAM area" CmdNum="129" CmdType="Read" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_READ_COMMAND">
+          <!--Read a block of RAM-->
+          <RequestParams>
+            <Param>MemoryAddress</Param>
+          </RequestParams>
+          <ResponseParams>
+            <Param>ReadBlock</Param>
+          </ResponseParams>
+        </Command>
+        <Command Name="Read NVMEM area" CmdNum="130" CmdType="Read" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_READ_COMMAND" Description="Read a block of NVMEM. 2 MSB of &quot;MemoryAddress&quot; represent the volume number to read from (0-Main board, 1-Sensor board)">
+          <!--Read a block of NVMEM-->
+          <RequestParams>
+            <Param>MemoryAddress</Param>
+          </RequestParams>
+          <ResponseParams>
+            <Param>ReadBlock</Param>
+          </ResponseParams>
+        </Command>
+        <Command Name="Read Firmware Version" CmdNum="131" CmdType="Read" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_READ_COMMAND" Description="Firmware CRC and build info">
+          <ResponseParams>
+            <Param>Firmware CRC</Param>
+            <Param>BuildDate</Param>
+          </ResponseParams>
+        </Command>
+      </SubCommands>
+    </XCommand>
+    <Command CmdNum="255" SubCmdOnly="1">
+      <!--Write factory values selectively by a subcommand-->
+      <SubCommands>
+        <XCommand Name="Write Device Id" CmdNum="131" CmdType="Write" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_FACTORY_COMMAND" Description="Factory Device Id">
+          <RequestParams>
+            <Param>DeviceID</Param>
+          </RequestParams>
+        </XCommand>
+        <XCommand Name="Clear NVMEM Signature" CmdNum="133" CmdType="Write" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_FACTORY_COMMAND" Description="This (logically) destroys the NVMEM image thus producing a virgin unit">
+          <RequestParams>
+            <Param>FF NVMEM Volume Id</Param>
+          </RequestParams>
+        </XCommand>
+      </SubCommands>
+    </Command>
+  </Commands>
+  <Variables>
+    <Variable Name="FF NVMEM Volume Id" DataType="H_UCHAR" Description="NVMEM volume id (0-main board only - for now)" EnRangeCheck="1">
+      <Range Model="TypeRange" />
+    </Variable>
+  </Variables>
+  <Variables>
+    <Variable Name="Read Request" DataType="H_UCHAR" EnRangeCheck="1">
+      <Range Model="Standard" />
+      <EnumValues v0="Since Reset" v1="Since Last Read" />
+    </Variable>
+    <Variable Name="fbc_hangup_cnt" DataType="H_UINT4" Description="fieldbus controller watchdog timer expired"></Variable>
+    <Variable Name="fcs_err_cnt" DataType="H_UINT4" Description="FCS error"></Variable>
+    <Variable Name="frm_err_cnt" DataType="H_UINT4" Description="framing error, end delimiter not seen"></Variable>
+    <Variable Name="cns_err_cnt" DataType="H_UINT4" Description="carrier not seen"></Variable>
+    <Variable Name="jab_err_cnt" DataType="H_UINT4" Description="jabber timeout"></Variable>
+    <Variable Name="nept_err_cnt" DataType="H_UINT4" Description="receiver not empty  unexpected start delimiter"></Variable>
+    <Variable Name="empty_err_cnt" DataType="H_UINT4" Description="transmitter empty"></Variable>
+    <Variable Name="fifo_err_cnt" DataType="H_UINT4" Description="FIFO buffer error"></Variable>
+    <Variable Name="rxov_err_cnt" DataType="H_UINT4" Description="receiver overflow"></Variable>
+    <Variable Name="rxlen_err_cnt" DataType="H_UINT4" Description="receiver length"></Variable>
+  </Variables>
+  <Commands>
+    <SubCmdOnly CmdNum="255">
+      <SubCommands>
+        <Command Name="Commit RAM to NVMEM in FFP" CmdNum="0" CmdType="Write " AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_FACTORY_COMMAND" Description="Forces initialization of NVMEM from RAM image. Automatically repairs NVMEM signature.&#xD;&#xA;An NVMEM record is committed if its flags are such that&#xD;&#xA;((flags ^ &quot;Ram Commit Flip&quot;) &amp; &quot;RAM Commit Suppress&quot;) == 0.&#xD;&#xA;E.g. Suppress==0 commits all regardless of Flip; Suppress==0x02 commits calibrations if Flip==0x02 or everything except calibrations if Flip==0.">
+          <!--Formerly known as hart_FactoryCommand_132_SetVersion-->
+          <RequestParams>
+            <Param>FF NVMEM Volume Id</Param>
+          </RequestParams>
+        </Command>
+        <Command Name="Reset FFP Log File System" CmdNum="198" CmdType="Write" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_FACTORY_COMMAND" Description="Removes all log file data"></Command>
+      </SubCommands>
+    </SubCmdOnly>
+    <SubCmdOnly CmdNum="255">
+      <SubCommands>
+        <Command Name="Read FF DLL stats" CmdNum="19" CmdType="Read" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_READ_COMMAND" Description="Read data link statistics provided by FF stack">
+          <RequestParams>
+            <Param>Read Request</Param>
+          </RequestParams>
+          <ResponseParams>
+            <Param>Read Request</Param>
+            <Param>fbc_hangup_cnt</Param>
+            <Param>fcs_err_cnt</Param>
+            <Param>frm_err_cnt</Param>
+            <Param>cns_err_cnt</Param>
+            <Param>jab_err_cnt</Param>
+            <Param>nept_err_cnt</Param>
+            <Param>empty_err_cnt</Param>
+            <Param>fifo_err_cnt</Param>
+            <Param>rxov_err_cnt</Param>
+            <Param>rxlen_err_cnt</Param>
+          </ResponseParams>
+        </Command>
+      </SubCommands>
+    </SubCmdOnly>
+  </Commands>
+</HART>

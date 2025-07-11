@@ -1,0 +1,10 @@
+//  Generic Compilers, -si4 -sp4,
+//  Standard lint options
+
+co_stdint.lnt
+
+au-sm.lnt au-ds.lnt au-misra.lnt
+
+options.lnt  lintbugs.lnt
+
+-si4 -sp4

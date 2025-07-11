@@ -1,0 +1,18 @@
+-e970 //native type
+-esym(957, __low_level_init) //no prototype - compiler required function
+-e957 //no prototype (TBD to look into this)
+-e960 //no MISRA
+-e722 //suspicious `;`
+-e752 -e750 //not referenced
+-e641 //enum to int
+-e553 //Undefined preprocessor variable evals to 0 OK (in command line)
+-e640 //strong type expected
+-e508 //extern used with definition
+-e525 -e725 //indentation
+-e829 // <stdio.h>
+-e732 //loss of sign
+-e734 -e713 //loss of precision
+-e740 //Unusual pointer cast
+
+
+//TODO: strengthen lint for stubs_app.c
