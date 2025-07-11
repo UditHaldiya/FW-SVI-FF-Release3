@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<HART Version="1.0">
+  <Commands>
+    <!--Read Unique Identifier-->
+    <Command Name="Read Unique Identifier" CmdNum="0" CmdType="Read" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_READ_COMMAND" Description="Read Unique Identifier">
+      <ResponseParams>
+        <Struct>st Unique Identifier</Struct>
+      </ResponseParams>
+    </Command>
+  </Commands>
+  <Structs>
+    <Struct Name="st Unique Identifier">
+      <Param>Dummy Delimiter</Param>
+      <Param>MfgID</Param>
+      <Param>DeviceType</Param>
+      <Param>Preambles</Param>
+      <Param>CmdRev</Param>
+      <Param>DevRev</Param>
+      <Param>SWRev</Param>
+      <Param>HWRev and Signaling code</Param>
+      <Param>Flags</Param>
+      <Param>Device ID</Param>
+      <Param>nPreambles</Param>
+      <Param>nVariables</Param>
+      <Param>Count</Param>
+      <Param>ExtStatus</Param>
+    </Struct>
+  </Structs>
+  <Variables>
+    <Variable Name="ExtStatus" DataType="H_UCHAR" Printf="%x" Description="Extended Field Device Status" />
+  </Variables>
+  <Variables>
+    <Variable Name="Dummy Delimiter" DataType="H_UCHAR" Description="&quot;254&quot;" />
+    <Variable Name="MfgID" DataType="H_UCHAR" Printf="0x%X" EnRangeCheck="1">
+      <Range Model="TypeRange" />
+      <EnumValues v65="Dresser" />
+    </Variable>
+    <Variable Name="DeviceType" DataType="H_UCHAR" Printf="0x%02X" EnRangeCheck="1">
+      <Range Model="TypeRange" />
+      <EnumValues vC8="SVI" vC9="SVI2" vCA="SVI2 AP" vCB="ESD" v64="DLT12300" v65="DLT12400" vCC="SVi1000" />
+    </Variable>
+    <Variable Name="Preambles" DataType="H_UCHAR" Description="Minimum number of Preambles required for the request message from the Master to the Slave. This number includes the two preambles used in asynchronous Physical Layers(along with the Delimiter) to detect the start of message." />
+    <Variable Name="CmdRev" DataType="H_UCHAR" Description="Universal Command Major Revison Number implemented by this device. For HART Revision 6 this value must be the number 6." />
+    <Variable Name="DevRev" DataType="H_UCHAR" Description="Device Revision Level." />
+    <Variable Name="SWRev" DataType="H_UCHAR" Description="Software Revision Level of this Device. Level 254 and 255 are reserved." />
+    <Variable Name="HWRev and Signaling code" DataType="H_UCHAR" Description="(Most significant 5 bits)Hardware Revision Level.Level 31 is reserved.\n(Least significant 3 bits)Physical signaling code" />
+    <Variable Name="Flags" DataType="H_UCHAR" Description="Flags" />
+    <Variable Name="Device ID" DataType="H_UINT3" Printf="%07u" DisplayName="Device ID" EnRangeCheck="1">
+      <Range Model="TypeRange" />
+    </Variable>
+    <Variable Name="nPreambles" DataType="H_UCHAR" Printf="%u" Description="Minimum number of preambles to be sent with the response message from the slave to the master.">
+      <Range Model="Standard" MinValue="0" MaxValue="16777215" />
+    </Variable>
+    <Variable Name="nVariables" DataType="H_UCHAR" Printf="%u" Description="Max number of Device Variables.">
+      <Range Model="Ascii" />
+    </Variable>
+    <Variable Name="Count" DataType="H_UINT" Printf="%02X" Description="Configuration change count"></Variable>
+  </Variables>
+</HART>

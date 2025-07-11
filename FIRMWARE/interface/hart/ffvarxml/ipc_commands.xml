@@ -1,0 +1,119 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--    $Archive: /MNCB/Dev/AP_Release_3.1.x/LCX_devel/FIRMWARE/interface/hart/commonxml/poscontrol.xml $
+    $Date: 2/11/11 2:31p $
+    $Revision: 12 $
+    $Author: Arkkhasin $
+
+-->
+<HART Version="1.0">
+  <Include></Include>
+  <Commands>
+    <Command Name="IPC Dynamic Parameters Exchange" CmdNum="177" CmdType="Command" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_READ_COMMAND" Description="IPC - Dynamic Parameters Exchange Command">
+      <RequestParams>
+        <Param>IPC Target Mode</Param>
+        <Param>IPC SP Status</Param>
+        <Param>IPC SP Float</Param>
+        <Param>IPC IP Action Status</Param>
+        <Param>IPC IP Action</Param>
+        <Param>IPC Variable ID 1</Param>
+        <Param>IPC Variable ID 2</Param>
+        <Param>IPC Command Flags</Param>
+      </RequestParams>
+      <ResponseParams>
+        <Param>IPC Actual Mode</Param>
+        <Param>IPC POS Status</Param>
+        <Param>IPC POS Float</Param>
+        <Param>IPC SP Tracked</Param>
+        <Param>IPC AI Status</Param>
+        <Param>IPC AI Float</Param>
+        <Param>IPC Variable ID 1</Param>
+        <Param>IPC Var 1 Status</Param>
+        <Param>IPC Var 1 Buffer</Param>
+        <Param>IPC Variable ID 2</Param>
+        <Param>IPC Var 2 Status</Param>
+        <Param>IPC Var 2 Buffer</Param>
+      </ResponseParams>
+    </Command>
+    <Command Name="IPC Read Short Variables" CmdNum="188" CmdType="Command" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_READ_COMMAND" Description="IPC - Read two short variables">
+      <RequestParams>
+        <Param>IPC Variable ID 1</Param>
+        <Param>IPC Variable ID 2</Param>
+      </RequestParams>
+      <ResponseParams>
+        <Param>IPC Variable ID 1</Param>
+        <Param>IPC Var 1 Status</Param>
+        <Param>IPC Var 1 Buffer</Param>
+        <Param>IPC Variable ID 2</Param>
+        <Param>IPC Var 2 Status</Param>
+        <Param>IPC Var 2 Buffer</Param>
+      </ResponseParams>
+    </Command>
+    <Command Name="IPC Write Short Variables" CmdNum="186" CmdType="Command" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_READ_COMMAND" Description="IPC - Write two short variables">
+      <RequestParams>
+        <Param>IPC Variable ID 1</Param>
+        <Param>IPC Var 1 Status</Param>
+        <Param>IPC Var 1 Buffer</Param>
+        <Param>IPC Variable ID 2</Param>
+        <Param>IPC Var 2 Status</Param>
+        <Param>IPC Var 2 Buffer</Param>
+      </RequestParams>
+      <ResponseParams>
+        <Param>IPC Variable ID 1</Param>
+        <Param>IPC Var 1 Status</Param>
+        <Param>IPC Var 1 Buffer</Param>
+        <Param>IPC Variable ID 2</Param>
+        <Param>IPC Var 2 Status</Param>
+        <Param>IPC Var 2 Buffer</Param>
+      </ResponseParams>
+    </Command>
+    <Command Name="IPC Read Array" CmdNum="178" CmdType="Command" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_READ_COMMAND" Description="IPC - Read array variables">
+      <RequestParams>
+        <Param>IPC Variable ID 1</Param>
+        <Param>IPC Data Block Num</Param>
+        <Param>IPC Data Block</Param>
+      </RequestParams>
+      <ResponseParams>
+        <Param>IPC Variable ID 1</Param>
+        <Param>IPC Data Block Num</Param>
+        <Param>IPC Array Status</Param>
+        <Param>IPC Array Data</Param>
+      </ResponseParams>
+    </Command>
+    <Command Name="IPC Write Array" CmdNum="187" CmdType="Command" AllowedModes="HC_ALLOWED_MODE_ALL" CmdFlags="HC_READ_COMMAND" Description="IPC - Write data block up to 11 bytes">
+      <RequestParams>
+        <Param>IPC Variable ID 1</Param>
+        <Param>IPC Data Block Num</Param>
+        <Param>IPC Data Block</Param>
+      </RequestParams>
+      <ResponseParams>
+        <Param>IPC Variable ID 1</Param>
+        <Param>IPC Data Block Num</Param>
+        <Param>IPC Array Status</Param>
+      </ResponseParams>
+    </Command>
+  </Commands>
+  <Variables>
+    <Variable Name="IPC Target Mode" DataType="H_UCHAR" Description="Device Target Mode" />
+    <Variable Name="IPC SP Status" DataType="H_UCHAR" Description="Device SP Status" />
+    <Variable Name="IPC SP Float" DataType="H_FLOAT" Description="Device SP Float Buffer" />
+    <Variable Name="IPC AI Status" DataType="H_UCHAR" Description="Device Analog Input Status" />
+    <Variable Name="IPC AI Float" DataType="H_FLOAT" Description="Device Analog Input" />
+    <Variable Name="IPC IP Action Status" DataType="H_UCHAR" Description="Device IP Action Status" />
+    <Variable Name="IPC IP Action" DataType="H_UCHAR" Description="Device IP Action" />
+    <Variable Name="IPC Variable ID 1" DataType="H_UINT" Description="Device Variable 1 ID Index" />
+    <Variable Name="IPC Variable ID 2" DataType="H_UINT" Description="Device Variable 2 ID Index" />
+    <Variable Name="IPC Actual Mode" DataType="H_UCHAR" Description="Device Actual Mode" />
+    <Variable Name="IPC POS Status" DataType="H_UCHAR" Description="Device Position Status" />
+    <Variable Name="IPC POS Float" DataType="H_FLOAT" Description="Valve Position" />
+    <Variable Name="IPC SP Tracked" DataType="H_FLOAT" Description="Valve Setpoint to track. If NaN, do not track. No tracking if TB in AUTO.\nNOTE: In open-loop control, position is tracked instead of setpoint." />
+    <Variable Name="IPC Var 1 Status" DataType="H_UCHAR" Description="Device Variable 1 Status" />
+    <Variable Name="IPC Var 1 Buffer" DataType="H_UINT4" Description="Device Variable 1 Buffer" />
+    <Variable Name="IPC Var 2 Status" DataType="H_UCHAR" Description="Device Variable 2 Status" />
+    <Variable Name="IPC Var 2 Buffer" DataType="H_UINT4" Description="Device Variable 2 Buffer" />
+    <Variable Name="IPC Command Flags" DataType="H_UINT" Description="Command bits to APP:\n&#xD;&#xA;0x8000 - DO2 state\n&#xD;&#xA;0x4000 - DO1 state\n&#xD;&#xA;0x0004 - APP SP tracking acknowlwdgment\n&#xD;&#xA;0x0002 - Data collection trigger on TB alerts\n&#xD;&#xA;0x0001 - Write lock status resolved with resource block" />
+    <Variable Name="IPC Data Block Num" DataType="H_UCHAR" Description="Data block Number for Array Variables" />
+    <Variable Name="IPC Array Status" DataType="H_UCHAR" Description="Arrray Variable Status" />
+    <Variable Name="IPC Array Data" DataType="H_UCHAR" MinSize="32" MaxSize="32" Description="Data for Array Variable" />
+    <Variable Name="IPC Data Block" DataType="H_UCHAR" MaxSize="11" DisplayName="Data Block" Default="0" Description="Data Buffer When Reading or Writing Array"></Variable>
+  </Variables>
+</HART>

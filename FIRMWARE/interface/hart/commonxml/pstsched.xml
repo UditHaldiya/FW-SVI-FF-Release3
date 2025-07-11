@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<HART Version="1.0">
+  <Include></Include>
+  <Commands>
+    <SubCmdOnly CmdNum="170">
+      <SubCommands>
+        <Command Name="Read Partial Stroke Test Start Config" CmdNum="196" CmdType="Read" AllowedModes="HC_ALLOWED_MODE_ALL | HC_ALLOWED_MODE_FS" CmdFlags="HC_READ_COMMAND" Description="Read Partial Stroke Test Schedule">
+          <RequestParams></RequestParams>
+          <ResponseParams>
+            <Param>PST Trigger By UI</Param>
+            <Param>Data Collection Trigger By HART</Param>
+            <Param>Data Collection Trigger By DI Switch</Param>
+            <Param>Data Collection Trigger By AI Input</Param>
+            <Param>Data Collection Trigger AI Input Threshold</Param>
+          </ResponseParams>
+        </Command>
+        <Command Name="Read Partial Stroke Test Schedule" CmdNum="194" CmdType="Read" AllowedModes="HC_ALLOWED_MODE_ALL | HC_ALLOWED_MODE_FS" CmdFlags="HC_READ_COMMAND" Description="Read Time Until Next Partial Stroke Test">
+          <RequestParams></RequestParams>
+          <ResponseParams>
+            <Struct>H PST Time Until</Struct>
+          </ResponseParams>
+        </Command>
+      </SubCommands>
+    </SubCmdOnly>
+    <SubCmdOnly CmdNum="171">
+      <SubCommands>
+        <Command Name="Write Partial Stroke Test Start Config" CmdNum="196" CmdType="Write" AllowedModes="HC_ALLOWED_MODE_ALL | HC_ALLOWED_MODE_FS" CmdFlags="HC_WRITE_COMMAND" Description="Write Partial Stroke Test Start Config">
+          <RequestParams>
+            <Param>PST Trigger By UI</Param>
+            <Param>Data Collection Trigger By HART</Param>
+            <Param>Data Collection Trigger By DI Switch</Param>
+            <Param>Data Collection Trigger By AI Input</Param>
+            <Param>Data Collection Trigger AI Input Threshold</Param>
+          </RequestParams>
+          <ResponseParams>
+            <Param>PST Trigger By UI</Param>
+            <Param>Data Collection Trigger By HART</Param>
+            <Param>Data Collection Trigger By DI Switch</Param>
+            <Param>Data Collection Trigger By AI Input</Param>
+            <Param>Data Collection Trigger AI Input Threshold</Param>
+          </ResponseParams>
+        </Command>
+        <Command Name="Write Partial Stroke Test Schedule" CmdNum="194" CmdType="Write" AllowedModes="HC_ALLOWED_MODE_ALL | HC_ALLOWED_MODE_FS" CmdFlags="HC_WRITE_COMMAND" Description="Write Time Until Next Partial Stroke Test. If the time exceeds PST interval, it is still accepted but taken modulo interval.">
+          <RequestParams>
+            <Struct>H PST Time Until</Struct>
+          </RequestParams>
+          <ResponseParams>
+            <Struct>H PST Time Until</Struct>
+          </ResponseParams>
+        </Command>
+      </SubCommands>
+    </SubCmdOnly>
+  </Commands>
+  <Structs>
+    <Struct Name="H PST Time Until">
+      <Param>PST Days Until Next</Param>
+      <Param>PST Minutes Until Next</Param>
+    </Struct>
+  </Structs>
+  <Variables>
+    <Variable Name="PST Interval" DataType="H_INT" Description="Schedule adjustment within year" Units="days">
+      <Range Model="Standard" MinValue="0" MaxValue="365" />
+    </Variable>
+    <Variable Name="PST Days Until Next" DataType="H_INT" Description="Schedule adjustment within year" Units="days">
+      <Range Model="Standard" MinValue="0" MaxValue="365" />
+    </Variable>
+    <Variable Name="PST Minutes Until Next" DataType="H_INT" Description="Schedule adjustment within day" Units="minutes">
+      <Range Model="Standard" MinValue="0" MaxValue="1439" />
+    </Variable>
+    <Variable Name="PST Trigger By UI" DataType="H_UCHAR" Description="Whether can be triggered by local UI">
+      <EnumValues v0="UIT_Disabled" v1="UIT_Enabled" />
+    </Variable>
+    <Variable Name="Data Collection Trigger By HART" DataType="H_UCHAR" Description="How to react to HART message trigger">
+      <EnumValues v0="HCT_Disabled" v1="HCT_Enabled" />
+    </Variable>
+    <Variable Name="Data Collection Trigger By AI Input" DataType="H_UCHAR" Description="How to react to physical AI input">
+      <EnumValues v0="HCTAI_Disabled" v1="HCTAI_EnabledBelow" v2="HCTAI_EnabledAbove" />
+    </Variable>
+    <Variable Name="Data Collection Trigger By DI Switch" DataType="H_UCHAR" Description="How to react to DI switch">
+      <EnumValues v0="HCTDI_Disabled" v1="HCTDI_EnabledOpen" v2="HCTDI_EnabledClosed" />
+    </Variable>
+  </Variables>
+</HART>
