@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.572
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "genkey3w", "genkey3w\genkey3w.vcxproj", "{9E71FDC6-F25E-465E-8293-E4B900494D79}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9E71FDC6-F25E-465E-8293-E4B900494D79}.Debug|x64.ActiveCfg = Debug|x64
+		{9E71FDC6-F25E-465E-8293-E4B900494D79}.Debug|x64.Build.0 = Debug|x64
+		{9E71FDC6-F25E-465E-8293-E4B900494D79}.Debug|x86.ActiveCfg = Debug|Win32
+		{9E71FDC6-F25E-465E-8293-E4B900494D79}.Debug|x86.Build.0 = Debug|Win32
+		{9E71FDC6-F25E-465E-8293-E4B900494D79}.Release|x64.ActiveCfg = Release|x64
+		{9E71FDC6-F25E-465E-8293-E4B900494D79}.Release|x64.Build.0 = Release|x64
+		{9E71FDC6-F25E-465E-8293-E4B900494D79}.Release|x86.ActiveCfg = Release|Win32
+		{9E71FDC6-F25E-465E-8293-E4B900494D79}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C510C746-1223-4F5C-8A89-5BDDCF3D9F76}
+	EndGlobalSection
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 2
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = http://ogmcshyaptf01.logon.ds.ge.com:8080/tfs/defaultcollection
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = genkey3w\\genkey3w.vcxproj
+		SccProjectName1 = genkey3w
+		SccLocalPath1 = genkey3w
+	EndGlobalSection
+EndGlobal
