@@ -1,0 +1,18 @@
+#MP ;Configuration of component HISTOGRAM
+#MP If Defined(optionset {MAC}) 
+#MP Else
+#MP Macro optionset
+#MP Endm
+#MP Endif
+#MP If Defined(select {MAC}) 
+#MP Else
+#MP Macro select
+#MP Setstr #1# {#2#}
+#MP Endm
+#MP Endif
+#MP optionset[HISTOGRAM_OPTIONS_POSERR, WRITABLE, READONLY]
+#MP optionset[HISTOGRAM_OPTIONS_POSITION, WRITABLE, READONLY]
+#MP optionset[HISTOGRAM_OPTIONS_WORKING_TIMES, WRITABLE, READONLY]
+#MP select[HISTOGRAM_SELECTION_POSERR, READONLY ]
+#MP select[HISTOGRAM_SELECTION_POSITION, WRITABLE ]
+#MP select[HISTOGRAM_SELECTION_WORKING_TIMES, READONLY ]

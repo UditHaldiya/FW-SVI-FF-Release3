@@ -1,0 +1,5 @@
+//Redirects 
+-d"fbs_call_fdev_funct=mnfbs_call_fdev_funct" 
+-d"fdc_wd_reset_wd_counter=mnfdc_wd_reset_wd_counter" 
+-d"Read_handler=mnRead_handler" 
+-d"tmp_hi_adjust_time=mntmp_hi_adjust_time" 

@@ -1,0 +1,83 @@
+#MP Include "ustd.inc"
+#MP Include "lfgen.inc"
+#MP Setstr splitstr = "||"
+#MP Setstr out_c = cdir "\" bname ".c"
+#MP Setstr out_h = hdir "\" bname ".h"
+#MP Setstr out_inc = idir "\" bname ".inc"
+#MP toupper[bname]
+#MP Setstr GUARD = toupper "_H_"
+#MP Setstr nvmapstring = ""
+#MP     ;Create files
+#MP     Export (0) out_h
+#ifndef #mp%sGUARD
+#define #mp%sGUARD
+#include "errcodes.h"
+#include "nvffext.h"
+
+#include <base.h>
+#include <fbap.h>
+#include <ptb.h>
+
+typedef struct ff2nvram_map_t
+{
+    nvramId_t nvramid;
+} ff2nvram_map_t;
+extern const ff2nvram_map_t ff2nvram_map[];
+
+#MP     Export (0) out_c
+#include "mnwrap.h"
+#include "ff2nvram.h"
+#include "crc.h"
+
+#include <vfd.h>
+#include <fbif.h>
+#include <fbif_dcl.h>
+#include <fbif_idx.h>
+
+#MP     Export (0) out_inc
+#MP     Setstr nvstring = "#MP ;PTB parameters migrated to MN NV"
+#mp%snvstring
+#MP Export (0) "" ;remove gunk
+#MP   Include "ptb_custom.inc"
+#MP     ;Complete the files
+#MP     Export (1) out_h
+extern const size_t ff2nvram_map_size;
+#define TB_CUSTOM_FIRST_REL_INDEX (#mp%dgwout_start)
+#define TB_STORAGE_APP 0x01U //flag of N or S parameter stored in APP NVMEM
+#define TB_STORAGE_FFP 0x02U //flag of N or S parameter stored in FFP NVMEM
+extern const u8 nvstorage_attrib[];
+extern const size_t nvstorage_attrib_size;
+#endif //#mp%sGUARD
+/* This line marks the end of the source */
+#MP     Export (1) out_c
+const ff2nvram_map_t ff2nvram_map[] =
+{
+#MP ;Format/chop the output string
+#MP len = Ustrlen(nvmapstring)
+#MP If len==0
+    [0] = 0,
+#MP Endif
+#MP Repeat
+#MP Setstr str_ = {uSplit, nvmapstring, splitstr}
+#MP n = n+1
+#MP Setstr nvmapstring = {uSubstr, nvmapstring, nvmapstring, len}
+#mp%sstr_
+#MP While uSplit >= 0
+};
+const size_t ff2nvram_map_size = NELEM(ff2nvram_map);
+
+//Storage flags of custom TB parameters
+const u8 nvstorage_attrib[] =
+{
+#MP For x = gwout_start, gwout-1
+	[REL_IDX_PTB_#mp%snvstorage_index__%dx] = #mp%snvstorage__%dx,
+#MP Endfor
+};
+const size_t nvstorage_attrib_size = NELEM(nvstorage_attrib);
+
+/* This line marks the end of the source */
+#MP     Export (1) out_inc
+#MP     Setstr nvstring = "#MP ;/* This line marks the end of the source */"
+#mp%snvstring
+
+

@@ -1,0 +1,39 @@
+#MP C_strict = 1 ;if 0, enum constants are allowed in conditional directives
+#MP If C_strict != 0
+    #MP Include "ustd.inc"
+    #MP Macro modhash ;[mod]
+    #MP Setstr s = "Ark" {#1#}
+    #MP modhash = 0;
+    #MP Repeat
+    #MP     Setstr L = {uSubstr, s, 0, 1}
+    #MP     Setstr s = {uSubstr, s, 1, 10000}
+    #MP     modhash = (modhash*256 + ascii_%sL)% 50021 ;mod prime number
+    #MP While Ustrlen(s)>0
+    #MP Endm
+#MP Endif ;C_strict
+#MP
+#MP Macro optionset ;[]
+#MP If C_strict == 0
+enum #mp{%n#1#}_t
+{
+    #MP For i=2, #0#
+    #mp{%n#1#}_OPTION_#mp%n#i#,
+    #MP Endfor
+};
+#MP Else ;C_strict
+    #MP modhash[#1#] ;not efficient to call each time but who cares?
+    #MP For i=2, #0#
+#define #mp{%n#1#}_OPTION_#mp%n#i# (#mp%umodhash + #mp%ui)
+    #MP Endfor
+
+#MP Endif ;C_strict
+#MP Endm
+        #MP
+#MP Macro select ;
+#MP Setstr s = {#1#} ;as string
+#MP Setstr s1={uSplit, s, "_SELECTION_"}
+#MP Setstr r = {uSubstr, s, s, 1000}
+#define #mp{%n#1#} (#mp{%ss1}_OPTIONS_#mp{%sr}_OPTION_#mp%n#2#)
+#MP Endm
+        #MP
+#MP Include definitions

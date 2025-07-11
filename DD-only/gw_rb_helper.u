@@ -1,0 +1,40 @@
+#MP Include "ustd.inc"
+#MP Include "ffids.inc"
+#MP Include "ffidgen.inc"
+#MP Cparam_prepare
+
+#MP Include "changeset.inc"
+
+#MP Setstr SOFTWARE_REV = RES_VAL_DEV_REV "." RES_DEV_MINOR_REV "." RES_BUILD "." RES_BUILD_REV " CS" Changeset
+#MP SOFTWARE_REV = Ustrlen(SOFTWARE_REV)
+#MP If SOFTWARE_REV < 32
+    #MP For i=SOFTWARE_REV, 32-1
+    #MP     Setstr SOFTWARE_REV = SOFTWARE_REV " "
+    #MP Endfor
+#MP Endif
+#MP Setstr temp = {uSubstr, SOFTWARE_REV, 0, 1}
+#MP Setstr SOFTWARE_REV_C = "'" temp "'"
+#MP ascii = ascii_%stemp
+#MP Setstr SOFTWARE_REV_XC = "0x" {%Xascii}
+#MP For i=1, 32-1
+    #MP Setstr temp = {uSubstr, SOFTWARE_REV, i, i+1}
+    #MP Setstr SOFTWARE_REV_C = SOFTWARE_REV_C ",'" temp "'"
+    #MP ascii = ascii_%stemp
+    #MP Setstr SOFTWARE_REV_XC = SOFTWARE_REV_XC "," "0x" {%Xascii}
+#MP Endfor
+-------------[123456789012345678901234567890123456]
+SOFTWARE_REV=[#mp%sSOFTWARE_REV]
+#MP ;Now render the output
+#MP Export (0) "ids.gw"
+//For GW
+#define RES_VAL_DEV_REV #mp%dRES_VAL_DEV_REV
+#define RES_DEV_MINOR_REV #mp%dRES_DEV_MINOR_REV
+#define RES_BUILD #mp%dRES_BUILD
+#define RES_BUILD_REV #mp%dRES_BUILD_REV
+#MP; //For C via GW
+#MP ;GW substitutes here, so we must move it to a separate generator
+#MP ;See ffids.u
+
+// index = 65
+PARAM SOFTWARE_REV R 32 Simple VISIBLE_STRING 32 ##mp%sSOFTWARE_REV_XC
+

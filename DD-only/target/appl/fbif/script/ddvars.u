@@ -1,0 +1,7 @@
+#MP Include "ustd.inc"
+#MP Include "ddvargen.inc"
+#MP Export (0) outfile
+#ifndef CUSTOMVAR_INCLUDED
+#define CUSTOMVAR_INCLUDED
+#MP Include "ptb_custom.inc"
+#endif

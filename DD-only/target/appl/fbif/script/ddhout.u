@@ -1,0 +1,43 @@
+#MP Include "ustd.inc"
+#MP Include "ddhgen.inc"
+#MP Export (0) outfile
+#MP Setstr out = "#define TB_BLOCK_MEMBERS_SVI              ||"
+#MP Setstr out5=""
+#MP Include "ptb_custom.inc"
+
+#MP Macro Output ;[combined-string-to-chop]
+#MP ;Format/chop the output string
+/*----------------------------------/
+** TB block members for SVI2 special
+/----------------------------------*/
+#MP len = Ustrlen(#1#)
+#MP ;First, remove from the last semicolon on
+#MP cut = 1
+#MP For i=0, len-1
+#MP     Setstr char = {uSubstr, #1#, len-i-1, len-i}
+#MP     strcmp[char, ";"]
+#MP     If strcmp > 0
+#MP         cut = i
+#MP         i = len ;break
+#MP     Endif
+#MP Endfor
+#MP Setstr #1# = {uSubstr, #1#, 0, len - cut - 1}
+#MP n=0
+#MP Repeat
+#MP Setstr str_%un = {uSplit, #1#, "||"}
+#MP n = n+1
+#MP Setstr #1# = {uSubstr, #1#, #1#, len}
+#MP While uSplit >= 0
+#MP For i=0, n-2
+#mp%sstr_%ui\
+#MP Endfor
+#MP n = n-1
+#mp%sstr_%un
+/* End of DD macro definition */
+#MP Endm
+#MP
+#MP Output[out]
+#MP If Ustrlen(out5)!=0
+	#MP Setstr out5 = "#define TB_BLOCK_MEMBERS_SVI5  ||" out5
+	#MP Output[out5]
+#MP Endif
