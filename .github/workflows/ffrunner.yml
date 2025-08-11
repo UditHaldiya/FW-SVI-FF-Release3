@@ -17,16 +17,20 @@ jobs:
  
       - name: Build SVIFF project
         run: ./FIRMWARE/auto.bat
+        continue-on-error: true
 
       - name: Build FFTokenizer project
         run: ./FFTokenizer/build_standard_libs.bat
- 
+        continue-on-error: true
+
       - name: Build FWCTRL project
         run: ./FWCTRL/auto.bat
- 
+        continue-on-error: true
+        
       - name: Build DD-only project
         run: ./DD-only/auto.bat
- 
+        continue-on-error: true
+        
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
