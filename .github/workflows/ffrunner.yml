@@ -1,0 +1,42 @@
+name: SVIFF-CI
+ 
+on:
+  push:
+    branches: [ "dev" ]
+  pull_request:
+    branches: [ "dev" ]
+  workflow_dispatch:
+ 
+jobs:
+  build:
+    runs-on: [self-hosted, windows, x64] # Change if your runner has different labels
+ 
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+ 
+      - name: Build SVIFF project
+        run: |
+          cd FIRMWARE
+          call auto.bat
+ 
+      - name: Build FFTokenizer project
+        run: |
+          cd FFTokenizer
+          call build_standard_libs.bat
+ 
+      - name: Build FWCTRL project
+        run: |
+          cd FWCTRL
+          call auto.bat
+ 
+      - name: Build DD-only project
+        run: |
+          cd DD-only
+          call auto.bat
+ 
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TestBuilds
+path: FWCTRL/TestBuilds/TestBuilds.zip
