@@ -2,9 +2,9 @@ name: SVIFF-CI
  
 on:
   push:
-    branches: [ "dev" ]
+    branches: [ "master" ]
   pull_request:
-    branches: [ "dev" ]
+    branches: [ "master" ]
   workflow_dispatch:
  
 jobs:
@@ -16,27 +16,19 @@ jobs:
         uses: actions/checkout@v4
  
       - name: Build SVIFF project
-        run: |
-          cd FIRMWARE
-          call auto.bat
- 
+        run: ./FIRMWARE/auto.bat
+
       - name: Build FFTokenizer project
-        run: |
-          cd FFTokenizer
-          call build_standard_libs.bat
+        run: ./FFTokenizer/build_standard_libs.bat
  
       - name: Build FWCTRL project
-        run: |
-          cd FWCTRL
-          call auto.bat
+        run: ./FWCTRL/auto.bat
  
       - name: Build DD-only project
-        run: |
-          cd DD-only
-          call auto.bat
+        run: ./DD-only/auto.bat
  
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TestBuilds
-path: FWCTRL/TestBuilds/TestBuilds.zip
+            name: TestBuilds
+            path: ./FWCTRL/TestBuilds/TestBuilds.zip
