@@ -1,0 +1,39 @@
+MN_INSTRUM=ffprofiler MAINLIB=
+gnumake[1]: Entering directory `C:/Development/SVIFF/Release3/Release3/FIRMWARE'
+C:\Development\SVIFF\Release3\Release3\FIRMWARE\tools\gnumake OFFICIAL -f C:\Development\SVIFF\Release3\Release3\FIRMWARE\buildhelpers/miscexec.mak
+BTARGET=..\FIRMWARE\cmdbuild\Rel\project_FFAP\FFAP.mns
+WIT=
+gnumake[2]: Entering directory `C:/Development/SVIFF/Release3/Release3/FIRMWARE'
+echo %TIME% Start build > C:\Development\SVIFF\Release3\Release3\FIRMWARE\buildtime.log
+C:\Development\SVIFF\Release3\Release3\FIRMWARE\tools\rm.exe -f -r ..\BUILD\SVIFF\FromReleasesBranch\FromRelease3\C12345
+echo %TIME% Prepare workspace >> C:\Development\SVIFF\Release3\Release3\FIRMWARE\buildtime.log
+echo %TIME% Sync >> C:\Development\SVIFF\Release3\Release3\FIRMWARE\buildtime.log
+echo %TIME% Get modules >> C:\Development\SVIFF\Release3\Release3\FIRMWARE\buildtime.log
+gnumake -C ..\FIRMWARE proj=FFAP MODULES VCS_MODULES_ROOT=..\FIRMWARE MODARG=
+MN_INSTRUM=ffprofiler MAINLIB=
+gnumake[3]: Entering directory `C:/Development/SVIFF/Release3/Release3/FIRMWARE'
+gnumake -f C:\Development\SVIFF\Release3\Release3\FIRMWARE\buildhelpers\modfaster.mak MODULES
+allhartcmd=
+SourceVar=[]
+gnumake[4]: Entering directory `C:/Development/SVIFF/Release3/Release3/FIRMWARE'
+gnumake[4]: `MODULES' is up to date.
+gnumake[4]: Leaving directory `C:/Development/SVIFF/Release3/Release3/FIRMWARE'
+gnumake[3]: Leaving directory `C:/Development/SVIFF/Release3/Release3/FIRMWARE'
+echo %TIME% Remove workspace >> C:\Development\SVIFF\Release3\Release3\FIRMWARE\buildtime.log
+echo %TIME% Do local build >> C:\Development\SVIFF\Release3\Release3\FIRMWARE\buildtime.log
+C:/Development/SVIFF/Release3/Release3/FIRMWARE/tools/gnumake -C ..\FIRMWARE -f ..\FIRMWARE\makefile BUILD  proj=FFAP DIR=Rel
+MN_INSTRUM=ffprofiler MAINLIB=
+gnumake[3]: Entering directory `C:/Development/SVIFF/Release3/Release3/FIRMWARE'
+echo Using project FFAP
+Using project FFAP
+mkdir C:\Development\SVIFF\Release3\Release3\FIRMWARE\cmdbuild
+mkdir C:\Development\SVIFF\Release3\Release3\FIRMWARE\cmdbuild\Rel
+mkdir C:\Development\SVIFF\Release3\Release3\FIRMWARE\cmdbuild\Rel\project_FFAP
+C:\Development\SVIFF\Release3\Release3\FIRMWARE\tools\gnumake -f C:\Development\SVIFF\Release3\Release3\FIRMWARE\buildhelpers/buildexec.mak FEATURES
+--redirect hartdisptab=mnhartdisptab
+gnumake[4]: Entering directory `C:/Development/SVIFF/Release3/Release3/FIRMWARE'
+\tools\echo.exe #ifndef MEMMAP_G_ >>/includes/memmap.h
+gnumake[4]: Leaving directory `C:/Development/SVIFF/Release3/Release3/FIRMWARE'
+gnumake[3]: Leaving directory `C:/Development/SVIFF/Release3/Release3/FIRMWARE'
+gnumake[2]: Leaving directory `C:/Development/SVIFF/Release3/Release3/FIRMWARE'
+gnumake[1]: Leaving directory `C:/Development/SVIFF/Release3/Release3/FIRMWARE'

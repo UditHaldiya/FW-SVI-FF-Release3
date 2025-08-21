@@ -100,13 +100,13 @@ UNIMAL:
 # ----------------- project-driving features ---------------
 
 
-allfeatures:=$(PROJECT_DEFINITIONS_DIR)/allfeatures.inc
-projfeatures:=$(PROJECT_INCDIR)/projfeatures.inc
+allfeatures:=$(PROJECT_DEFINITIONS_DIR)\allfeatures.inc
+projfeatures:=$(PROJECT_INCDIR)\projfeatures.inc
 
 
-FEATURES: $(CMDDIR_PROJ)  $(allfeatures) $(projfeatures) $(PROJECT_DEFINITIONS_DIR)/$(hprojparam) MEMMAP
+FEATURES: $(CMDDIR_PROJ)  $(allfeatures) $(projfeatures) $(PROJECT_DEFINITIONS_DIR)\$(hprojparam) MEMMAP
 
-MEMMAP: $(PROJECT_DEFINITIONS_DIR)/$(uprojparam) includes/$(MEMMAP_H_PARAM)
+MEMMAP: $(PROJECT_DEFINITIONS_DIR)\$(uprojparam) /includes/memmap.h$(MEMMAP_H_PARAM)
 
 # Creates project_XYZ.h (with symbolic names of C header files)
 $(PROJECT_DEFINITIONS_DIR)/$(hprojparam) : $(projfeatures:.inc=.mak) $(featmak) $(MAKEFILE_LIST)
@@ -137,8 +137,8 @@ $(allfeatures) : $(allfeatures:.inc=.mak) $(featmak)
     $(Hide)$(MAKE) -r -f $(featmak) src=$< dst=$@ allf
 
 
-includes/$(MEMMAP_H_PARAM) : $(MAKEFILE_LIST)
-    $(MN_ECHO) #ifndef MEMMAP_G_ >$@
+/includes/memmap.h$(MEMMAP_H_PARAM) : $(MAKEFILE_LIST)
+    $(MN_ECHO) #ifndef MEMMAP_G_ >>$@
     $(MN_ECHO) #define MEMMAP_G_ >>$@
     $(MN_ECHO) #ifdef MEMMAP_H_ >>$@
     $(MN_ECHO) #define ROMSTART ( $(addsuffix U,$(addprefix 0x,$(MEMMAP_ROMSTART))) ) >>$@

@@ -5,7 +5,7 @@ endif
 modexec:=$(lastword $(MAKEFILE_LIST))
 #mycopy:=xcopy /R/K/Y
 mycopy:=.\cp.exe -f -p
-OFFVCS?="C:\Program Files (x86)\Microsoft Visual Studio 11.0\Common7\IDE\tf.exe"
+#OFFVCS?="C:\Program Files (x86)\Microsoft Visual Studio 11.0\Common7\IDE\tf.exe"
 
 comma:=,
 empty:=
@@ -13,7 +13,7 @@ space:= $(empty) $(empty)
 
 # Version control interface to modules
 VCS_MODULES_ROOT:=$$/Core/FIRMWARE
-modules_path:=$(lastword $(shell $(OFFVCS) workfold $(VCS_MODULES_ROOT) $(LOGIN)))
+#modules_path:=$(lastword $(shell $(OFFVCS) workfold $(VCS_MODULES_ROOT) $(LOGIN)))
 
 export submodfile:=$(PROJDIR)/modules_$(PROJ)
 export modreqfile:=$(PROJDIR)/reqmodules_$(PROJ)
@@ -26,8 +26,8 @@ FILEMEMBERS=$(SRC) $(HDR) $(ASRC) $(USRC) $(UHDR) $(allhartcmd)
 MEMBERS=$(FILEMEMBERS) $(SUB) $(MCPY) $(MKINC)
 
 # ----------- Outer shell part -----------------
-.PHONY : filelist.txt filecpy.butt modlist.txt modcpy.butt
-.PHONY : MODULES modsetup modeprepare hcinit modverify all_of_module modclean modverify
+#.PHONY : filelist.txt filecpy.butt modlist.txt modcpy.butt
+#.PHONY : MODULES modsetup modeprepare hcinit modverify all_of_module modclean modverify
 
 MODULES :
 	$(Hide)-mkdir modules

@@ -193,7 +193,7 @@ MN_ZIP:=$(MNTOOLS)\7za.exe -tzip
 MN_RM:=$(MNTOOLS)\rm.exe
 MN_MV:=$(MNTOOLS)\mv.exe
 #Win32 built-in echo is crippled; we take the one from GNU shelutils
-MN_ECHO:=$(MNTOOLS)\echo.exe -E
+MN_ECHO:=\tools\echo.exe
 export MN_RM MN_CAT MN_SED MN_MV MN_ECHO UNIMAL MNS_CONVERT MN_CRCGEN MN_ZIP MN_TEE
 export MN_CP = $(PROJDIR)\cp.exe
 export MNTOOLS

@@ -41,8 +41,8 @@ ReleaseDir?=.
 define VC_PLUGIN
     -$(MN_RM) -f -r $(SISTER_OFFroot)
     @echo Now getting FFP
-    $(OFFVCS) workfold /map "$$/$(TFSProject)/$(ReleaseDir)/FD-SW" $(SISTER_OFFroot) /workspace:$(OFFworkspace) $(OFFlogin)
-    $(OFFVCS) workfold /map "$$/$(TFSProject)/$(ReleaseDir)/FD-SW/$(TokenizerDir)" $(SISTER_OFFroot)/$(TokenizerDir) /workspace:$(OFFworkspace) $(OFFlogin)
+#    $(OFFVCS) workfold /map "$$/$(TFSProject)/$(ReleaseDir)/FD-SW" $(SISTER_OFFroot) /workspace:$(OFFworkspace) $(OFFlogin)
+#   $(OFFVCS) workfold /map "$$/$(TFSProject)/$(ReleaseDir)/FD-SW/$(TokenizerDir)" $(SISTER_OFFroot)/$(TokenizerDir) /workspace:$(OFFworkspace) $(OFFlogin)
     $(PAUSE)
     echo %TIME% Sync FF >> $(PROJDIR)\buildtime.log
     $(OFFVCS) get $(SISTER_OFFroot);$(OFFver) /recursive /force $(OFFlogin) \

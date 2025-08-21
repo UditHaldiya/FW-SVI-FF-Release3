@@ -94,7 +94,7 @@ OFFver ?=T
 OFFtemplateuser ?=GENPITFI01\502098661
 
 #OFFuname:=lg098661sv
-OFFuname?=svc-TFSBuildValves
+#OFFuname?=svc-TFSBuildValves
 #OFFuser :=Logon\$(OFFuname)
 #OFFuser?=BHI-MASTER\$(OFFuname)
 #   Password of the bogus user
@@ -105,31 +105,31 @@ OFFmodroot:= C:\rbuilder\Core\FIRMWARE
 #   Template workspace
 OFFworktemplate ?=rbuilder;$(OFFtemplateuser)
 #   Local builder workspace
-OFFworkspace :=rbuilder_$(OFFuname)
+#OFFworkspace :=rbuilder_$(OFFuname)
 #   Version control system commands
-OFFVCS?="$(ProgramFiles)\Microsoft Visual Studio 10.0\Common7\IDE\tf.exe"
-OFFTester:=Hu, Helen
-OFFWIT:="$(ProgramFiles)\Microsoft Team Foundation Server 2010 Power Tools\tfpt.exe" workitem
+#OFFVCS?="$(ProgramFiles)\Microsoft Visual Studio 10.0\Common7\IDE\tf.exe"
+#OFFTester:=Hu, Helen
+#OFFWIT:="$(ProgramFiles)\Microsoft Team Foundation Server 2010 Power Tools\tfpt.exe" workitem
 # -- End Do not change --
 
 VCSmodroot :="$$/Core/FIRMWARE"
-OFFlogin:=/login:"$(OFFuser),$(OFFpass)"
+#OFFlogin:=/login:"$(OFFuser),$(OFFpass)"
 OFFWITFields:="Title=*SVI FF 3.1.0.x test build $(buildname) $(OFFver);Assigned To=$(OFFTester);Discipline=Testing Task;Estimated Time=5;Description=Ready for testing"
 
 #Version control system root - we'll discover it
-ifneq (, $(filter OFFICIAL SS SEND OFFREPARE test, $(MAKECMDGOALS)))
-VCSroot=$(strip $(subst :,,$(subst $(_CURDIR),,\
-$(shell $(OFFVCS) workfold . $(OFFlogin)| $(MN_SED) -e "$$!d")\
-)))
-TFSProject=$(subst ?, ,$(word 2,$(subst /, ,$(subst $(empty) $(empty),?,$(VCSroot)))))
-endif
+#ifneq (, $(filter OFFICIAL SS SEND OFFREPARE test, $(MAKECMDGOALS)))
+#VCSroot=$(strip $(subst :,,$(subst $(_CURDIR),,\
+#$(shell $(OFFVCS) workfold . $(OFFlogin)| $(MN_SED) -e "$$!d")\
+#)))
+#TFSProject=$(subst ?, ,$(word 2,$(subst /, ,$(subst $(empty) $(empty),?,$(VCSroot)))))
+#endif
 
-export VCSroot TFSProject
+#export VCSroot TFSProject
 
 test test1:
-	@echo VCSroot=$(VCSroot)
-	@echo TFSProject=$(TFSProject)
-	@echo OFFlogin=$(OFFlogin)
+#	@echo VCSroot=$(VCSroot)
+#	@echo TFSProject=$(TFSProject)
+#	@echo OFFlogin=$(OFFlogin)
 
 #Default OFFICIAL goals
 OGOALS?=BUILD #DOX DOXZIP
@@ -149,32 +149,32 @@ export LOGIN=$(OFFlogin)
 SS : force
 # 1. Start clean
     echo %TIME% Start build > $(PROJDIR)\buildtime.log
-    -$(MAKE) OFFREPARE
-    -$(MN_RM) -f -r $(OFFroot)
+#    -$(MAKE) OFFREPARE
+#    -$(MN_RM) -f -r $(OFFroot)
     -$(MN_RM) -f -r $(MNS_OFFICIAL_DIR)
     $(CLEAN_PLUGIN)
 # 2. Clone the builder's abstract workspace on local machine
     echo %TIME% Prepare workspace >> $(PROJDIR)\buildtime.log
-    $(OFFVCS) workspace /new /noprompt /template:$(OFFworktemplate) $(OFFworkspace) $(OFFlogin)
+#    $(OFFVCS) workspace /new /noprompt /template:$(OFFworktemplate) $(OFFworkspace) $(OFFlogin)
 # 3. Map the sandbox
-    $(OFFVCS) workfold /map "$(VCSroot)" $(OFFroot) /workspace:$(OFFworkspace) $(OFFlogin)
-    $(OFFVCS) workfold /map $(VCSmodroot) $(OFFmodroot) /workspace:$(OFFworkspace) $(OFFlogin)
+#    $(OFFVCS) workfold /map "$(VCSroot)" $(OFFroot) /workspace:$(OFFworkspace) $(OFFlogin)
+#    $(OFFVCS) workfold /map $(VCSmodroot) $(OFFmodroot) /workspace:$(OFFworkspace) $(OFFlogin)
 # 4. Sync with the build sandbox
     echo %TIME% Sync >> $(PROJDIR)\buildtime.log
-    $(OFFVCS) get $(OFFroot);$(OFFver) /recursive /force $(OFFlogin) || $(OFFVCS) get $(OFFroot);$(OFFver) /recursive $(OFFlogin)
+#    $(OFFVCS) get $(OFFroot);$(OFFver) /recursive /force $(OFFlogin) || $(OFFVCS) get $(OFFroot);$(OFFver) /recursive $(OFFlogin)
 # 5. Get modules
     echo %TIME% Get modules >> $(PROJDIR)\buildtime.log
     gnumake -C $(OFFroot) proj=$(PROJ) MODULES VCS_MODULES_ROOT=$(OFFmodroot) MODARG=
 # 6. Execute a plugin if supplied
-    $(VC_PLUGIN)
+#    $(VC_PLUGIN)
 # 7. Delete temporary workspace
     echo %TIME% Remove workspace >> $(PROJDIR)\buildtime.log
-    $(OFFVCS) workspace /delete /noprompt $(OFFworkspace);$(OFFuser) $(OFFlogin)
+#    $(OFFVCS) workspace /delete /noprompt $(OFFworkspace);$(OFFuser) $(OFFlogin)
 
 # -- In case temporary workspace lingers around --
 OFFREPARE : force
 # 6. Delete temporary workspace
-    $(OFFVCS) workspace /delete /noprompt $(OFFworkspace);$(OFFuser) $(OFFlogin)
+#    $(OFFVCS) workspace /delete /noprompt $(OFFworkspace);$(OFFuser) $(OFFlogin)
 
 
 
@@ -215,7 +215,7 @@ $(info WIT=$(WIT))
 SEND : SEND_part
 ifeq ($(notask),)
 	echo wit=$(WIT)
-	$(OFFWIT) /uploadattachment $(WIT) /recursive /comment:"Build results" ..\builds\$(buildname)\* $(OFFlogin)
+#	$(OFFWIT) /uploadattachment $(WIT) /recursive /comment:"Build results" ..\builds\$(buildname)\* $(OFFlogin)
 endif
 
 NO_PIECES?=1
@@ -227,26 +227,26 @@ ifneq ($(NO_MNS),1)
 endif
     cp.exe -f -p $(BTARGET:.mns=.map) $(MNS_OFFICIAL_DIR)\$(MNS_OFFICIAL_NAME:.mns=.map)
 ifeq ($(NO_PIECES),0)
-    cmd /C for %v in ($(hart_versions)) do cp.exe -f -p $(BTARGET:.mns=-ver%v.html) $(MNS_OFFICIAL_DIR)\$(MNS_OFFICIAL_NAME:.mns=-ver%v.html)
-    cmd /C for %v in ($(hart_versions)) do cp.exe -f -p $(BTARGET:.mns=-ver%v.xml) $(MNS_OFFICIAL_DIR)\$(MNS_OFFICIAL_NAME:.mns=-ver%v.xml)
+#    cmd /C for %v in ($(hart_versions)) do cp.exe -f -p $(BTARGET:.mns=-ver%v.html) $(MNS_OFFICIAL_DIR)\$(MNS_OFFICIAL_NAME:.mns=-ver%v.html)
+#    cmd /C for %v in ($(hart_versions)) do cp.exe -f -p $(BTARGET:.mns=-ver%v.xml) $(MNS_OFFICIAL_DIR)\$(MNS_OFFICIAL_NAME:.mns=-ver%v.xml)
 endif
     $(SEND_PLUGIN)
-	$(SIGNING_PLUGIN)
-	$(AV_PLUGIN)
+#	$(SIGNING_PLUGIN)
+#	$(AV_PLUGIN)
 
 ifeq ($(notask),)
 ifneq ($(checkin),silent)
     @echo Any key to check in or Control-C to abort
     @pause
 endif
-	$(OFFWIT) /new "$(TFSProject)\Task" /fields:$(OFFWITFields) $(OFFlogin) > wit.log
+#	$(OFFWIT) /new "$(TFSProject)\Task" /fields:$(OFFWITFields) $(OFFlogin) > wit.log
 endif
 
 
 SYNC : force
-    $(OFFVCS) whoami -Y$(OFFuser),$(OFFpass)
-    $(OFFVCS) cp $(VCS_PROJ_ROOT) -Y$(OFFuser),$(OFFpass)
-    $(OFFVCS) get * -R -I- -GTC -GL$(OFFroot) -Y$(OFFuser),$(OFFpass) $(VSSARG)
+#    $(OFFVCS) whoami -Y$(OFFuser),$(OFFpass)
+#    $(OFFVCS) cp $(VCS_PROJ_ROOT) -Y$(OFFuser),$(OFFpass)
+#    $(OFFVCS) get * -R -I- -GTC -GL$(OFFroot) -Y$(OFFuser),$(OFFpass) $(VSSARG)
 
 # --------------------------------------------------
 force : ;
